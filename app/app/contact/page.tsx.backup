@@ -1,0 +1,447 @@
+
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import Link from 'next/link';
+import { useLocale } from '@/components/locale-context';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Send,
+  Instagram,
+  Facebook,
+  MessageCircle,
+  Calendar,
+  Star,
+  CheckCircle
+} from 'lucide-react';
+
+export default function ContactPage() {
+  const { t } = useLocale();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: 'consultation',
+    message: '',
+    newsletter: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const [heroRef, heroInView] = useInView({ triggerOnce: true, threshold: 0.1 });
+  const [contactRef, contactInView] = useInView({ triggerOnce: true, threshold: 0.1 });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send message');
+      }
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // You could add error state handling here
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="relative min-h-screen">
+      {/* Hero Section */}
+      <section 
+        ref={heroRef}
+        className="relative py-20 bg-gradient-to-br from-green-50 to-teal-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            className="text-center space-y-6"
+          >
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
+              Contact Us
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Have an idea in mind? Contact us for a personalized consultation and 
+              let's transform your space together.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Contact Content */}
+      <section ref={contactRef} className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Contact Form */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={contactInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.8 }}
+            >
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Send Us a Message</CardTitle>
+                  <CardDescription>
+                    Fill out the form and we'll get back to you soon
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isSubmitted ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center py-8 space-y-4"
+                    >
+                      <CheckCircle className="w-16 h-16 text-green-600 mx-auto" />
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        ¡Mensaje Enviado!
+                      </h3>
+                      <p className="text-gray-600">
+                        Gracias por contactarnos. Te responderemos dentro de 24 horas.
+                      </p>
+                      <Button 
+                        onClick={() => {
+                          setIsSubmitted(false);
+                          setFormData({
+                            name: '',
+                            email: '',
+                            phone: '',
+                            subject: 'consultation',
+                            message: '',
+                            newsletter: false
+                          });
+                        }}
+                        variant="outline"
+                      >
+                        Enviar Otro Mensaje
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Nombre Completo *
+                          </label>
+                          <Input
+                            required
+                            value={formData.name}
+                            onChange={(e) => handleInputChange('name', e.target.value)}
+                            placeholder="Tu nombre"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Teléfono
+                          </label>
+                          <Input
+                            value={formData.phone}
+                            onChange={(e) => handleInputChange('phone', e.target.value)}
+                            placeholder="+1 (555) 123-4567"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email *
+                        </label>
+                        <Input
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          placeholder="tu@email.com"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Asunto
+                        </label>
+                        <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="consultation">Consulta de Diseño</SelectItem>
+                            <SelectItem value="installation">Servicios de Instalación</SelectItem>
+                            <SelectItem value="custom-order">Pedido Personalizado</SelectItem>
+                            <SelectItem value="support">Soporte Técnico</SelectItem>
+                            <SelectItem value="partnership">Colaboración</SelectItem>
+                            <SelectItem value="other">Otro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Mensaje *
+                        </label>
+                        <Textarea
+                          required
+                          value={formData.message}
+                          onChange={(e) => handleInputChange('message', e.target.value)}
+                          placeholder="Cuéntanos sobre tu proyecto..."
+                          className="min-h-[120px]"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="newsletter"
+                          checked={formData.newsletter}
+                          onCheckedChange={(checked) => handleInputChange('newsletter', checked as boolean)}
+                        />
+                        <label htmlFor="newsletter" className="text-sm text-gray-700">
+                          Suscribirme al newsletter para recibir ofertas especiales
+                        </label>
+                      </div>
+
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="w-full bg-green-600 hover:bg-green-700 py-3"
+                        size="lg"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Enviar Mensaje
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Contact Information */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={contactInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="space-y-6"
+            >
+              {/* Contact Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Información de Contacto</CardTitle>
+                  <CardDescription>
+                    Ponte en contacto directamente con nuestro equipo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <Phone className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <div className="font-medium">+1 (954) 544-1740</div>
+                      <div className="text-sm text-gray-600">Lunes a Viernes, 8AM - 6PM</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <MessageCircle className="w-5 h-5 text-green-600" />
+                    <div>
+                      <div className="font-medium">WhatsApp: +1 (954) 544-1740</div>
+                      <div className="text-sm text-gray-600">Respuesta inmediata</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Mail className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <div className="font-medium">infobarrerawallpaper@gmail.com</div>
+                      <div className="text-sm text-gray-600">24-hour response time</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <div className="font-medium">Miami, Florida</div>
+                      <div className="text-sm text-gray-600">Servicio en toda el área metropolitana</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <div className="font-medium">Horario de Atención</div>
+                      <div className="text-sm text-gray-600">Lun-Vie: 8AM-6PM, Sáb: 9AM-3PM</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Social Media */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Síguenos</CardTitle>
+                  <CardDescription>
+                    Mantente al día con nuestros últimos diseños e inspiración
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex space-x-4">
+                    <a href="https://instagram.com/barrerawallpaper" target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Instagram className="w-4 h-4 mr-2" />
+                        Instagram
+                      </Button>
+                    </a>
+                    <a href="https://facebook.com/barrerawallpaper" target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Facebook className="w-4 h-4 mr-2" />
+                        Facebook
+                      </Button>
+                    </a>
+                    <a href="https://tiktok.com/@barrerawallpaper" target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        TikTok
+                      </Button>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Acciones Rápidas</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={() => {
+                      // Scroll to contact form
+                      document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Programar Consulta Gratuita
+                  </Button>
+                  
+                  <Link href="/catalog">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Star className="w-4 h-4 mr-2" />
+                      Solicitar Catálogo Digital
+                    </Button>
+                  </Link>
+                  
+                  <a href="tel:+19545441740">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Phone className="w-4 h-4 mr-2" />
+                      Llamada Directa
+                    </Button>
+                  </a>
+                  
+                  <a href="https://wa.me/19545441740?text=Hello%20!" target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="w-full justify-start bg-green-50 hover:bg-green-100 border-green-200">
+                      <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                      Contactar por WhatsApp
+                    </Button>
+                  </a>
+                </CardContent>
+              </Card>
+
+              {/* Testimonial */}
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-6">
+                  <div className="flex space-x-1 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <blockquote className="text-gray-700 italic mb-3">
+                    "El trabajo de Oscar transformó completamente nuestro hogar. 
+                    Su atención al detalle y creatividad son incomparables."
+                  </blockquote>
+                  <div className="text-sm font-medium text-gray-900">
+                    - María González, Miami Beach
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Map Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Nuestra Ubicación
+            </h2>
+            <p className="text-lg text-gray-600">
+              Ubicados en el corazón de Miami, atendemos toda el área metropolitana
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="relative aspect-[16/9] bg-gray-200 rounded-2xl overflow-hidden shadow-2xl"
+          >
+            {/* Placeholder for interactive map */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-green-400 flex items-center justify-center">
+              <div className="text-center text-white space-y-4">
+                <MapPin className="w-16 h-16 mx-auto" />
+                <div className="text-2xl font-bold">Miami, Florida</div>
+                <div className="text-lg">Área de Servicio Principal</div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+}

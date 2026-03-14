@@ -1,0 +1,56 @@
+name: Test Build
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Application
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'yarn'
+          cache-dependency-path: 'app/yarn.lock'
+
+      - name: 📦 Install Dependencies
+        working-directory: ./app
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: 🔨 Generate Prisma Client
+        working-directory: ./app
+        run: |
+          yarn prisma generate
+
+      - name: 🧪 Run TypeScript Check
+        working-directory: ./app
+        run: |
+          yarn tsc --noEmit
+
+      - name: 🏗️ Test Build
+        working-directory: ./app
+        run: |
+          yarn build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: "http://localhost:3000"
+          SKIP_ENV_VALIDATION: "true"
+
+      - name: ✅ Tests Passed
+        if: success()
+        run: echo "✅ All tests passed!"
+
+      - name: ❌ Tests Failed
+        if: failure()
+        run: echo "❌ Tests failed! Check logs for details."

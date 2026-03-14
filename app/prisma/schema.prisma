@@ -1,0 +1,434 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/barrera_wallpaper/app/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  firstName     String?
+  lastName      String?
+  phone         String?
+  isAdmin       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts               Account[]
+  sessions               Session[]
+  cartItems              CartItem[]
+  orders                 Order[]
+  installations          Installation[]
+  contactSubmissions     ContactSubmission[]
+  newsletterSubscription Newsletter?
+  aiWallpaperOrders      AIWallpaperOrder[]
+  aiGenerationRequests   AIGenerationRequest[]
+}
+
+model Category {
+  id            String   @id @default(cuid())
+  name          String
+  nameEs        String
+  slug          String   @unique
+  description   String?
+  descriptionEs String?
+  image         String?
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id               String   @id @default(cuid())
+  name             String
+  nameEs           String
+  description      String?
+  descriptionEs    String?
+  slug             String   @unique
+  sku              String   @unique
+  price            Float
+  salePrice        Float?
+  images           Json
+  colors           Json
+  styles           Json
+  dimensions       String?
+  material         String?
+  materialEs       String?
+  isCustomizable   Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  stock            Int      @default(0)
+  cloudStoragePath String?
+  categoryId       String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+}
+
+model CartItem {
+  id            String   @id @default(cuid())
+  userId        String
+  productId     String
+  quantity      Int      @default(1)
+  customization Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String?
+  orderNumber     String      @unique
+  status          OrderStatus @default(PENDING)
+  subtotal        Float
+  tax             Float
+  shipping        Float
+  total           Float
+  currency        String      @default("USD")
+  stripeSessionId String?
+  stripePaymentId String?
+  paypalOrderId   String?
+  shippingName     String
+  shippingEmail    String
+  shippingPhone    String?
+  shippingAddress1 String
+  shippingAddress2 String?
+  shippingCity     String
+  shippingState    String
+  shippingCountry  String
+  shippingZip      String
+  billingName     String?
+  billingAddress1 String?
+  billingAddress2 String?
+  billingCity     String?
+  billingState    String?
+  billingCountry  String?
+  billingZip      String?
+  pictoremOrderId String?
+  pictoremStatus  String?
+  isAIGenerated   Boolean @default(false)
+  notes             String?
+  trackingNumber    String?
+  estimatedDelivery DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user                User?                @relation(fields: [userId], references: [id])
+  orderItems          OrderItem[]
+  installations       Installation[]
+  aiWallpaperOrders   AIWallpaperOrder[]
+  paymentTransactions PaymentTransaction[]
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id            String @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Int
+  price         Float
+  customization Json?
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Installation {
+  id      String             @id @default(cuid())
+  userId  String
+  orderId String?
+  type    InstallationType   @default(RESIDENTIAL)
+  status  InstallationStatus @default(REQUESTED)
+  contactName  String
+  contactEmail String
+  contactPhone String
+  address1 String
+  address2 String?
+  city     String
+  state    String
+  country  String  @default("US")
+  zip      String
+  rooms           Json
+  wallpaperType   String?
+  wallArea        String?
+  specialRequests String?
+  preferredDate   DateTime?
+  alternativeDate DateTime?
+  estimatedCost Float?
+  finalCost     Float?
+  scheduledDate DateTime?
+  completedDate DateTime?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+}
+
+model ContactSubmission {
+  id        String        @id @default(cuid())
+  userId    String?
+  type      ContactType   @default(GENERAL)
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  language  String        @default("en")
+  status    ContactStatus @default(NEW)
+  response  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Newsletter {
+  id             String    @id @default(cuid())
+  userId         String?   @unique
+  email          String    @unique
+  firstName      String?
+  lastName       String?
+  language       String    @default("en")
+  isActive       Boolean   @default(true)
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model AIWallpaperOrder {
+  id      String  @id @default(cuid())
+  orderId String
+  userId  String?
+  prompt            String
+  generatedImageUrl String?
+  aiProvider        String  @default("openai")
+  pictoremPreorderCode String?
+  material             String
+  type                 String
+  orientation          String
+  width                Int
+  height               Int
+  numCopies            Int     @default(1)
+  borderColor          String  @default("ffffff")
+  additionalOptions    Json?
+  pictoremPrice Float?
+  ourMarkup     Float?
+  customerPrice Float?
+  status          AIOrderStatus @default(GENERATING)
+  pictoremOrderId String?
+  errorMessage    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+}
+
+model PaymentTransaction {
+  id      String @id @default(cuid())
+  orderId String
+  provider      PaymentProvider
+  transactionId String?
+  sessionId     String?
+  paypalOrderId String?
+  amount   Float
+  currency String        @default("USD")
+  status   PaymentStatus @default(PENDING)
+  metadata     Json?
+  errorMessage String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model AIGenerationRequest {
+  id     String  @id @default(cuid())
+  userId String?
+  prompt     String
+  style      String?
+  colors     Json
+  aiProvider String  @default("openai")
+  generatedImageUrl String?
+  status            AIStatus @default(PROCESSING)
+  errorMessage      String?
+  processingTime Int?
+  cost           Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model PictoremProduct {
+  id String @id @default(cuid())
+  material String
+  type     String
+  name          String
+  nameEs        String
+  description   String?
+  descriptionEs String?
+  isActive      Boolean @default(true)
+  baseMarkup Float @default(2.0)
+  minPrice   Float @default(25.0)
+  maxPrice   Float @default(500.0)
+  minWidth  Int @default(8)
+  maxWidth  Int @default(60)
+  minHeight Int @default(8)
+  maxHeight Int @default(60)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([material, type])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum InstallationType {
+  RESIDENTIAL
+  COMMERCIAL
+}
+
+enum InstallationStatus {
+  REQUESTED
+  QUOTE_SENT
+  CONFIRMED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ContactType {
+  GENERAL
+  PRODUCT_INQUIRY
+  INSTALLATION_QUOTE
+  SUPPORT
+  COMPLAINT
+  COLLABORATION
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum AIOrderStatus {
+  GENERATING
+  GENERATED
+  PRICING
+  READY_FOR_PAYMENT
+  PAID
+  SENT_TO_PICTOREM
+  PICTOREM_CONFIRMED
+  PICTOREM_PROCESSING
+  PICTOREM_SHIPPED
+  DELIVERED
+  CANCELLED
+  ERROR
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum AIStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}

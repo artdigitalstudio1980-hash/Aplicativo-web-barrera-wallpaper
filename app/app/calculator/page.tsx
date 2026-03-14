@@ -12,7 +12,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useLocale } from '@/components/locale-context';
 
-export default function CalculatorPage() {
+import { Suspense } from 'react';
+
+function CalculatorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const wallpaperId = searchParams.get('wallpaperId');
@@ -261,5 +263,13 @@ export default function CalculatorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CalculatorPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex justify-center items-center"><Loader2 className="w-8 h-8 animate-spin text-gray-500" /></div>}>
+      <CalculatorContent />
+    </Suspense>
   );
 }

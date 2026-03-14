@@ -10,7 +10,9 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useLocale } from '@/components/locale-context';
 
-export default function RegisterPage() {
+import { Suspense } from 'react';
+
+function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
@@ -147,5 +149,13 @@ export default function RegisterPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex justify-center items-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+      <RegisterContent />
+    </Suspense>
   );
 }

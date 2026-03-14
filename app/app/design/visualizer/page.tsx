@@ -10,7 +10,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useLocale } from '@/components/locale-context';
 
-export default function VisualizerPage() {
+import { Suspense } from 'react';
+
+function VisualizerContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedWallpaperId = searchParams.get('wallpaperId');
@@ -318,5 +320,13 @@ export default function VisualizerPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VisualizerPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex justify-center items-center"><Loader2 className="w-8 h-8 animate-spin text-gray-500" /></div>}>
+      <VisualizerContent />
+    </Suspense>
   );
 }

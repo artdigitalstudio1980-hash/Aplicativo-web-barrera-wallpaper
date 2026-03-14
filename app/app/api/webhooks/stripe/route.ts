@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { sendOrderConfirmationEmail } from '@/lib/mailer';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-08-27.basil' as any,
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     // Save session in database for history
     await prisma.designSession.create({
       data: {
-        userId: session?.user?.id || null,
+        userId: (session?.user as any)?.id || null,
         originalImage: roomImage.substring(0, 1000) + '...', // Saving only prefix or uploading to S3 in real app
         generatedImage: finalImageUrl,
         wallpaperId: wallpaperId,

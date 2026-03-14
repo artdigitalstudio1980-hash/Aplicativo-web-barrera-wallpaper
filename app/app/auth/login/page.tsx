@@ -11,7 +11,9 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useLocale } from '@/components/locale-context';
 
-export default function LoginPage() {
+import { Suspense } from 'react';
+
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
@@ -103,5 +105,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex justify-center items-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

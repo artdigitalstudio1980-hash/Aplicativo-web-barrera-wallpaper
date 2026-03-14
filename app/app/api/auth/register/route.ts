@@ -1,74 +1,37 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import bcrypt from 'bcryptjs';
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { firstName, lastName, email, password, phone } = body;
+    const { name, email, password } = await req.json();
 
-    // Validation
-    if (!firstName || !lastName || !email || !password) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    if (!name || !email || !password) {
+      return NextResponse.json({ message: "Faltan datos requeridos" }, { status: 400 });
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      );
-    }
-
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { email },
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'A user with this email already exists' },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "El correo ya está registrado" }, { status: 409 });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
-        name: `${firstName} ${lastName}`,
-        email: email.toLowerCase(),
+        name,
+        email,
         password: hashedPassword,
-        phone: phone || null,
-        isAdmin: false
+        // Al crear el usuario, por defecto tendrá role USER y isAdmin false.
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        createdAt: true
-      }
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Account created successfully',
-      user
-    });
-
-  } catch (error: any) {
-    console.error('Registration error:', error);
-    return NextResponse.json(
-      { error: 'An error occurred during registration' },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Usuario creado exitosamente", user: { id: user.id, name: user.name, email: user.email } }, { status: 201 });
+  } catch (error) {
+    console.error("Register Error:", error);
+    return NextResponse.json({ message: "Error interno del servidor" }, { status: 500 });
   }
 }

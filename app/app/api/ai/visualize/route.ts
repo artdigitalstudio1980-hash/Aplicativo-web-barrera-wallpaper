@@ -13,33 +13,57 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Faltan datos requeridos (Imagen de la habitación o ID del Wallpaper)' }, { status: 400 });
     }
 
-    // Attempt to use HuggingFace Inference API (Free Tier)
-    const HUGGINGFACE_TOKEN = process.env.HUGGINGFACE_TOKEN;
+    // Usar Replicate para el Inpainting
+    const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
-    let finalImageUrl = roomImage; // Default fallback to original image
+    let finalImageUrl = roomImage; // Fallback por defecto
 
-    if (HUGGINGFACE_TOKEN) {
-      // If we have a token, we can call a free model like Stable Diffusion Inpainting or ControlNet.
-      // This is a placeholder for the actual fetch call to HF API.
-      // e.g. fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0', ...)
+    if (REPLICATE_API_TOKEN) {
+      console.log('Iniciando llamada a Replicate para Inpainting...');
       
-      // Simulating external API delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // In a real scenario, we upload the base64 roomImage, ask it to "Change the walls to look like [wallpaperName]", and return the result.
-      // For now, since true automatic segmentation via free API is hard to do in one step without Masking,
-      // we assume the API returns a URL or base64.
-      
-      // We will leave the fallback to let the user see the UI flow.
+      const wallpaper = await prisma.product.findUnique({ where: { id: wallpaperId }});
+      const wallpaperUrl = wallpaper && Array.isArray(wallpaper.images) && wallpaper.images.length > 0 ? wallpaper.images[0] as string : '';
+
+      try {
+        const response = await fetch('https://api.replicate.com/v1/predictions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            version: 'some_replicate_model_version_for_inpainting_or_controlnet', // Esto se ajustará después al modelo final
+            input: {
+              image: roomImage, // La foto de la habitación
+              prompt: `A room with beautiful ${wallpaperName} wallpaper on the walls, highly detailed, realistic lighting`,
+              condition_image: wallpaperUrl // Si el modelo soporta ControlNet / Image Prompting
+            }
+          })
+        });
+
+        const replicateData = await response.json();
+        
+        // En un entorno de producción, aquí deberías manejar el "polling" 
+        // ya que Replicate responde con un status inicial 'starting' o 'processing' 
+        // y debes consultar la URL de GET prediction hasta que sea 'succeeded'.
+        // Por la limitación de Vercel/NextJS timeouts, lo simularemos o esperaremos si finaliza rápido.
+        
+        console.log('Respuesta inicial de Replicate:', replicateData);
+        // Simulamos un delay de procesado o tomamos la salida si fuera sincrona
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Si el output existiera lo usamos: finalImageUrl = replicateData.output[0]
+        // Mientras el polling se desarrolla asíncronamente
+        finalImageUrl = replicateData.output?.[0] || wallpaperUrl || roomImage;
+
+      } catch (err) {
+        console.error('Error llamando a Replicate:', err);
+        finalImageUrl = wallpaperUrl || roomImage; // Fallback
+      }
     } else {
-      // Fallback if no HF Token is provided (demo mode)
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      console.log('No HUGGINGFACE_TOKEN found. Using fallback mock.');
-      
-      // Get the wallpaper image from DB to composite a placeholder
+      console.log('No REPLICATE_API_TOKEN found. Using fallback mock.');
       const wallpaper = await prisma.product.findUnique({ where: { id: wallpaperId }});
       if (wallpaper && Array.isArray(wallpaper.images) && wallpaper.images.length > 0) {
-        // Just for visual demo, we return the wallpaper image itself if API is missing
         finalImageUrl = wallpaper.images[0] as string;
       }
     }

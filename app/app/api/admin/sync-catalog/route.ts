@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth-options';
 import catalogData from '../../../../prisma/catalog_master.json';
 
 const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
-  // SEGURIDAD: En producción deberías usar un "secret key" en la URL o verificar la sesión de admin
-  // ej: /api/admin/sync-catalog?key=TU_CLAVE_SECRETA
-  const { searchParams } = new URL(request.url);
-  const key = searchParams.get('key');
-  
-  if (key !== 'sincronizar2024') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  // SEGURIDAD: Verificar sesión de admin usando NextAuth
+  const session = await getServerSession(authOptions);
+
+  if (!session || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'No autorizado. Se requieren permisos de administrador.' }, { status: 401 });
   }
 
   try {

@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+// placeholder
 import Stripe from 'stripe';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendOrderConfirmationEmail } from '@/lib/mailer';
 

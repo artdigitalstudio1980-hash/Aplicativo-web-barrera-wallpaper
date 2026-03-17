@@ -1,0 +1,107 @@
+[
+  {
+    "category": "SYSTEXX Phantasy",
+    "products": [
+      {
+        "sku": "SYS-PHA-050",
+        "name": "Bamboo 050",
+        "nameEs": "SYSTEXX Phantasy Bamboo 050",
+        "weight": "225 g/m²",
+        "dimensions": "1 x 12.5 | 25 m",
+        "description": "Natural design with bamboo texture. Features Aqua Technology (water-activated adhesive).",
+        "descriptionEs": "Diseño natural con textura de bambú. Incluye Tecnología Aqua (adhesivo activado por agua)."
+      },
+      {
+        "sku": "SYS-PHA-072",
+        "name": "Diamond Dust 072",
+        "nameEs": "SYSTEXX Phantasy Diamond Dust 072",
+        "weight": "225 g/m²",
+        "dimensions": "1 x 12.5 | 25 m",
+        "description": "Elegant texture with a subtle diamond dust shimmer effect.",
+        "descriptionEs": "Textura elegante con un sutil efecto de brillo de polvo de diamante."
+      },
+      {
+        "sku": "SYS-PHA-073",
+        "name": "Stardust 073",
+        "nameEs": "SYSTEXX Phantasy Stardust 073",
+        "weight": "225 g/m²",
+        "dimensions": "1 x 12.5 | 25 m",
+        "description": "Star-like texture patterns for a magical wall atmosphere.",
+        "descriptionEs": "Patrones de textura tipo estrella para una atmósfera mágica en la pared."
+      },
+      {
+        "sku": "SYS-PHA-077",
+        "name": "Icecubes 077",
+        "nameEs": "SYSTEXX Phantasy Icecubes 077",
+        "weight": "225 g/m²",
+        "dimensions": "1 x 12.5 | 25 m",
+        "description": "Geometric ice cube inspired texture for modern interiors.",
+        "descriptionEs": "Textura geométrica inspirada en cubos de hielo para interiores modernos."
+      },
+      {
+        "sku": "SYS-PHA-087",
+        "name": "Jungle 087",
+        "nameEs": "SYSTEXX Phantasy Jungle 087",
+        "weight": "225 g/m²",
+        "dimensions": "1 x 12.5 | 25 m",
+        "description": "Organic jungle leaf patterns for a tropical feel.",
+        "descriptionEs": "Patrones orgánicos de hojas de selva para una sensación tropical."
+      }
+    ]
+  },
+  {
+    "category": "SYSTEXX Pure",
+    "products": [
+      {
+        "sku": "SYS-PUR-J04",
+        "name": "Jute 004",
+        "nameEs": "SYSTEXX Pure Jute 004",
+        "weight": "325 g/m²",
+        "dimensions": "1 x 25 m",
+        "description": "Classic jute weave texture, timeless and durable.",
+        "descriptionEs": "Clásica textura de tejido de yute, atemporal y duradera."
+      },
+      {
+        "sku": "SYS-PUR-S532",
+        "name": "Structure 532",
+        "nameEs": "SYSTEXX Pure Structure 532",
+        "weight": "170 g/m²",
+        "dimensions": "1 x 50 m",
+        "description": "Fine structural glass fabric for smooth, professional finish.",
+        "descriptionEs": "Tejido de vidrio de estructura fina para un acabado liso y profesional."
+      },
+      {
+        "sku": "SYS-PUR-SKY88",
+        "name": "Skyline EP88",
+        "nameEs": "SYSTEXX Pure Skyline EP88",
+        "weight": "260 g/m²",
+        "dimensions": "0.95 x 15.5 m",
+        "description": "Impressive skyline inspired effects that vary with light.",
+        "descriptionEs": "Impresionantes efectos inspirados en el horizonte que varían con la luz."
+      }
+    ]
+  },
+  {
+    "category": "SYSTEXX Active",
+    "products": [
+      {
+        "sku": "SYS-ACT-M20",
+        "name": "Magnetic M20",
+        "nameEs": "SYSTEXX Active Magnetic M20",
+        "weight": "950 g/m²",
+        "dimensions": "0.95 x 16.0 m",
+        "description": "Magnetic surface solution, ideal for offices and creative spaces.",
+        "descriptionEs": "Solución de superficie magnética, ideal para oficinas y espacios creativos."
+      },
+      {
+        "sku": "SYS-ACT-R938",
+        "name": "Reno 938",
+        "nameEs": "SYSTEXX Active Reno 938",
+        "weight": "210 g/m²",
+        "dimensions": "1 x 25 m",
+        "description": "Perfect for covering irregular surfaces and wall renovations.",
+        "descriptionEs": "Perfecto para cubrir superficies irregulares y renovaciones de paredes."
+      }
+    ]
+  }
+]

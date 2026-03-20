@@ -56,13 +56,19 @@ jobs:
           HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
           HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
         run: |
-          sshpass -p "$HOSTINGER_PASSWORD" rsync -avz --delete \
-            -e "ssh -p $HOSTINGER_PORT -o StrictHostKeyChecking=no" \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='scripts' \
-            ./app/ \
-            "$HOSTINGER_USERNAME@$HOSTINGER_HOST:/home/u425976741/domains/barrerawallpaper.com/nodejs/"
+          for i in 1 2 3; do
+            echo "rsync attempt $i..."
+            sshpass -p "$HOSTINGER_PASSWORD" rsync -avz --delete \
+              -e "ssh -p $HOSTINGER_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=15" \
+              --exclude='.git' \
+              --exclude='node_modules' \
+              --exclude='scripts' \
+              ./app/ \
+              "$HOSTINGER_USERNAME@$HOSTINGER_HOST:/home/u425976741/domains/barrerawallpaper.com/nodejs/" \
+              && echo "rsync OK" && break
+            echo "Attempt $i failed, waiting 20s before retry..."
+            sleep 20
+          done
 
       - name: Start/Restart App via SSH
         uses: appleboy/ssh-action@v1.0.3

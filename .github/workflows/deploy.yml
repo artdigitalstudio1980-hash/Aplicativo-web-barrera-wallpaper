@@ -55,7 +55,6 @@ jobs:
           HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
           HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
           HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
-          HOSTINGER_APP_PATH: ${{ secrets.HOSTINGER_APP_PATH }}
         run: |
           sshpass -p "$HOSTINGER_PASSWORD" rsync -avz --delete \
             -e "ssh -p $HOSTINGER_PORT -o StrictHostKeyChecking=no" \
@@ -63,7 +62,7 @@ jobs:
             --exclude='node_modules' \
             --exclude='scripts' \
             ./app/ \
-            "$HOSTINGER_USERNAME@$HOSTINGER_HOST:$HOSTINGER_APP_PATH/"
+            "$HOSTINGER_USERNAME@$HOSTINGER_HOST:/home/u425976741/domains/barrerawallpaper.com/nodejs/"
 
       - name: Start/Restart App via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -76,14 +75,13 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
-            cd ${{ secrets.HOSTINGER_APP_PATH }}
+            cd /home/u425976741/domains/barrerawallpaper.com/nodejs
 
             yarn install --production --frozen-lockfile
             yarn prisma generate
-            yarn prisma db push
 
             if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
-              pm2 restart barrera-wallpaper
+              pm2 restart barrera-wallpaper --update-env
             else
               pm2 start "yarn start" --name barrera-wallpaper
               pm2 save

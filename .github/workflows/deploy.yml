@@ -4,40 +4,68 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Permite ejecución manual desde GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy Application
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: 🚚 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🔍 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '20.x'
           cache: 'yarn'
           cache-dependency-path: 'app/yarn.lock'
 
-      - name: 📦 Install Dependencies
+      - name: Install Dependencies
         working-directory: ./app
         run: |
           yarn install --frozen-lockfile
           yarn prisma generate
 
-      - name: 🧪 Run Build Test
+      - name: Build
         working-directory: ./app
-        run: |
-          yarn build
+        run: yarn build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
 
-      - name: 🚀 Deploy to Hostinger via SSH
+      - name: Write server .env
+        working-directory: ./app
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+        run: |
+          printf 'DATABASE_URL=%s\nNEXTAUTH_SECRET=%s\nNEXTAUTH_URL=%s\n' \
+            "$DATABASE_URL" "$NEXTAUTH_SECRET" "$NEXTAUTH_URL" > .env
+
+      - name: Install rsync and sshpass
+        run: sudo apt-get install -y rsync sshpass
+
+      - name: Deploy files via rsync
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+          HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
+          HOSTINGER_APP_PATH: ${{ secrets.HOSTINGER_APP_PATH }}
+        run: |
+          sshpass -p "$HOSTINGER_PASSWORD" rsync -avz --delete \
+            -e "ssh -p $HOSTINGER_PORT -o StrictHostKeyChecking=no" \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='scripts' \
+            ./app/ \
+            "$HOSTINGER_USERNAME@$HOSTINGER_HOST:$HOSTINGER_APP_PATH/"
+
+      - name: Start/Restart App via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
@@ -48,24 +76,11 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
-            APP_PATH="${{ secrets.HOSTINGER_APP_PATH }}"
+            cd ${{ secrets.HOSTINGER_APP_PATH }}
 
-            if [ ! -d "$APP_PATH/.git" ]; then
-              git clone https://github.com/artdigitalstudio1980-hash/barrera-wallpaper.git "$APP_PATH"
-            fi
-
-            cd "$APP_PATH"
-            git pull origin main
-
-            cd "$APP_PATH/app"
-
-            printf 'DATABASE_URL=%s\nNEXTAUTH_SECRET=%s\nNEXTAUTH_URL=%s\n' \
-              "$DATABASE_URL" "$NEXTAUTH_SECRET" "$NEXTAUTH_URL" > .env
-
-            yarn install --frozen-lockfile
+            yarn install --production --frozen-lockfile
             yarn prisma generate
             yarn prisma db push
-            yarn build
 
             if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
               pm2 restart barrera-wallpaper
@@ -73,12 +88,3 @@ jobs:
               pm2 start "yarn start" --name barrera-wallpaper
               pm2 save
             fi
-
-      - name: 📋 Deployment Result
-        if: always()
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "Deployment successful! App is now live at ${{ secrets.NEXTAUTH_URL }}"
-          else
-            echo "Deployment failed! Check logs for details."
-          fi

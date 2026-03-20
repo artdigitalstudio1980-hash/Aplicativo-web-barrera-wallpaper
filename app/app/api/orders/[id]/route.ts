@@ -58,8 +58,6 @@ export async function GET(req: NextRequest, { params }: Context) {
       shippingCountry: order.shippingCountry,
       shippingZip: order.shippingZip,
       isAIGenerated: order.isAIGenerated,
-      pictoremOrderId: order.pictoremOrderId,
-      pictoremStatus: order.pictoremStatus,
       trackingNumber: order.trackingNumber,
       estimatedDelivery: order.estimatedDelivery,
       createdAt: order.createdAt,
@@ -79,7 +77,6 @@ export async function GET(req: NextRequest, { params }: Context) {
         borderColor: order.aiWallpaperOrders[0].borderColor,
         customerPrice: order.aiWallpaperOrders[0].customerPrice,
         status: order.aiWallpaperOrders[0].status,
-        pictoremOrderId: order.aiWallpaperOrders[0].pictoremOrderId
       } : null,
 
       // Payment transactions

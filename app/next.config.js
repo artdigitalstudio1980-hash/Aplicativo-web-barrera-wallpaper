@@ -14,7 +14,23 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  images: { unoptimized: true },
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      { protocol: 'https', hostname: 'replicate.delivery' },
+      { protocol: 'https', hostname: 'pbxt.replicate.delivery' },
+      { protocol: 'https', hostname: '**.replicate.com' },
+      { protocol: 'https', hostname: '**.supabase.co' },
+      { protocol: 'https', hostname: '**.amazonaws.com' },
+      { protocol: 'https', hostname: 'oaidalleapiprodscus.blob.core.windows.net' },
+      { protocol: 'https', hostname: '**.blob.core.windows.net' },
+      { protocol: 'https', hostname: 'i.pinimg.com' },
+      { protocol: 'https', hostname: '**.pinimg.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: '**.cloudinary.com' },
+    ],
+  },
+
 };
 
 module.exports = nextConfig;

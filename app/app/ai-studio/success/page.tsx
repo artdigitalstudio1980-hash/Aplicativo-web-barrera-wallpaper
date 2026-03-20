@@ -33,7 +33,6 @@ interface OrderDetails {
     width: number;
     height: number;
     numCopies: number;
-    pictoremOrderId?: string;
   };
 }
 
@@ -177,16 +176,7 @@ function SuccessPageContent() {
                       </div>
                     </div>
 
-                    {orderDetails.aiWallpaperOrder.pictoremOrderId && (
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <div className="flex items-center text-blue-800">
-                          <Truck className="w-4 h-4 mr-2" />
-                          <span className="text-sm font-medium">
-                            Fulfillment Order: {orderDetails.aiWallpaperOrder.pictoremOrderId}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+
                   </>
                 )}
               </CardContent>

@@ -8,15 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import {
   Search,
   Filter,
   Eye,
   Package,
   Truck,
   CheckCircle,
-  AlertCircle,
-  ExternalLink,
   RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
@@ -31,8 +29,6 @@ interface Order {
   customerName: string;
   customerEmail: string;
   isAIGenerated: boolean;
-  pictoremOrderId?: string;
-  pictoremStatus?: string;
   createdAt: string;
   aiWallpaperOrder?: {
     prompt: string;
@@ -58,8 +54,8 @@ const AI_STATUS_COLORS = {
   'GENERATED': 'bg-blue-100 text-blue-800',
   'READY_FOR_PAYMENT': 'bg-green-100 text-green-800',
   'PAID': 'bg-emerald-100 text-emerald-800',
-  'SENT_TO_PICTOREM': 'bg-purple-100 text-purple-800',
-  'PICTOREM_CONFIRMED': 'bg-indigo-100 text-indigo-800',
+  'PROCESSING': 'bg-purple-100 text-purple-800',
+  'SHIPPED': 'bg-indigo-100 text-indigo-800',
   'DELIVERED': 'bg-emerald-100 text-emerald-800',
   'ERROR': 'bg-red-100 text-red-800'
 };
@@ -97,19 +93,17 @@ export default function AdminOrdersPage() {
     }
 
     try {
-      const response = await fetch('/api/pictorem/retry-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ orderId })
+      const response = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, action: 'retry' })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert(`Order ${data.data.orderNumber} successfully sent to Pictorem!`);
-        fetchOrders(); // Refresh orders
+        alert(`Order ${data.data.orderNumber} queued for processing.`);
+        fetchOrders();
       } else {
         alert(`Failed to retry order: ${data.error || 'Unknown error'}`);
       }
@@ -294,30 +288,7 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
 
-                      {/* Pictorem Status */}
-                      <div className="lg:col-span-2">
-                        {order.pictoremOrderId ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center text-sm text-green-600">
-                              <Package className="w-4 h-4 mr-1" />
-                              <span>Sent to Pictorem</span>
-                            </div>
-                            <p className="text-xs text-gray-500 font-mono">
-                              {order.pictoremOrderId}
-                            </p>
-                            {order.pictoremStatus && (
-                              <Badge variant="outline" className="text-xs">
-                                {order.pictoremStatus}
-                              </Badge>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-sm text-gray-400">
-                            <AlertCircle className="w-4 h-4 mr-1" />
-                            <span>Not sent</span>
-                          </div>
-                        )}
-                      </div>
+
 
                       {/* Actions */}
                       <div className="lg:col-span-1">
@@ -328,22 +299,10 @@ export default function AdminOrdersPage() {
                               View
                             </Button>
                           </Link>
-                          {order.pictoremOrderId && (
-                            <Button size="sm" variant="outline" asChild className="w-full">
-                              <a 
-                                href={`https://pictorem.com/order-status/${order.pictoremOrderId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="w-4 h-4 mr-1" />
-                                Pictorem
-                              </a>
-                            </Button>
-                          )}
-                          {!order.pictoremOrderId && order.isAIGenerated && order.status === 'CONFIRMED' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                          {order.isAIGenerated && order.status === 'CONFIRMED' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="w-full"
                               onClick={() => retryOrder(order.id)}
                             >

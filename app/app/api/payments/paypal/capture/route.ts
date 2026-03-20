@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { pictoremClient } from '@/lib/pictorem';
+
 
 interface CapturePayPalOrderRequest {
   paypalOrderId: string;
@@ -52,9 +52,6 @@ export async function POST(req: NextRequest) {
         where: { orderId },
         data: { status: 'PAID' }
       });
-
-      // Send order to Pictorem
-      await sendOrderToPictorem(orderId);
 
       return NextResponse.json({
         success: true,
@@ -127,85 +124,4 @@ async function capturePayPalOrder(paypalOrderId: string) {
   });
 
   return await captureResponse.json();
-}
-
-async function sendOrderToPictorem(orderId: string) {
-  try {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { aiWallpaperOrders: true }
-    });
-
-    if (!order || !order.aiWallpaperOrders.length) {
-      console.error('Order or AI wallpaper order not found');
-      return;
-    }
-
-    const aiOrder = order.aiWallpaperOrders[0];
-
-    // Prepare delivery info for Pictorem
-    const deliveryInfo = {
-      firstname: order.shippingName.split(' ')[0] || order.shippingName,
-      lastname: order.shippingName.split(' ').slice(1).join(' ') || '',
-      address1: order.shippingAddress1,
-      address2: order.shippingAddress2 || '',
-      city: order.shippingCity,
-      province: order.shippingState,
-      country: order.shippingCountry,
-      cp: order.shippingZip,
-      phone: order.shippingPhone || ''
-    };
-
-    // Prepare order items for Pictorem
-    const orderItems = [{
-      code: aiOrder.pictoremPreorderCode || '',
-      fileurl: aiOrder.generatedImageUrl || '',
-      filetype: 'jpg',
-      bordercolorhex: aiOrder.borderColor,
-      thanknotemsg: `Custom wallpaper design created with Barrera Wallpaper AI`
-    }];
-
-    // Send order to Pictorem
-    const pictoremResponse = await pictoremClient.sendOrder(
-      deliveryInfo,
-      orderItems,
-      `Barrera Wallpaper Order ${order.orderNumber}`
-    );
-
-    if (pictoremResponse.status && pictoremResponse.orderid) {
-      // Update order with Pictorem order ID
-      await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          pictoremOrderId: pictoremResponse.orderid,
-          pictoremStatus: 'confirmed',
-          status: 'PROCESSING'
-        }
-      });
-
-      await prisma.aIWallpaperOrder.updateMany({
-        where: { orderId },
-        data: {
-          status: 'SENT_TO_PICTOREM',
-          pictoremOrderId: pictoremResponse.orderid
-        }
-      });
-
-      console.log(`Order ${order.orderNumber} sent to Pictorem: ${pictoremResponse.orderid}`);
-    } else {
-      throw new Error(`Pictorem order failed: ${JSON.stringify(pictoremResponse.msg)}`);
-    }
-
-  } catch (error) {
-    console.error('Error sending order to Pictorem:', error);
-    
-    // Update order with error
-    await prisma.aIWallpaperOrder.updateMany({
-      where: { orderId },
-      data: {
-        status: 'ERROR',
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
-      }
-    });
-  }
 }

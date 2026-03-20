@@ -42,8 +42,6 @@ interface ProductConfiguration {
   numCopies: number;
   borderColor: string;
   customerPrice?: number;
-  pictoremCost?: number;
-  profit?: number;
 }
 
 interface CustomerInfo {
@@ -184,7 +182,7 @@ export default function AIStudioPage() {
 
     setIsPricingLoading(true);
     try {
-      const response = await fetch('/api/pictorem/pricing', {
+      const response = await fetch('/api/ai-wallpaper/pricing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productConfig)
@@ -195,9 +193,7 @@ export default function AIStudioPage() {
       if (data.success) {
         setProductConfig(prev => ({
           ...prev,
-          customerPrice: data.data.customerPrice,
-          pictoremCost: data.data.pictoremCost,
-          profit: data.data.profit
+          customerPrice: data.data.customerPrice
         }));
         toast.success(`Price calculated: $${data.data.customerPrice.toFixed(2)}`);
       } else {
@@ -849,7 +845,7 @@ export default function AIStudioPage() {
 
                   <div className="text-center text-sm text-gray-500 space-y-2">
                     <p>🔒 Your payment information is secure and encrypted</p>
-                    <p>📦 Your custom wallpaper will be printed and shipped by our partner Pictorem</p>
+                    <p>📦 Tu wallpaper personalizado será impreso y enviado por nuestro equipo</p>
                     <p>🚚 Estimated delivery: 7-14 business days</p>
                   </div>
                 </CardContent>

@@ -13,22 +13,45 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Barrera Wallpaper - Premium Wall Coverings by Oscar Barrera",
-  description: "Transform your space with premium wallpaper designs. Discover Oscar Barrera's artistic vision where design, art, and technology converge.",
-  keywords: "Barrera Wallpaper, Oscar Barrera, wallpaper Miami, premium wallpaper, custom wallpaper, wall coverings, interior design",
-  authors: [{ name: "Oscar Barrera" }],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://barrerawallpaper.com'),
+  title: {
+    default: "Barrera Wallpaper - Premium Wall Coverings by Oscar Barrera",
+    template: "%s | Barrera Wallpaper",
+  },
+  description: "Transform your space with premium wallpaper designs. Discover Oscar Barrera's artistic vision where design, art, and technology converge. AI-powered custom wallpaper, installation services in Miami & USA.",
+  keywords: "Barrera Wallpaper, Oscar Barrera, wallpaper Miami, premium wallpaper, custom wallpaper, wall coverings, interior design, papel tapiz, papel tapiz Miami, AI wallpaper",
+  authors: [{ name: "Oscar Barrera", url: "https://barrerawallpaper.com/about" }],
   creator: "Barrera Wallpaper",
+  publisher: "Barrera Wallpaper",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: "Barrera Wallpaper - Premium Wall Coverings",
-    description: "Transform your space with premium wallpaper designs by Oscar Barrera",
+    description: "Transform your space with premium wallpaper designs by Oscar Barrera. AI-powered custom designs, professional installation.",
     siteName: "Barrera Wallpaper",
     locale: "en_US",
+    alternateLocale: "es_US",
     type: "website",
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Barrera Wallpaper - Premium Wall Coverings',
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Barrera Wallpaper - Premium Wall Coverings",
     description: "Transform your space with premium wallpaper designs by Oscar Barrera",
+    images: ['/og-image.jpg'],
   },
 };
 

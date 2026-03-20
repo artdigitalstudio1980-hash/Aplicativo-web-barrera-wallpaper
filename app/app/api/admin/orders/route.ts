@@ -39,8 +39,6 @@ export async function GET(req: NextRequest) {
       customerName: order.shippingName,
       customerEmail: order.shippingEmail,
       isAIGenerated: order.isAIGenerated,
-      pictoremOrderId: order.pictoremOrderId,
-      pictoremStatus: order.pictoremStatus,
       trackingNumber: order.trackingNumber,
       estimatedDelivery: order.estimatedDelivery,
       createdAt: order.createdAt.toISOString(),
@@ -58,8 +56,7 @@ export async function GET(req: NextRequest) {
         height: order.aiWallpaperOrders[0].height,
         numCopies: order.aiWallpaperOrders[0].numCopies,
         customerPrice: order.aiWallpaperOrders[0].customerPrice ? Number(order.aiWallpaperOrders[0].customerPrice) : null,
-        status: order.aiWallpaperOrders[0].status,
-        pictoremOrderId: order.aiWallpaperOrders[0].pictoremOrderId
+        status: order.aiWallpaperOrders[0].status
       } : null,
 
       // Payment summary

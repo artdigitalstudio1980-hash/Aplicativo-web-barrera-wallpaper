@@ -59,11 +59,8 @@ jobs:
 
             cd "$APP_PATH/app"
 
-            cat > .env << 'ENVEOF'
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
-            ENVEOF
+            printf 'DATABASE_URL=%s\nNEXTAUTH_SECRET=%s\nNEXTAUTH_URL=%s\n' \
+              "$DATABASE_URL" "$NEXTAUTH_SECRET" "$NEXTAUTH_URL" > .env
 
             yarn install --frozen-lockfile
             yarn prisma generate
@@ -73,7 +70,7 @@ jobs:
             if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
               pm2 restart barrera-wallpaper
             else
-              pm2 start yarn --name barrera-wallpaper -- start
+              pm2 start "yarn start" --name barrera-wallpaper
               pm2 save
             fi
 
@@ -81,7 +78,7 @@ jobs:
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "🎉 Deployment successful! App is now live at ${{ secrets.NEXTAUTH_URL }}"
+            echo "Deployment successful! App is now live at ${{ secrets.NEXTAUTH_URL }}"
           else
-            echo "💥 Deployment failed! Check logs for details."
+            echo "Deployment failed! Check logs for details."
           fi

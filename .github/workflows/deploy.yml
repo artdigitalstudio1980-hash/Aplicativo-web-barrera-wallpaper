@@ -43,20 +43,45 @@ jobs:
           host: ${{ secrets.HOSTINGER_HOST }}
           username: ${{ secrets.HOSTINGER_USERNAME }}
           password: ${{ secrets.HOSTINGER_PASSWORD }}
-          port: ${{ secrets.HOSTINGER_PORT || 22 }}
+          port: ${{ secrets.HOSTINGER_PORT }}
           script: |
-            cd ${{ secrets.HOSTINGER_APP_PATH }}
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            APP_PATH="${{ secrets.HOSTINGER_APP_PATH }}"
+
+            if [ ! -d "$APP_PATH/.git" ]; then
+              git clone https://github.com/artdigitalstudio1980-hash/barrera-wallpaper.git "$APP_PATH"
+            fi
+
+            cd "$APP_PATH"
             git pull origin main
+
+            cd "$APP_PATH/app"
+
+            cat > .env << 'ENVEOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+            ENVEOF
+
             yarn install --frozen-lockfile
             yarn prisma generate
-            yarn prisma migrate deploy
+            yarn prisma db push
             yarn build
-            pm2 restart barrera-wallpaper || pm2 start yarn --name barrera-wallpaper -- start
 
-      - name: ✅ Deployment Success
-        if: success()
-        run: echo "🎉 Deployment successful! App is now live at ${{ secrets.NEXTAUTH_URL }}"
+            if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
+              pm2 restart barrera-wallpaper
+            else
+              pm2 start yarn --name barrera-wallpaper -- start
+              pm2 save
+            fi
 
-      - name: ❌ Deployment Failed
-        if: failure()
-        run: echo "💥 Deployment failed! Check logs for details."
+      - name: 📋 Deployment Result
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "🎉 Deployment successful! App is now live at ${{ secrets.NEXTAUTH_URL }}"
+          else
+            echo "💥 Deployment failed! Check logs for details."
+          fi

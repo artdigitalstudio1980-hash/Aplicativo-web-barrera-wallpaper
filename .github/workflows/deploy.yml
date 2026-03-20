@@ -1,4 +1,4 @@
-name: Deploy to Hostinger
+name: Deploy to Hostinger (Optimized)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Application
+    name: Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -36,46 +36,44 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
 
-      - name: Write server .env
+      - name: Prepare Deployment Package
         working-directory: ./app
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
         run: |
-          printf 'DATABASE_URL=%s\nNEXTAUTH_SECRET=%s\nNEXTAUTH_URL=%s\n' \
-            "$DATABASE_URL" "$NEXTAUTH_SECRET" "$NEXTAUTH_URL" > .env
+          # Solo incluimos lo necesario para ejecutar la app
+          tar -czf ../deploy.tar.gz \
+            .next \
+            public \
+            package.json \
+            yarn.lock \
+            next.config.js \
+            prisma \
+            .env.example
 
-      - name: Install rsync and sshpass
-        run: sudo apt-get install -y rsync sshpass
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.HOSTINGER_PORT }} ${{ secrets.HOSTINGER_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy files via rsync
+      - name: Upload Package via SCP (with Retries)
         env:
           HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
           HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
           HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
-          HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
         run: |
-          for i in 1 2 3; do
-            echo "rsync attempt $i..."
-            sshpass -p "$HOSTINGER_PASSWORD" rsync -avz --delete \
-              -e "ssh -p $HOSTINGER_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=15" \
-              --exclude='.git' \
-              --exclude='node_modules' \
-              --exclude='scripts' \
-              ./app/ \
-              "$HOSTINGER_USERNAME@$HOSTINGER_HOST:/home/u425976741/domains/barrerawallpaper.com/nodejs/" \
-              && echo "rsync OK" && break
-            echo "Attempt $i failed, waiting 20s before retry..."
-            sleep 20
+          # Intentar subir el archivo hasta 5 veces si hay timeout
+          for i in {1..5}; do
+            echo "Intento de subida $i..."
+            scp -P $HOSTINGER_PORT -o ConnectTimeout=30 deploy.tar.gz $HOSTINGER_USERNAME@$HOSTINGER_HOST:/home/u425976741/domains/barrerawallpaper.com/nodejs/ && break || sleep 15
           done
 
-      - name: Start/Restart App via SSH
+      - name: Extract & Restart App
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
           username: ${{ secrets.HOSTINGER_USERNAME }}
-          password: ${{ secrets.HOSTINGER_PASSWORD }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           script: |
             export NVM_DIR="$HOME/.nvm"
@@ -83,9 +81,20 @@ jobs:
 
             cd /home/u425976741/domains/barrerawallpaper.com/nodejs
 
-            yarn install --production --frozen-lockfile
-            yarn prisma generate
+            # Descomprimir el paquete nuevo
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
 
+            # Instalar solo dependencias de producción (rápido)
+            yarn install --production --frozen-lockfile
+            
+            # Asegurar que el .env existe (si no, usar el backup o pedirlo)
+            if [ ! -f ".env" ]; then
+              cp .env.example .env
+              echo "ADVERTENCIA: .env creado desde .env.example. Por favor configura las variables reales."
+            fi
+
+            # Reiniciar PM2
             if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
               pm2 restart barrera-wallpaper --update-env
             else

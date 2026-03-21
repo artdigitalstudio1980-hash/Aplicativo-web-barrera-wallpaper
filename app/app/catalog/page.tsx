@@ -72,7 +72,7 @@ export default function CatalogPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white">
         <Loader2 className="w-10 h-10 animate-spin text-black mb-4" />
-        <p className="text-sm font-bold tracking-widest uppercase">Initializing Store...</p>
+        <p className="text-sm font-bold tracking-widest uppercase">Initializing Virtual Showroom...</p>
       </div>
     );
   }

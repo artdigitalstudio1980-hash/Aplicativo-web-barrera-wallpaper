@@ -97,9 +97,15 @@ jobs:
               echo "ADVERTENCIA: .env creado desde .env.example. Por favor configura las variables reales."
             fi
 
-            # Reiniciar PM2
+            # --- NUEVO: Limpiar caché de Redis y reiniciar PM2 ---
+            # Asumimos que Redis está instalado y FLUSHALL es seguro.
+            # Si Redis no está disponible o FLUSHALL es destructivo, esto fallará.
+            echo "Intentando limpiar caché de Redis..."
+            redis-cli FLUSHALL || echo "Advertencia: No se pudo limpiar la caché de Redis. Asegúrate de que redis-cli esté instalado y accesible."
+
+            echo "Reiniciando la aplicación con PM2..."
             if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
-              pm2 reload barrera-wallpaper --update-env
+              pm2 restart barrera-wallpaper --update-env
             else
               pm2 start "yarn start" --name barrera-wallpaper
               pm2 save

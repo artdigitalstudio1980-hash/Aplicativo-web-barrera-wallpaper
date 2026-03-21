@@ -6,64 +6,37 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, SlidersHorizontal, Loader2, Wand2, 
-  ShoppingCart, MessageSquare, Ruler, Info, 
-  ChevronRight, ChevronLeft, Sparkles
+  Search, Loader2, Wand2, ShoppingCart, 
+  Ruler, Info, ChevronRight, ChevronLeft, 
+  Sparkles, ShieldCheck, Flame, Zap, Droplets
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLocale } from '@/components/locale-context';
 import { toast } from 'sonner';
 
-interface Category {
-  id: string;
-  name: string;
-  nameEs: string;
-  slug: string;
-}
+// --- DATA CONFIGURATION ---
 
-interface Product {
-  id: string;
-  name: string;
-  nameEs: string;
-  description?: string;
-  slug: string;
-  sku: string;
-  price: number;
-  salePrice?: number;
-  images: string[];
-  imageUrl?: string;
-  isFeatured: boolean;
-  isCustomizable: boolean;
-  dimensions?: string;
-  material?: string;
-  category: Category;
-}
-
-// Imágenes de publicidad para el slider superior
-const AD_IMAGES = [
-  { src: '/catalog-info/active-category-overview.png', title: 'SYSTEXX Active', desc: 'Funcionalidad extrema: Magnético, Acústico y Térmico.' },
-  { src: '/catalog-info/phantasy-description.png', title: 'SYSTEXX Phantasy', desc: 'Diseños opulentos y texturas creativas.' },
-  { src: '/catalog-info/active-magnetic-description.png', title: 'Paredes Magnéticas', desc: 'Transforma cualquier espacio en una oficina creativa.' },
-  { src: '/catalog-info/systexx-properties.png', title: 'Tecnología Alemana', desc: 'Fibra de vidrio de alta resistencia con tecnología Aqua.' },
+const ADS = [
+  { src: '/catalog-info/imagen_publicidad/cover-systexx-collection.png', title: 'SYSTEXX Collection', desc: 'German engineering meets interior art.' },
+  { src: '/catalog-info/imagen_publicidad/active-acoustherm-description.png', title: 'AcousTherm Technology', desc: 'Heats rooms 4x faster and optimizes acoustics.' },
+  { src: '/catalog-info/imagen_publicidad/active-magnetic-description.png', title: 'Magnetic Walls', desc: 'Transform surfaces into interactive spaces.' },
+  { src: '/catalog-info/imagen_publicidad/active-fireprotect-description.png', title: 'Fire Protection', desc: 'Non-combustible safety for high-traffic areas.' },
+  { src: '/catalog-info/imagen_publicidad/systexx-properties.png', title: 'Technical Superiority', desc: 'Impact resistant, crack-bridging, and Oeko-Tex certified.' },
 ];
 
 export default function CatalogPage() {
   const { t, locale } = useLocale();
   const router = useRouter();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('featured');
   const [adIndex, setAdIndex] = useState(0);
 
   useEffect(() => {
     fetchProducts();
-    const timer = setInterval(() => {
-      setAdIndex((prev) => (prev + 1) % AD_IMAGES.length);
-    }, 6000);
+    const timer = setInterval(() => setAdIndex((prev) => (prev + 1) % ADS.length), 7000);
     return () => clearInterval(timer);
   }, []);
 
@@ -73,14 +46,9 @@ export default function CatalogPage() {
       const data = await res.json();
       if (data.success) {
         setProducts(data.products);
-        const uniqueCategories = Array.from(
-          new Map(data.products.map((p: Product) => [p.category.id, p.category])).values()
-        );
-        setCategories(uniqueCategories);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Error al cargar el catálogo');
     } finally {
       setLoading(false);
     }
@@ -94,7 +62,6 @@ export default function CatalogPage() {
     if (searchQuery) {
       filtered = filtered.filter(p =>
         (p.nameEs || p.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -103,190 +70,200 @@ export default function CatalogPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-premium">
-        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-        <p className="text-sm font-medium animate-pulse">Cargando catálogo premium...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+        <Loader2 className="w-10 h-10 animate-spin text-black mb-4" />
+        <p className="text-sm font-bold tracking-widest uppercase">Initializing Store...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-premium">
+    <div className="min-h-screen pt-24 pb-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* --- PUBLICIDAD SUPERIOR (SLIDER) --- */}
-        <div className="relative h-[300px] md:h-[400px] rounded-3xl overflow-hidden mb-12 shadow-2xl group">
+        {/* --- LUXURY SCROLL ADVERTISING (TOP) --- */}
+        <div className="relative h-[350px] md:h-[450px] rounded-[3rem] overflow-hidden mb-16 shadow-2xl group">
           <AnimatePresence mode="wait">
             <motion.div
               key={adIndex}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.8 }}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 1.2 }}
               className="absolute inset-0"
             >
               <Image 
-                src={AD_IMAGES[adIndex].src} 
-                alt={AD_IMAGES[adIndex].title} 
+                src={ADS[adIndex].src} 
+                alt={ADS[adIndex].title} 
                 fill 
-                className="object-cover"
+                className="object-cover brightness-75"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
-                <motion.h2 
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-3xl md:text-5xl font-bold text-white mb-2"
-                >
-                  {AD_IMAGES[adIndex].title}
-                </motion.h2>
-                <motion.p 
-                  initial={{ y: 20, opacity: 0 }}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-10 md:p-16">
+                <motion.div
+                  initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-white/80 text-lg max-w-xl"
                 >
-                  {AD_IMAGES[adIndex].desc}
-                </motion.p>
+                  <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] mb-4 inline-block">
+                    Premium Feature
+                  </span>
+                  <h2 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tighter uppercase italic">
+                    {ADS[adIndex].title}
+                  </h2>
+                  <p className="text-gray-300 text-lg md:text-xl max-w-2xl font-light">
+                    {ADS[adIndex].desc}
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
           </AnimatePresence>
           
-          {/* Controles del Slider */}
-          <div className="absolute bottom-6 right-8 flex gap-2">
-            {AD_IMAGES.map((_, i) => (
+          {/* Ad Nav Dots */}
+          <div className="absolute bottom-10 right-10 flex gap-3">
+            {ADS.map((_, i) => (
               <button 
                 key={i} 
                 onClick={() => setAdIndex(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${adIndex === i ? 'w-8 bg-white' : 'w-2 bg-white/40'}`}
+                className={`h-1 rounded-full transition-all duration-500 ${adIndex === i ? 'w-12 bg-white' : 'w-3 bg-white/30'}`}
               />
             ))}
           </div>
         </div>
 
-        {/* --- HEADER & FILTROS --- */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-          <div>
-            <h1 className="text-4xl font-light tracking-tight text-gray-900 mb-2">
-              CATÁLOGO <span className="font-bold">EXCLUSIVO</span>
+        {/* --- STORE HEADER & FILTERS --- */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 mb-16">
+          <div className="space-y-4">
+            <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
+              Virtual <span className="text-gray-400">Showroom</span>
             </h1>
-            <p className="text-gray-500 max-w-md">
-              Descubre revestimientos técnicos que combinan arte, durabilidad y tecnología IA.
+            <p className="text-gray-500 max-w-md font-light">
+              Explore the full range of German-engineered SYSTEXX wallcoverings. 
+              Durable, technical, and aesthetically unmatched.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input 
-                placeholder="Buscar textura, SKU o tipo..." 
-                className="pl-10 rounded-full border-gray-200 focus:ring-2 focus:ring-black/5 w-full sm:w-[300px]"
+                placeholder="Search collection..." 
+                className="pl-12 h-14 w-full sm:w-[350px] rounded-full border-gray-100 bg-gray-50/50 focus:bg-white transition-all shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Link href="/design">
-              <Button className="rounded-full bg-black text-white hover:bg-gray-800 gap-2 shadow-lg shadow-black/10">
-                <Wand2 className="w-4 h-4" />
-                Diseñador IA
+            <Link href="/design/">
+              <Button className="h-14 px-8 rounded-full bg-black text-white hover:bg-gray-800 gap-3 shadow-xl transition-all hover:scale-105">
+                <Wand2 className="w-5 h-5" />
+                <span className="font-bold uppercase text-xs tracking-widest">AI Designer</span>
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Categorías (Pills) */}
-        <div className="flex flex-wrap gap-2 mb-12">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${selectedCategory === 'all' ? 'bg-black text-white shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'}`}
-          >
-            Todos los productos
-          </button>
-          {categories.map((cat) => (
+        {/* Categories Navigation */}
+        <div className="flex flex-wrap gap-3 mb-16 border-b border-gray-100 pb-8">
+          {['all', 'systexx-active', 'systexx-phantasy', 'systexx-pure'].map((cat) => (
             <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.slug)}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${selectedCategory === cat.slug ? 'bg-black text-white shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'}`}
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
+                selectedCategory === cat 
+                ? 'bg-black text-white shadow-2xl' 
+                : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-900 hover:text-gray-900'
+              }`}
             >
-              {cat.nameEs || cat.name}
+              {cat.replace('systexx-', '') === 'all' ? 'All Collections' : cat.replace('systexx-', '')}
             </button>
           ))}
         </div>
 
-        {/* --- GRID DE PRODUCTOS (GLASS CARD STYLE) --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {/* --- SALES CATALOG GRID --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           {filteredProducts.map((product, idx) => {
-            const imgUrl = product.imageUrl || (Array.isArray(product.images) ? product.images[0] : '') || '';
+            const imgUrl = product.images?.[0] || '';
+            const isSpecial = product.sku.includes('MAG') || product.sku.includes('ACO') || product.sku.includes('ABS');
+            
             return (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="glass-card rounded-[2rem] overflow-hidden flex flex-col group cursor-pointer"
-                onClick={() => router.push(`/design?wallpaperId=${product.id}`)}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05, duration: 0.6 }}
+                viewport={{ once: true }}
+                className="group relative flex flex-col bg-white"
               >
-                {/* Imagen del Producto */}
-                <div className="relative aspect-[4/5] overflow-hidden">
+                {/* Product Image Container */}
+                <div 
+                  className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden bg-gray-50 mb-6 cursor-pointer shadow-sm group-hover:shadow-2xl transition-all duration-700"
+                  onClick={() => router.push(`/design/?wallpaperId=${product.id}`)}
+                >
                   <Image 
                     src={imgUrl} 
-                    alt={product.nameEs || product.name} 
+                    alt={product.name} 
                     fill 
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="object-cover transition-transform duration-1000 group-hover:scale-110"
                     unoptimized
                   />
                   
-                  {/* Overlay en Hover */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-6 text-center backdrop-blur-[2px]">
-                    <Sparkles className="w-8 h-8 text-white mb-3 animate-pulse" />
-                    <p className="text-white font-medium text-lg mb-4">Probar en mi pared</p>
-                    <Button variant="secondary" className="rounded-full font-bold">
-                      ABRIR SIMULADOR
+                  {/* Overlay Interaction */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                    <Sparkles className="w-10 h-10 text-white mb-4 animate-pulse" />
+                    <p className="text-white font-bold text-xl mb-6 uppercase tracking-tighter italic">Visualize in your space</p>
+                    <Button variant="secondary" className="rounded-full px-10 font-black text-xs tracking-widest">
+                      OPEN SIMULADOR
                     </Button>
                   </div>
 
-                  {/* Badges Premium */}
-                  <div className="absolute top-5 left-5 flex flex-col gap-2">
-                    <span className="bg-white/90 backdrop-blur-md text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm">
-                      {product.category.slug.replace('systexx-', '')}
+                  {/* Technical Badges */}
+                  <div className="absolute top-6 left-6 flex flex-col gap-2">
+                    <span className="bg-white/90 backdrop-blur-md text-black text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                      {product.category.name.replace('SYSTEXX ', '')}
                     </span>
-                    {product.sku.includes('MAG') && (
-                      <span className="bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">
-                        Magnético
+                    {isSpecial && (
+                      <span className="bg-blue-600 text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest animate-pulse">
+                        Technical Line
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Información del Producto */}
-                <div className="p-6 flex flex-col flex-1">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-primary transition-colors">
-                      {product.nameEs || product.name}
-                    </h3>
-                    <p className="text-xs text-gray-400 font-mono">{product.sku}</p>
-                  </div>
-
-                  {/* Ficha Técnica Rápida */}
-                  <div className="space-y-2 mb-6">
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <Ruler className="w-4 h-4" />
-                      <span className="text-xs">{product.dimensions || '1 x 25 m'}</span>
+                {/* Product Info */}
+                <div className="px-2 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900 tracking-tighter uppercase italic leading-tight group-hover:text-blue-600 transition-colors">
+                        {product.nameEs || product.name}
+                      </h3>
+                      <p className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">{product.sku}</p>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <Info className="w-4 h-4" />
-                      <span className="text-xs truncate">{product.materialEs || 'Fibra de Vidrio con tecnología Aqua'}</span>
+                    <div className="text-right">
+                      <span className="text-2xl font-black text-gray-900">${product.price.toFixed(2)}</span>
+                      <p className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">per roll</p>
                     </div>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100/50">
-                    <span className="text-2xl font-black text-gray-900">
-                      ${product.price.toFixed(2)}
-                      <span className="text-[10px] font-medium text-gray-400 ml-1">/rollo</span>
-                    </span>
-                    <button className="bg-gray-100 p-2.5 rounded-full hover:bg-black hover:text-white transition-all">
-                      <ChevronRight className="w-5 h-5" />
+                  {/* Specs Mini-Grid */}
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <div className="flex items-center gap-2 text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                      <Ruler className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-bold uppercase tracking-tighter">{product.dimensions || '1 x 25 m'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                      <Droplets className="w-3.5 h-3.5 text-blue-400" />
+                      <span className="text-[10px] font-bold uppercase tracking-tighter">Aqua Tech</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex gap-2">
+                    <Link href={`/calculator/?wallpaperId=${product.id}`} className="flex-1">
+                      <Button className="w-full h-14 rounded-2xl bg-black text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg hover:shadow-black/20">
+                        Calculate & Buy
+                      </Button>
+                    </Link>
+                    <button className="w-14 h-14 flex items-center justify-center rounded-2xl border border-gray-100 hover:bg-gray-50 transition-all">
+                      <ShoppingCart className="w-5 h-5 text-gray-400" />
                     </button>
                   </div>
                 </div>
@@ -295,14 +272,62 @@ export default function CatalogPage() {
           })}
         </div>
 
+        {/* Empty State */}
         {filteredProducts.length === 0 && (
-          <div className="text-center py-40 glass-card rounded-3xl">
-            <p className="text-xl text-gray-400">No hemos encontrado texturas con esos criterios.</p>
-            <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}>
-              Ver todo el catálogo
+          <div className="text-center py-40 border-2 border-dashed border-gray-100 rounded-[4rem]">
+            <Info className="w-12 h-12 mx-auto text-gray-200 mb-6" />
+            <p className="text-2xl font-black text-gray-300 uppercase tracking-tighter italic">No textures found in this collection</p>
+            <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }} className="mt-4 text-black font-bold uppercase text-xs tracking-widest underline underline-offset-8">
+              Reset Filters
             </Button>
           </div>
         )}
+
+        {/* --- FOOTER BANNER: WHY SYSTEXX --- */}
+        <section className="mt-32 p-12 md:p-20 rounded-[4rem] bg-gray-900 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px]"></div>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic mb-8">
+                Unmatched German <br /><span className="text-blue-500">Technical Standards</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="flex gap-4">
+                  <Flame className="w-6 h-6 text-orange-500 shrink-0" />
+                  <div>
+                    <p className="font-black uppercase text-xs tracking-widest mb-1">Fire Rated</p>
+                    <p className="text-sm text-gray-400 font-light">A2-s1, d0 non-combustible certification.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <ShieldCheck className="w-6 h-6 text-green-500 shrink-0" />
+                  <div>
+                    <p className="font-black uppercase text-xs tracking-widest mb-1">Impact Resistant</p>
+                    <p className="text-sm text-gray-400 font-light">Bridges cracks and protects walls for 30+ years.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <Zap className="w-6 h-6 text-yellow-500 shrink-0" />
+                  <div>
+                    <p className="font-black uppercase text-xs tracking-widest mb-1">Aqua Technology</p>
+                    <p className="text-sm text-gray-400 font-light">Water-activated adhesive for 40% faster install.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <Users className="w-6 h-6 text-blue-500 shrink-0" />
+                  <div>
+                    <p className="font-black uppercase text-xs tracking-widest mb-1">Oeko-Tex Standard</p>
+                    <p className="text-sm text-gray-400 font-light">Safe for hospitals, schools, and nursery rooms.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="relative aspect-video rounded-[3rem] overflow-hidden shadow-2xl">
+              <Image src="/catalog-info/imagen_publicidad/active-category-overview.png" alt="SYSTEXX Overview" fill className="object-cover" />
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   );

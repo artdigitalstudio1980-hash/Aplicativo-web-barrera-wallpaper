@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import Image from 'next/image';
@@ -21,96 +21,29 @@ import {
   Filter,
   Truck,
   Shield,
-  RotateCcw
+  RotateCcw,
+  Loader2
 } from 'lucide-react';
 
-// Sample products data
-const products = [
-  {
-    id: 1,
-    name: 'Elegance Gold Damask',
-    category: 'premium',
-    price: 129.99,
-    originalPrice: 159.99,
-    image: '/images/product-elegance-gold.jpg',
-    rating: 4.9,
-    reviews: 124,
-    inStock: true,
-    bestseller: true,
-    material: 'Vinilo Premium',
-    coverage: '5.2 m²'
-  },
-  {
-    id: 2,
-    name: 'Modern Geometric Lines',
-    category: 'contemporary',
-    price: 89.99,
-    originalPrice: null,
-    image: '/images/product-modern-geometric.jpg',
-    rating: 4.7,
-    reviews: 89,
-    inStock: true,
-    bestseller: false,
-    material: 'Papel No Tejido',
-    coverage: '5.2 m²'
-  },
-  {
-    id: 3,
-    name: 'Tropical Leaf Pattern',
-    category: 'botanical',
-    price: 99.99,
-    originalPrice: 119.99,
-    image: '/images/product-tropical-leaf.jpg',
-    rating: 4.8,
-    reviews: 156,
-    inStock: true,
-    bestseller: true,
-    material: 'Vinilo Lavable',
-    coverage: '5.2 m²'
-  },
-  {
-    id: 4,
-    name: 'Abstract Watercolor',
-    category: 'artistic',
-    price: 109.99,
-    originalPrice: null,
-    image: '/images/product-abstract-watercolor.jpg',
-    rating: 4.6,
-    reviews: 67,
-    inStock: false,
-    bestseller: false,
-    material: 'Papel Premium',
-    coverage: '5.2 m²'
-  },
-  {
-    id: 5,
-    name: 'Classic Floral Vintage',
-    category: 'vintage',
-    price: 139.99,
-    originalPrice: 169.99,
-    image: '/images/product-classic-floral.jpg',
-    rating: 4.9,
-    reviews: 203,
-    inStock: true,
-    bestseller: true,
-    material: 'Papel Texturizado',
-    coverage: '5.2 m²'
-  },
-  {
-    id: 6,
-    name: 'Minimalist Stripes',
-    category: 'contemporary',
-    price: 79.99,
-    originalPrice: null,
-    image: '/images/product-minimalist-stripes.jpg',
-    rating: 4.5,
-    reviews: 45,
-    inStock: true,
-    bestseller: false,
-    material: 'Papel Eco-Friendly',
-    coverage: '5.2 m²'
-  }
-];
+// --- DATA CONFIGURATION ---
+interface Product {
+  id: number;
+  name: string;
+  category: { slug: string; name: string }; // Expected structure from API
+  price: number;
+  originalPrice: number | null;
+  image: string; // Expecting a relative path like /catalogo/filename.jpg
+  rating: number;
+  reviews: number;
+  inStock: boolean;
+  bestseller: boolean;
+  material: string;
+  coverage: string;
+  sku: string;
+}
+
+// --- API ENDPOINT FOR PRODUCTS ---
+const PRODUCTS_API_ENDPOINT = '/api/products';
 
 export default function ShopPage() {
   const { t } = useLocale();
@@ -118,17 +51,54 @@ export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('bestseller');
   const [cartItems, setCartItems] = useState<number[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [heroRef, heroInView] = useInView({ triggerOnce: true, threshold: 0.1 });
   const [gridRef, gridInView] = useInView({ triggerOnce: true, threshold: 0.1 });
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(PRODUCTS_API_ENDPOINT);
+        const data = await res.json();
+        if (data.success && data.products) {
+          // Process products to ensure correct image paths and category structure
+          const processedProducts = data.products.map((p: any) => ({
+            ...p,
+            // Adjust image path: assuming API returns filename and we need to prefix with /catalogo/
+            image: p.image ? `/catalogo/${p.image.split('/').pop()}` : '/images/placeholder.png',
+            // Ensure category is an object with slug and name, default if missing
+            category: p.category?.slug ? p.category : { slug: 'uncategorized', name: 'Uncategorized' }
+          }));
+          setProducts(processedProducts);
+        } else {
+          console.error('Failed to fetch products:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-      
-      return matchesSearch && matchesCategory;
-    });
+    let filtered = [...products];
+    
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(p => p.category.slug === selectedCategory);
+    }
+    
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(p =>
+        (p.nameEs || p.name).toLowerCase().includes(searchTerm.toLowerCase()) || // Assuming nameEs might exist
+        p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
     // Sort filtered results
     if (sortBy === 'bestseller') {
@@ -142,11 +112,23 @@ export default function ShopPage() {
     }
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortBy]);
+  }, [products, searchTerm, selectedCategory, sortBy]);
 
   const addToCart = (productId: number) => {
-    setCartItems(prev => [...prev, productId]);
+    setCartItems(prev => {
+      if (prev.includes(productId)) return prev; // Prevent duplicates
+      return [...prev, productId];
+    });
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+        <Loader2 className="w-10 h-10 animate-spin text-black mb-4" />
+        <p className="text-sm font-bold tracking-widest uppercase">Loading Showroom...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen">
@@ -295,6 +277,7 @@ export default function ShopPage() {
                       alt={product.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      unoptimized
                     />
                     
                     {/* Overlay buttons */}
@@ -476,3 +459,4 @@ export default function ShopPage() {
     </div>
   );
 }
+

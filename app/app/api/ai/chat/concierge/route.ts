@@ -1,60 +1,72 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import fs from 'fs';
+import path from 'path';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const CONCIERGE_SYSTEM_PROMPT = `
-Eres el "Luxury Concierge" de Barrera Wallpaper en Miami. 
-Tu nombre es "Oscar's Digital Assistant".
-Tu tono es: Sofisticado, servicial, profesional y minimalista.
-
-CONTEXTO DE LA EMPRESA:
-- Fundador: Oscar Barrera (más de 10 años de experiencia).
-- Ubicación: Miami, Florida.
-- Especialidad: Revestimientos de paredes de lujo, fibra de vidrio alemana (SYSTEXX by Vitrulan).
-- Innovación: Usamos Inteligencia Artificial para visualizar diseños en las paredes del cliente.
-
-TUS OBJETIVOS:
-1. Dar una bienvenida calurosa y profesional.
-2. Responder dudas sobre los productos (SYSTEXX es resistente al fuego, lavable y duradero).
-3. Calificar al cliente: ¿Es para su hogar o un proyecto comercial?
-4. El objetivo final es que el usuario haga clic en el botón de "Hablemos por WhatsApp" para cerrar la cita con Oscar, o que visite el "Design Studio" en la web.
-
-REGLAS:
-- Responde siempre en el idioma que te hable el usuario (Inglés por defecto).
-- Si el usuario pregunta por precios, dile que varían según el diseño y medidas, pero que el promedio premium comienza en $45/m2.
-- Mantén las respuestas cortas y elegantes (máximo 3 párrafos).
-- No menciones que eres una IA a menos que te lo pregunten directamente.
-`;
+// Inicializar Google AI con la clave del entorno (Gratis)
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_STUDIO_API_KEY || '');
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'demo_mode') {
-      // Mock response for demo mode
-      return NextResponse.json({ 
-        role: 'assistant', 
-        content: "Hello! I'm Oscar's luxury concierge. I'm currently in demo mode, but I'd be happy to assist you with our premium SYSTEXX wallcoverings in Miami. How can I help transform your space today?" 
-      });
+    // 1. Cargar Conocimiento Dinámico (Auto-Aprendizaje)
+    let dynamicKnowledge = '';
+    try {
+      const knowledgePath = path.join(process.cwd(), 'knowledge', 'concierge_faq.md');
+      if (fs.existsSync(knowledgePath)) {
+        dynamicKnowledge = fs.readFileSync(knowledgePath, 'utf-8');
+      }
+    } catch (e) {
+      console.warn('No se pudo cargar el conocimiento dinámico:', e);
     }
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        { role: 'system', content: CONCIERGE_SYSTEM_PROMPT },
-        ...messages
-      ],
-      temperature: 0.7,
-      max_tokens: 300,
-    });
+    // 2. Configurar el Modelo
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    return NextResponse.json(response.choices[0].message);
+    // 3. Crear el Prompt del Sistema
+    const systemPrompt = `
+      ROLE: Luxury Concierge for Barrera Wallpaper (Miami).
+      NAME: Oscar's Assistant.
+      TONE: Sophisticated, helpful, professional, minimalist.
+      LANGUAGE: ENGLISH (Default). Adapt to user if they speak Spanish.
+
+      DYNAMIC KNOWLEDGE (UPDATED REAL-TIME):
+      ${dynamicKnowledge}
+
+      OBJECTIVES:
+      1. Welcome warmly.
+      2. Answer questions using the Knowledge Base.
+      3. Qualify the client (Residential vs Commercial).
+      4. GOAL: Get them to click "Talk to Oscar on WhatsApp" or visit "/design".
+
+      RULES:
+      - Short answers (max 3 sentences).
+      - Prices start at ~$45/m².
+      - Never say "I am an AI" unless asked directly.
+    `;
+
+    // 4. Preparar el historial para Gemini
+    // Gemini gestiona el historial de forma diferente, aquí simplificamos enviando el contexto + último mensaje
+    // o construyendo un chat simple. Para este endpoint stateless, enviamos el prompt + historial reciente.
+    
+    const lastMessage = messages[messages.length - 1].content;
+    const previousContext = messages.slice(0, -1).map((m: any) => `${m.role}: ${m.content}`).join('\n');
+
+    const finalPrompt = `${systemPrompt}\n\nCHAT HISTORY:\n${previousContext}\n\nUSER: ${lastMessage}\nASSISTANT:`;
+
+    const result = await model.generateContent(finalPrompt);
+    const response = result.response;
+    const text = response.text();
+
+    return NextResponse.json({ role: 'assistant', content: text });
 
   } catch (error: any) {
-    console.error('Concierge API Error:', error);
-    return NextResponse.json({ error: 'Assistant is briefly unavailable' }, { status: 500 });
+    console.error('Concierge Gemini Error:', error);
+    // Fallback elegante si falla la API
+    return NextResponse.json({ 
+      role: 'assistant', 
+      content: "I apologize, I'm currently updating my database. Please click the WhatsApp button below to speak with Oscar directly." 
+    });
   }
 }

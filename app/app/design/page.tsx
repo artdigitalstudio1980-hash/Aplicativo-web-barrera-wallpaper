@@ -12,8 +12,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useLocale } from '@/components/locale-context';
+import { Send } from 'lucide-react';
 
-const STEPS = ['Cargar Espacio', 'Pintar Paredes', 'Visualizar', 'Resultado'];
+const STEPS = ['Upload Space', 'Paint Walls', 'Visualize', 'Result'];
 
 function DesignVisualizerContent() {
   const router = useRouter();
@@ -32,6 +33,14 @@ function DesignVisualizerContent() {
   const [showComparison, setShowComparison] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // IA Assistant States
+  const [aiMessages, setAiMessages] = useState<any[]>([
+    { role: 'assistant', content: "Hi! I'm your Design Consultant. Upload a photo of your room to start transforming it." }
+  ]);
+  const [aiInput, setAiInput] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,6 +49,33 @@ function DesignVisualizerContent() {
 
   const [tool, setTool] = useState<'brush' | 'eraser'>('brush');
   const [brushSize, setBrushSize] = useState(40);
+
+  const handleAiSend = async () => {
+    if (!aiInput.trim() || isAiLoading) return;
+    const msg = aiInput.trim();
+    setAiInput('');
+    const newMsgs = [...aiMessages, { role: 'user', content: msg }];
+    setAiMessages(newMsgs);
+    setIsAiLoading(true);
+
+    try {
+      const res = await fetch('/api/ai/chat/design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: newMsgs,
+          currentStep: STEPS[step],
+          selectedProduct: selectedWallpaper?.name
+        }),
+      });
+      const data = await res.json();
+      setAiMessages([...newMsgs, data]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   useEffect(() => { fetchWallpapers(); }, []);
 
@@ -335,6 +371,59 @@ function DesignVisualizerContent() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* --- AI DESIGN ASSISTANT BUBBLE --- */}
+        <div className="fixed bottom-10 left-10 z-[60]">
+          <AnimatePresence>
+            {isAssistantOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                className="absolute bottom-20 left-0 w-[320px] h-[400px] flex flex-col bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white/40 overflow-hidden"
+              >
+                <div className="p-6 bg-black text-white flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <span className="text-xs font-black uppercase tracking-widest">Design Expert</span>
+                  </div>
+                  <button onClick={() => setIsAssistantOpen(false)}><X className="w-4 h-4" /></button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+                  {aiMessages.map((m, i) => (
+                    <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[85%] p-3 rounded-2xl ${m.role === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-800'}`}>
+                        {m.content}
+                      </div>
+                    </div>
+                  ))}
+                  {isAiLoading && <Loader2 className="w-4 h-4 animate-spin mx-auto text-gray-400" />}
+                </div>
+
+                <div className="p-3 bg-gray-50 flex gap-2">
+                  <input 
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAiSend()}
+                    placeholder="Ask for design advice..."
+                    className="flex-1 bg-white border border-gray-200 rounded-full px-4 py-2 text-[10px] outline-none"
+                  />
+                  <button onClick={handleAiSend} className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center">
+                    <Send className="w-3 h-3" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <button
+            onClick={() => setIsAssistantOpen(!isAssistantOpen)}
+            className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
+          >
+            {isAssistantOpen ? <X className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
     </div>
   );

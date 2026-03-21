@@ -20,7 +20,6 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   };
 
   const changeLocale = (newLocale: Locale) => {
-    console.log('Changing locale to:', newLocale);
     setLocale(newLocale);
     if (typeof window !== 'undefined') {
       localStorage.setItem('preferred-locale', newLocale);
@@ -30,8 +29,12 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedLocale = localStorage.getItem('preferred-locale') as Locale;
-      if (savedLocale && (savedLocale === 'en' || savedLocale === 'es')) {
-        setLocale(savedLocale);
+      // Si el idioma guardado es inglés, lo forzamos a español una vez para resetear la experiencia del usuario
+      if (savedLocale === 'en') {
+        setLocale('es');
+        localStorage.setItem('preferred-locale', 'es');
+      } else if (savedLocale === 'es') {
+        setLocale('es');
       }
     }
   }, []);

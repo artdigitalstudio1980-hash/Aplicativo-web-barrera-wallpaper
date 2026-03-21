@@ -96,7 +96,7 @@ jobs:
 
             # Reiniciar PM2
             if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
-              pm2 restart barrera-wallpaper --update-env
+              pm2 reload barrera-wallpaper --update-env
             else
               pm2 start "yarn start" --name barrera-wallpaper
               pm2 save

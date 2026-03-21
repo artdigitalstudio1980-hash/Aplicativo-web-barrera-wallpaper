@@ -81,6 +81,9 @@ jobs:
 
             cd /home/u425976741/domains/barrerawallpaper.com/nodejs
 
+            # Limpiar directorio .next antes de extraer el nuevo paquete
+            rm -rf .next
+
             # Descomprimir el paquete nuevo
             tar -xzf deploy.tar.gz
             rm deploy.tar.gz

@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, Loader2, Wand2, ShoppingCart, MessageSquare, Ruler } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, SlidersHorizontal, Loader2, Wand2, 
+  ShoppingCart, MessageSquare, Ruler, Info, 
+  ChevronRight, ChevronLeft, Sparkles
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLocale } from '@/components/locale-context';
@@ -36,11 +40,12 @@ interface Product {
   category: Category;
 }
 
-const sortOptions = [
-  { value: 'featured', labelEn: 'Featured', labelEs: 'Destacados' },
-  { value: 'price-low', labelEn: 'Price: Low to High', labelEs: 'Precio: Menor a Mayor' },
-  { value: 'price-high', labelEn: 'Price: High to Low', labelEs: 'Precio: Mayor a Menor' },
-  { value: 'name', labelEn: 'Name', labelEs: 'Nombre' }
+// Imágenes de publicidad para el slider superior
+const AD_IMAGES = [
+  { src: '/catalog-info/active-category-overview.png', title: 'SYSTEXX Active', desc: 'Funcionalidad extrema: Magnético, Acústico y Térmico.' },
+  { src: '/catalog-info/phantasy-description.png', title: 'SYSTEXX Phantasy', desc: 'Diseños opulentos y texturas creativas.' },
+  { src: '/catalog-info/active-magnetic-description.png', title: 'Paredes Magnéticas', desc: 'Transforma cualquier espacio en una oficina creativa.' },
+  { src: '/catalog-info/systexx-properties.png', title: 'Tecnología Alemana', desc: 'Fibra de vidrio de alta resistencia con tecnología Aqua.' },
 ];
 
 export default function CatalogPage() {
@@ -52,9 +57,14 @@ export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
+  const [adIndex, setAdIndex] = useState(0);
 
   useEffect(() => {
     fetchProducts();
+    const timer = setInterval(() => {
+      setAdIndex((prev) => (prev + 1) % AD_IMAGES.length);
+    }, 6000);
+    return () => clearInterval(timer);
   }, []);
 
   const fetchProducts = async () => {
@@ -67,12 +77,10 @@ export default function CatalogPage() {
           new Map(data.products.map((p: Product) => [p.category.id, p.category])).values()
         );
         setCategories(uniqueCategories);
-      } else {
-        toast.error('Failed to load products');
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Error loading products');
+      toast.error('Error al cargar el catálogo');
     } finally {
       setLoading(false);
     }
@@ -85,276 +93,213 @@ export default function CatalogPage() {
     }
     if (searchQuery) {
       filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.nameEs.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (p.nameEs || p.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.sku.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
-        break;
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'featured':
-      default:
-        filtered.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
-        break;
-    }
     return filtered;
-  }, [products, searchQuery, selectedCategory, sortBy]);
-
-  const isSystexx = (product: Product) =>
-    product.category.slug.startsWith('systexx');
-
-  const handleVisualizeOnWall = (productId: string) => {
-    router.push(`/design?wallpaperId=${productId}`);
-  };
+  }, [products, searchQuery, selectedCategory]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-premium">
+        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <p className="text-sm font-medium animate-pulse">Cargando catálogo premium...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-20 px-4 py-12">
-      <div className="max-w-7xl mx-auto">
-
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Wallpaper Catalog</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore our collection of premium glass fiber and decorative wallcoverings.
-            Click <span className="text-primary font-semibold">Visualize on Wall</span> to preview any product in your own space.
-          </p>
-        </div>
-
-        {/* Design Tool Banner */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl p-4 mb-8 flex items-center gap-4">
-          <div className="bg-primary/10 rounded-full p-2 shrink-0">
-            <Wand2 className="w-6 h-6 text-primary" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-sm">Design Visualizer available</p>
-            <p className="text-xs text-muted-foreground">
-              Upload a photo of your room and preview any wallpaper directly on your walls before buying.
-            </p>
-          </div>
-          <Link href="/design">
-            <Button size="sm" variant="outline" className="shrink-0">
-              Open Design Tool
-            </Button>
-          </Link>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button
-              variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              onClick={() => setSelectedCategory('all')}
-              size="sm"
+    <div className="min-h-screen pt-24 pb-20 bg-premium">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* --- PUBLICIDAD SUPERIOR (SLIDER) --- */}
+        <div className="relative h-[300px] md:h-[400px] rounded-3xl overflow-hidden mb-12 shadow-2xl group">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={adIndex}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.8 }}
+              className="absolute inset-0"
             >
-              All
-            </Button>
-            {categories.map((cat: any) => (
-              <Button
-                key={cat.id}
-                variant={selectedCategory === cat.slug ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory(cat.slug)}
-                size="sm"
-              >
-                {cat.name}
-              </Button>
+              <Image 
+                src={AD_IMAGES[adIndex].src} 
+                alt={AD_IMAGES[adIndex].title} 
+                fill 
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+                <motion.h2 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-3xl md:text-5xl font-bold text-white mb-2"
+                >
+                  {AD_IMAGES[adIndex].title}
+                </motion.h2>
+                <motion.p 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-white/80 text-lg max-w-xl"
+                >
+                  {AD_IMAGES[adIndex].desc}
+                </motion.p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Controles del Slider */}
+          <div className="absolute bottom-6 right-8 flex gap-2">
+            {AD_IMAGES.map((_, i) => (
+              <button 
+                key={i} 
+                onClick={() => setAdIndex(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${adIndex === i ? 'w-8 bg-white' : 'w-2 bg-white/40'}`}
+              />
             ))}
           </div>
+        </div>
 
-          <div className="flex justify-center items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="border rounded-md px-3 py-1 text-sm bg-background"
-            >
-              {sortOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.labelEn}
-                </option>
-              ))}
-            </select>
+        {/* --- HEADER & FILTROS --- */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div>
+            <h1 className="text-4xl font-light tracking-tight text-gray-900 mb-2">
+              CATÁLOGO <span className="font-bold">EXCLUSIVO</span>
+            </h1>
+            <p className="text-gray-500 max-w-md">
+              Descubre revestimientos técnicos que combinan arte, durabilidad y tecnología IA.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input 
+                placeholder="Buscar textura, SKU o tipo..." 
+                className="pl-10 rounded-full border-gray-200 focus:ring-2 focus:ring-black/5 w-full sm:w-[300px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Link href="/design">
+              <Button className="rounded-full bg-black text-white hover:bg-gray-800 gap-2 shadow-lg shadow-black/10">
+                <Wand2 className="w-4 h-4" />
+                Diseñador IA
+              </Button>
+            </Link>
           </div>
         </div>
 
-        {/* Results count */}
-        <p className="text-sm text-muted-foreground text-center mb-6">
-          {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
-        </p>
+        {/* Categorías (Pills) */}
+        <div className="flex flex-wrap gap-2 mb-12">
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${selectedCategory === 'all' ? 'bg-black text-white shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'}`}
+          >
+            Todos los productos
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.slug)}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${selectedCategory === cat.slug ? 'bg-black text-white shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'}`}
+            >
+              {cat.nameEs || cat.name}
+            </button>
+          ))}
+        </div>
 
-        {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product, index) => {
-              const imagesArray = Array.isArray(product.images) ? product.images : [];
-              const imageUrl = product.imageUrl || imagesArray[0] || '';
-              const systexx = isSystexx(product);
+        {/* --- GRID DE PRODUCTOS (GLASS CARD STYLE) --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {filteredProducts.map((product, idx) => {
+            const imgUrl = product.imageUrl || (Array.isArray(product.images) ? product.images[0] : '') || '';
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="glass-card rounded-[2rem] overflow-hidden flex flex-col group cursor-pointer"
+                onClick={() => router.push(`/design?wallpaperId=${product.id}`)}
+              >
+                {/* Imagen del Producto */}
+                <div className="relative aspect-[4/5] overflow-hidden">
+                  <Image 
+                    src={imgUrl} 
+                    alt={product.nameEs || product.name} 
+                    fill 
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    unoptimized
+                  />
+                  
+                  {/* Overlay en Hover */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-6 text-center backdrop-blur-[2px]">
+                    <Sparkles className="w-8 h-8 text-white mb-3 animate-pulse" />
+                    <p className="text-white font-medium text-lg mb-4">Probar en mi pared</p>
+                    <Button variant="secondary" className="rounded-full font-bold">
+                      ABRIR SIMULADOR
+                    </Button>
+                  </div>
 
-              return (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="group"
-                >
-                  <div className="bg-card rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+                  {/* Badges Premium */}
+                  <div className="absolute top-5 left-5 flex flex-col gap-2">
+                    <span className="bg-white/90 backdrop-blur-md text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm">
+                      {product.category.slug.replace('systexx-', '')}
+                    </span>
+                    {product.sku.includes('MAG') && (
+                      <span className="bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">
+                        Magnético
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-                    {/* Image */}
-                    <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-                      {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={product.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-100 to-gray-200">
-                          <span className="text-gray-400 text-sm">No image</span>
-                        </div>
-                      )}
+                {/* Información del Producto */}
+                <div className="p-6 flex flex-col flex-1">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-primary transition-colors">
+                      {product.nameEs || product.name}
+                    </h3>
+                    <p className="text-xs text-gray-400 font-mono">{product.sku}</p>
+                  </div>
 
-                      {/* Badges */}
-                      <div className="absolute top-2 left-2 flex flex-col gap-1">
-                        {systexx && (
-                          <span className="bg-slate-800 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                            SYSTEXX
-                          </span>
-                        )}
-                        {product.isFeatured && (
-                          <span className="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                            Featured
-                          </span>
-                        )}
-                        {product.isCustomizable && (
-                          <span className="bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                            Custom
-                          </span>
-                        )}
-                        {product.salePrice && (
-                          <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                            Sale
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Visualize overlay on hover */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <Button
-                          size="sm"
-                          onClick={() => handleVisualizeOnWall(product.id)}
-                          className="gap-2 bg-white text-black hover:bg-white/90 font-semibold"
-                        >
-                          <Wand2 className="w-4 h-4" />
-                          Visualize on Wall
-                        </Button>
-                      </div>
+                  {/* Ficha Técnica Rápida */}
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Ruler className="w-4 h-4" />
+                      <span className="text-xs">{product.dimensions || '1 x 25 m'}</span>
                     </div>
-
-                    {/* Info */}
-                    <div className="p-4 flex flex-col flex-1">
-                      <div className="flex-1">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-                          {product.category.name}
-                        </p>
-                        <h3 className="font-semibold text-base leading-tight mb-1">
-                          {product.name}
-                        </h3>
-
-                        {/* Dimensions */}
-                        {product.dimensions && (
-                          <div className="flex items-start gap-1 mt-1 mb-2">
-                            <Ruler className="w-3 h-3 text-muted-foreground mt-0.5 shrink-0" />
-                            <p className="text-xs text-muted-foreground leading-tight">
-                              {product.dimensions}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Material */}
-                        {product.material && (
-                          <p className="text-xs text-muted-foreground/70 truncate">
-                            {product.material}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Price + Actions */}
-                      <div className="mt-3 pt-3 border-t">
-                        <div className="flex justify-between items-center mb-3">
-                          {product.salePrice ? (
-                            <div>
-                              <span className="text-xl font-bold text-red-600">${product.salePrice.toFixed(2)}</span>
-                              <span className="text-sm line-through text-muted-foreground ml-2">${product.price.toFixed(2)}</span>
-                            </div>
-                          ) : (
-                            <span className="text-xl font-bold">${product.price.toFixed(2)}</span>
-                          )}
-                          <span className="text-xs text-muted-foreground">/roll</span>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="col-span-1 text-xs gap-1 px-2"
-                            onClick={() => handleVisualizeOnWall(product.id)}
-                          >
-                            <Wand2 className="w-3 h-3" />
-                            Try
-                          </Button>
-                          <Link href={`/shop/${product.slug}`} className="col-span-1">
-                            <Button size="sm" className="w-full text-xs gap-1 px-2">
-                              <ShoppingCart className="w-3 h-3" />
-                              Buy
-                            </Button>
-                          </Link>
-                          <Link href="/contact" className="col-span-1">
-                            <Button size="sm" variant="outline" className="w-full text-xs gap-1 px-2">
-                              <MessageSquare className="w-3 h-3" />
-                              Quote
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Info className="w-4 h-4" />
+                      <span className="text-xs truncate">{product.materialEs || 'Fibra de Vidrio con tecnología Aqua'}</span>
                     </div>
                   </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="text-lg text-muted-foreground">No products found</p>
-            <Button variant="outline" className="mt-4" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}>
-              Clear filters
+
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100/50">
+                    <span className="text-2xl font-black text-gray-900">
+                      ${product.price.toFixed(2)}
+                      <span className="text-[10px] font-medium text-gray-400 ml-1">/rollo</span>
+                    </span>
+                    <button className="bg-gray-100 p-2.5 rounded-full hover:bg-black hover:text-white transition-all">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-40 glass-card rounded-3xl">
+            <p className="text-xl text-gray-400">No hemos encontrado texturas con esos criterios.</p>
+            <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}>
+              Ver todo el catálogo
             </Button>
           </div>
         )}

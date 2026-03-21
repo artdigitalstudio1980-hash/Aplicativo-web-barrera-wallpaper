@@ -13,20 +13,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLocale } from '@/components/locale-context';
-import { toast } from 'sonner';
 
 // --- DATA CONFIGURATION ---
-
 const ADS = [
-  { src: '/catalog-info/imagen_publicidad/cover-systexx-collection.png', title: 'SYSTEXX Collection', desc: 'German engineering meets interior art.' },
-  { src: '/catalog-info/imagen_publicidad/active-acoustherm-description.png', title: 'AcousTherm Technology', desc: 'Heats rooms 4x faster and optimizes acoustics.' },
-  { src: '/catalog-info/imagen_publicidad/active-magnetic-description.png', title: 'Magnetic Walls', desc: 'Transform surfaces into interactive spaces.' },
-  { src: '/catalog-info/imagen_publicidad/active-fireprotect-description.png', title: 'Fire Protection', desc: 'Non-combustible safety for high-traffic areas.' },
-  { src: '/catalog-info/imagen_publicidad/systexx-properties.png', title: 'Technical Superiority', desc: 'Impact resistant, crack-bridging, and Oeko-Tex certified.' },
+  { src: '/publicidad/cover-systexx-collection.png', title: 'SYSTEXX Collection', desc: 'German engineering meets interior art.' },
+  { src: '/publicidad/active-acoustherm-description.png', title: 'AcousTherm Technology', desc: 'Heats rooms 4x faster and optimizes acoustics.' },
+  { src: '/publicidad/active-magnetic-description.png', title: 'Magnetic Walls', desc: 'Transform surfaces into interactive spaces.' },
+  { src: '/publicidad/active-fireprotect-description.png', title: 'Fire Protection', desc: 'Non-combustible safety for high-traffic areas.' },
+  { src: '/publicidad/systexx-properties.png', title: 'Technical Superiority', desc: 'Impact resistant, crack-bridging, and Oeko-Tex certified.' },
 ];
 
 export default function CatalogPage() {
-  const { t, locale } = useLocale();
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +116,6 @@ export default function CatalogPage() {
             </motion.div>
           </AnimatePresence>
           
-          {/* Ad Nav Dots */}
           <div className="absolute bottom-10 right-10 flex gap-3">
             {ADS.map((_, i) => (
               <button 
@@ -131,7 +127,7 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        {/* --- STORE HEADER & FILTERS --- */}
+        {/* --- STORE HEADER --- */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 mb-16">
           <div className="space-y-4">
             <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
@@ -162,27 +158,12 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        {/* Categories Navigation */}
-        <div className="flex flex-wrap gap-3 mb-16 border-b border-gray-100 pb-8">
-          {['all', 'systexx-active', 'systexx-phantasy', 'systexx-pure'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
-                selectedCategory === cat 
-                ? 'bg-black text-white shadow-2xl' 
-                : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-900 hover:text-gray-900'
-              }`}
-            >
-              {cat.replace('systexx-', '') === 'all' ? 'All Collections' : cat.replace('systexx-', '')}
-            </button>
-          ))}
-        </div>
-
-        {/* --- SALES CATALOG GRID --- */}
+        {/* --- GRID --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           {filteredProducts.map((product, idx) => {
-            const imgUrl = product.images?.[0] || '';
+            // Ajuste de la ruta: Ahora las imágenes están en /catalogo/
+            const fileName = product.images?.[0]?.split('/').pop();
+            const imgUrl = fileName ? `/catalogo/${fileName}` : '/images/placeholder.png';
             const isSpecial = product.sku.includes('MAG') || product.sku.includes('ACO') || product.sku.includes('ABS');
             
             return (
@@ -194,7 +175,6 @@ export default function CatalogPage() {
                 viewport={{ once: true }}
                 className="group relative flex flex-col bg-white"
               >
-                {/* Product Image Container */}
                 <div 
                   className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden bg-gray-50 mb-6 cursor-pointer shadow-sm group-hover:shadow-2xl transition-all duration-700"
                   onClick={() => router.push(`/design/?wallpaperId=${product.id}`)}
@@ -207,7 +187,6 @@ export default function CatalogPage() {
                     unoptimized
                   />
                   
-                  {/* Overlay Interaction */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
                     <Sparkles className="w-10 h-10 text-white mb-4 animate-pulse" />
                     <p className="text-white font-bold text-xl mb-6 uppercase tracking-tighter italic">Visualize in your space</p>
@@ -215,119 +194,33 @@ export default function CatalogPage() {
                       OPEN SIMULADOR
                     </Button>
                   </div>
-
-                  {/* Technical Badges */}
-                  <div className="absolute top-6 left-6 flex flex-col gap-2">
-                    <span className="bg-white/90 backdrop-blur-md text-black text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
-                      {product.category.name.replace('SYSTEXX ', '')}
-                    </span>
-                    {isSpecial && (
-                      <span className="bg-blue-600 text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest animate-pulse">
-                        Technical Line
-                      </span>
-                    )}
-                  </div>
                 </div>
 
-                {/* Product Info */}
                 <div className="px-2 space-y-4">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-2xl font-black text-gray-900 tracking-tighter uppercase italic leading-tight group-hover:text-blue-600 transition-colors">
-                        {product.nameEs || product.name}
+                        {product.name}
                       </h3>
                       <p className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">{product.sku}</p>
                     </div>
                     <div className="text-right">
                       <span className="text-2xl font-black text-gray-900">${product.price.toFixed(2)}</span>
-                      <p className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">per roll</p>
-                    </div>
-                  </div>
-
-                  {/* Specs Mini-Grid */}
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    <div className="flex items-center gap-2 text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                      <Ruler className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-bold uppercase tracking-tighter">{product.dimensions || '1 x 25 m'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                      <Droplets className="w-3.5 h-3.5 text-blue-400" />
-                      <span className="text-[10px] font-bold uppercase tracking-tighter">Aqua Tech</span>
                     </div>
                   </div>
 
                   <div className="pt-4 flex gap-2">
                     <Link href={`/calculator/?wallpaperId=${product.id}`} className="flex-1">
-                      <Button className="w-full h-14 rounded-2xl bg-black text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg hover:shadow-black/20">
+                      <Button className="w-full h-14 rounded-2xl bg-black text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg">
                         Calculate & Buy
                       </Button>
                     </Link>
-                    <button className="w-14 h-14 flex items-center justify-center rounded-2xl border border-gray-100 hover:bg-gray-50 transition-all">
-                      <ShoppingCart className="w-5 h-5 text-gray-400" />
-                    </button>
                   </div>
                 </div>
               </motion.div>
             );
           })}
         </div>
-
-        {/* Empty State */}
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-40 border-2 border-dashed border-gray-100 rounded-[4rem]">
-            <Info className="w-12 h-12 mx-auto text-gray-200 mb-6" />
-            <p className="text-2xl font-black text-gray-300 uppercase tracking-tighter italic">No textures found in this collection</p>
-            <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }} className="mt-4 text-black font-bold uppercase text-xs tracking-widest underline underline-offset-8">
-              Reset Filters
-            </Button>
-          </div>
-        )}
-
-        {/* --- FOOTER BANNER: WHY SYSTEXX --- */}
-        <section className="mt-32 p-12 md:p-20 rounded-[4rem] bg-gray-900 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px]"></div>
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic mb-8">
-                Unmatched German <br /><span className="text-blue-500">Technical Standards</span>
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div className="flex gap-4">
-                  <Flame className="w-6 h-6 text-orange-500 shrink-0" />
-                  <div>
-                    <p className="font-black uppercase text-xs tracking-widest mb-1">Fire Rated</p>
-                    <p className="text-sm text-gray-400 font-light">A2-s1, d0 non-combustible certification.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <ShieldCheck className="w-6 h-6 text-green-500 shrink-0" />
-                  <div>
-                    <p className="font-black uppercase text-xs tracking-widest mb-1">Impact Resistant</p>
-                    <p className="text-sm text-gray-400 font-light">Bridges cracks and protects walls for 30+ years.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <Zap className="w-6 h-6 text-yellow-500 shrink-0" />
-                  <div>
-                    <p className="font-black uppercase text-xs tracking-widest mb-1">Aqua Technology</p>
-                    <p className="text-sm text-gray-400 font-light">Water-activated adhesive for 40% faster install.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <Users className="w-6 h-6 text-blue-500 shrink-0" />
-                  <div>
-                    <p className="font-black uppercase text-xs tracking-widest mb-1">Oeko-Tex Standard</p>
-                    <p className="text-sm text-gray-400 font-light">Safe for hospitals, schools, and nursery rooms.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative aspect-video rounded-[3rem] overflow-hidden shadow-2xl">
-              <Image src="/catalog-info/imagen_publicidad/active-category-overview.png" alt="SYSTEXX Overview" fill className="object-cover" />
-            </div>
-          </div>
-        </section>
-
       </div>
     </div>
   );

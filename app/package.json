@@ -36,6 +36,7 @@
     "@aws-sdk/client-s3": "^3.879.0",
     "@aws-sdk/s3-request-presigner": "^3.879.0",
     "@floating-ui/react": "0.26.0",
+    "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "1.7.18",
     "@hookform/resolvers": "3.9.0",
     "@next-auth/prisma-adapter": "1.0.7",

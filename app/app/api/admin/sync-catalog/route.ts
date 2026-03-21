@@ -67,8 +67,8 @@ export async function GET() {
     for (const prod of products) {
       await prisma.product.upsert({
         where: { sku: prod.sku },
-        update: prod,
-        create: { ...prod, isActive: true, stock: 999 }
+        update: { ...prod, colors: [], styles: [] },
+        create: { ...prod, isActive: true, stock: 999, colors: [], styles: [] }
       });
     }
 

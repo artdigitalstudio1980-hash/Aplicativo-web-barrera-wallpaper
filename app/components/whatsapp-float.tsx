@@ -1,21 +1,60 @@
-
 'use client';
 
-import { MessageCircle, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { MessageCircle, X, Send, Loader2, User, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { Button } from './ui/button';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export default function WhatsAppFloat() {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: "Welcome to Barrera Wallpaper. I am Oscar's digital concierge. How can I help you transform your space in Miami today?" }
+  ]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const whatsappNumber = "19545441740";
-  const defaultMessage = "Hello! I'm interested in your wallpaper services.";
-  
-  const handleWhatsAppClick = () => {
-    const encodedMessage = encodeURIComponent(defaultMessage);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
-    setIsExpanded(false);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMsg = input.trim();
+    setInput('');
+    const newMessages = [...messages, { role: 'user', content: userMsg } as Message];
+    setMessages(newMessages);
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/ai/chat/concierge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+      const data = await res.json();
+      setMessages([...newMessages, data]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openWhatsApp = () => {
+    const defaultMsg = "Hello Oscar! I'm interested in your premium wallpaper services. I was just chatting with your AI assistant.";
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(defaultMsg)}`, '_blank');
   };
 
   return (
@@ -23,83 +62,115 @@ export default function WhatsAppFloat() {
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="fixed bottom-24 right-4 z-40 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 max-w-xs"
+            initial={{ opacity: 0, scale: 0.9, y: 40, x: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 40, x: 20 }}
+            className="fixed bottom-24 right-4 z-50 w-[350px] md:w-[400px] h-[500px] flex flex-col glass rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/40"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <MessageCircle className="w-4 h-4 text-white" />
+            {/* Header */}
+            <div className="p-6 bg-black text-white flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/20">
+                  <Image src="/images/Barrera_logo_FAVICON-1.png" alt="Oscar Assistant" fill className="object-cover" />
                 </div>
                 <div>
-                  <div className="font-medium text-sm text-gray-900">Barrera Wallpaper</div>
-                  <div className="text-xs text-gray-600">En línea ahora</div>
+                  <p className="text-xs font-black uppercase tracking-widest text-gray-400">Concierge</p>
+                  <p className="text-sm font-bold">Oscar's Assistant</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
+              <button onClick={() => setIsExpanded(false)} className="hover:rotate-90 transition-transform">
+                <X className="w-5 h-5" />
               </button>
             </div>
-            
-            <div className="mb-3">
-              <p className="text-sm text-gray-700 mb-2">
-                ¡Hola! ¿En qué podemos ayudarte hoy?
-              </p>
-              <p className="text-xs text-gray-600">
-                Respuesta promedio: ~5 minutos
-              </p>
+
+            {/* Chat Body */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-white/30 backdrop-blur-sm custom-scrollbar">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] p-4 rounded-3xl text-sm ${
+                    m.role === 'user' 
+                    ? 'bg-black text-white rounded-tr-none' 
+                    : 'bg-white/80 text-gray-800 shadow-sm border border-white/50 rounded-tl-none'
+                  }`}>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-white/80 p-4 rounded-3xl shadow-sm border border-white/50 rounded-tl-none">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                  </div>
+                </div>
+              )}
             </div>
-            
-            <button
-              onClick={handleWhatsAppClick}
-              className="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg py-2 px-4 text-sm font-medium transition-colors flex items-center justify-center space-x-2"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Enviar mensaje</span>
-            </button>
+
+            {/* Actions / Input */}
+            <div className="p-4 bg-white/50 border-t border-white/20 backdrop-blur-md">
+              <div className="flex gap-2 mb-3">
+                <input 
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Type your message..."
+                  className="flex-1 bg-white/80 border-none rounded-full px-5 py-2 text-sm focus:ring-2 focus:ring-black/5 outline-none shadow-inner"
+                />
+                <button 
+                  onClick={handleSend}
+                  disabled={isLoading}
+                  className="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <Button 
+                onClick={openWhatsApp}
+                className="w-full h-12 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold gap-2 shadow-lg shadow-green-200 uppercase text-[10px] tracking-widest"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Talk to Oscar on WhatsApp
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Floating WhatsApp Button */}
+      {/* Main Trigger Button */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsExpanded(!isExpanded)}
-        className="fixed bottom-4 right-4 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-colors group"
+        className={`fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 ${isExpanded ? 'bg-black' : 'bg-white'}`}
       >
         <AnimatePresence mode="wait">
           {isExpanded ? (
-            <motion.div
-              key="close"
-              initial={{ rotate: -180, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 180, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <X className="w-6 h-6" />
+            <motion.div key="x" initial={{ rotate: -90 }} animate={{ rotate: 0 }} exit={{ rotate: 90 }}>
+              <X className="w-6 h-6 text-white" />
             </motion.div>
           ) : (
-            <motion.div
-              key="whatsapp"
-              initial={{ rotate: 180, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: -180, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="relative"
-            >
-              <MessageCircle className="w-6 h-6" />
-              {/* Notification dot */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+            <motion.div key="chat" initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
+              <MessageCircle className="w-8 h-8 text-black" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-black rounded-full border-2 border-white flex items-center justify-center">
+                <Sparkles className="w-2 h-2 text-white animate-pulse" />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.button>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.1);
+          border-radius: 10px;
+        }
+      `}</style>
     </>
   );
 }

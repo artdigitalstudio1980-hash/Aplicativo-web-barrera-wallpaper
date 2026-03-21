@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useLocale } from '@/components/locale-context';
 import Image from 'next/image';
+import Link from 'next/link';
 import { 
   Heart,
   Target,

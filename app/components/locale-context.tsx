@@ -13,10 +13,10 @@ interface LocaleContextType {
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('en'); // Default to English
+  const [locale, setLocale] = useState<Locale>('es'); // Default to Spanish
 
   const t = (key: TranslationKey): string => {
-    return translations[locale]?.[key] || translations.en[key] || key;
+    return translations[locale]?.[key] || translations.es[key] || translations.en[key] || key;
   };
 
   const changeLocale = (newLocale: Locale) => {

@@ -3,7 +3,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_STUDIO_API_KEY || '');
+// Inicializar Google AI con la clave directa para asegurar funcionamiento en Hostinger
+const GOOGLE_KEY = "AIzaSyCk4k5JhlPP3hJ6TV19lMoCNEuUCRiNPw4";
+const genAI = new GoogleGenerativeAI(GOOGLE_KEY);
 
 export async function POST(req: Request) {
   try {

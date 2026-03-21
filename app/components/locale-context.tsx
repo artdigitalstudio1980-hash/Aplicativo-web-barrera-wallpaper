@@ -13,10 +13,10 @@ interface LocaleContextType {
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('es'); // Default to Spanish
+  const [locale, setLocale] = useState<Locale>('en'); // Default to English for Miami-based company
 
   const t = (key: TranslationKey): string => {
-    return translations[locale]?.[key] || translations.es[key] || translations.en[key] || key;
+    return translations[locale]?.[key] || translations.en[key] || translations.es[key] || key;
   };
 
   const changeLocale = (newLocale: Locale) => {
@@ -29,12 +29,12 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedLocale = localStorage.getItem('preferred-locale') as Locale;
-      // Si el idioma guardado es inglés, lo forzamos a español una vez para resetear la experiencia del usuario
-      if (savedLocale === 'en') {
-        setLocale('es');
-        localStorage.setItem('preferred-locale', 'es');
-      } else if (savedLocale === 'es') {
-        setLocale('es');
+      // Force reset to English if Spanish was previously saved
+      if (savedLocale === 'es') {
+        setLocale('en');
+        localStorage.setItem('preferred-locale', 'en');
+      } else {
+        setLocale('en');
       }
     }
   }, []);

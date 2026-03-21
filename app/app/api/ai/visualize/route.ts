@@ -5,14 +5,34 @@ import { authOptions } from '@/lib/auth';
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const ABACUS_API_KEY = process.env.ABACUS_API_KEY || '99e8655f67fa4bc9aec1827e7995feb9';
+const ABACUS_API_KEY = process.env.ABACUS_API_KEY;
 
 // stable-diffusion-inpainting by stability-ai — well tested on Replicate
 const REPLICATE_MODEL_VERSION = '95b7223104132402a9ae91cc677285bc5eb997834bd2349fa486f53910fd68b3';
 
+// Helper function to sanitize string inputs
+function sanitizeString(str: string): string {
+  if (!str) return '';
+  // Basic sanitization: replace potentially harmful characters.
+  // For a robust solution, consider a dedicated sanitization library.
+  return str
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/&/g, '&amp;')
+    .replace(/\//g, '\\/'); // Escape forward slashes
+}
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+    // --- SECURITY FIX: Check if session is valid before proceeding ---
+    if (!session || !session.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    // ------------------------------------------------------------------
+
     const body = await req.json();
     const { roomImage, maskImage, wallpaperId, wallpaperName, wallpaperImageUrl } = body;
 
@@ -23,7 +43,8 @@ export async function POST(req: Request) {
     const wallpaper = await prisma.product.findUnique({ where: { id: wallpaperId } });
     const wpImageUrl = wallpaperImageUrl ||
       (wallpaper && Array.isArray(wallpaper.images) && wallpaper.images.length > 0 ? wallpaper.images[0] as string : null);
-    const wpName = wallpaperName || wallpaper?.name || 'premium decorative wallpaper';
+    // Sanitize wallpaper name before using it in the prompt
+    const wpName = sanitizeString(wallpaperName || wallpaper?.name || 'premium decorative wallpaper');
 
     // ── REPLICATE PATH ──────────────────────────────────────────────────────────
     if (REPLICATE_API_TOKEN) {

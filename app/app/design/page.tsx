@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -7,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   UploadCloud, Wand2, ArrowRight, Loader2, CheckCircle,
   RefreshCcw, ChevronLeft, Brush, Eraser, ZoomIn, ZoomOut,
-  Sliders, ImagePlus, Sparkles, Eye, Download, Split, Ruler
+  Sliders, ImagePlus, Sparkles, Eye, Download, Split, Ruler, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -24,7 +26,7 @@ function DesignVisualizerContent() {
 
   const [step, setStep] = useState(0);
   const [roomImageSrc, setRoomImageSrc] = useState<string | null>(null);
-  const [maskDataUrl, setMaskDataUrl] = useState<string | null>(null);
+  const [maskDataUrl, setMaskDataUrl] = useState<string | null>(null); // State to hold mask data URL
   const [selectedWallpaper, setSelectedWallpaper] = useState<any | null>(null);
   const [wallpapers, setWallpapers] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -89,8 +91,12 @@ function DesignVisualizerContent() {
           const wp = data.products.find((p: any) => p.id === preselectedWallpaperId);
           if (wp) setSelectedWallpaper(wp);
         }
+      } else {
+        toast.error('Failed to load wallpapers.');
+        console.error('Error fetching wallpapers:', data.error);
       }
     } catch (e) {
+      toast.error('An error occurred while fetching wallpapers.');
       console.error('fetchWallpapers error:', e);
     }
   };
@@ -104,7 +110,9 @@ function DesignVisualizerContent() {
     img.onload = () => {
       roomImageRef.current = img;
       const maxW = canvas.parentElement?.clientWidth || 800;
-      const scale = Math.min(maxW / img.width, 500 / img.height, 1);
+      // Adjust scale to fit within a reasonable maximum height as well
+      const maxH = 500; 
+      const scale = Math.min(maxW / img.width, maxH / img.height, 1);
       canvas.width = img.width * scale;
       canvas.height = img.height * scale;
       overlay.width = canvas.width;
@@ -118,46 +126,56 @@ function DesignVisualizerContent() {
         octx.clearRect(0, 0, overlay.width, overlay.height);
       }
     };
+    img.onerror = () => {
+      toast.error('Error loading image.');
+    };
     img.src = src;
   }, []);
 
   useEffect(() => {
     if (step === 1 && roomImageSrc) {
+      // Use a small timeout to ensure canvas is ready after parent div renders
       setTimeout(() => loadImageToCanvas(roomImageSrc), 100);
     }
   }, [step, roomImageSrc, loadImageToCanvas]);
 
   const handleFileChange = (file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
       toast.error('La imagen debe pesar menos de 10MB');
       return;
     }
     const reader = new FileReader();
     reader.onloadend = () => {
       setRoomImageSrc(reader.result as string);
+      // Clear previous mask when a new image is uploaded
+      setMaskDataUrl(null); 
       setStep(1);
+    };
+    reader.onerror = () => {
+      toast.error('Error reading image file.');
     };
     reader.readAsDataURL(file);
   };
 
-  const getCanvasPos = (e: any) => {
+  const getCanvasPos = (e: MouseEvent | TouchEvent) => {
     const canvas = overlayRef.current!;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
+    
     let clientX, clientY;
-    if (e.touches) {
+    if ('touches' in e && e.touches.length > 0) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
+      clientX = (e as MouseEvent).clientX;
+      clientY = (e as MouseEvent).clientY;
     }
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
   };
 
-  const draw = (e: any) => {
-    if (!isDrawing.current) return;
+  const draw = (e: MouseEvent | TouchEvent) => {
+    if (!isDrawing.current || !overlayRef.current) return;
     const canvas = overlayRef.current!;
     const ctx = canvas.getContext('2d')!;
     const { x, y } = getCanvasPos(e);
@@ -165,26 +183,113 @@ function DesignVisualizerContent() {
     ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
     ctx.beginPath();
     ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; // Color de la máscara
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; // Color de la máscara (negro semitransparente)
     ctx.fill();
   };
 
+  // Function to capture the mask as a Data URL
+  const captureMask = () => {
+    const overlayCanvas = overlayRef.current;
+    if (overlayCanvas) {
+      const maskUrl = overlayCanvas.toDataURL('image/png');
+      setMaskDataUrl(maskUrl);
+    }
+  };
+
+  // --- NEW: handleGenerate function integrated with AI API ---
   const handleGenerate = async () => {
     if (!roomImageSrc || !selectedWallpaper) {
-      toast.error('Selecciona un diseño primero');
+      toast.error('Por favor, sube una imagen de tu espacio y selecciona un diseño.');
       return;
     }
     setIsGenerating(true);
-    setStep(2);
-    
-    // Simulación de carga IA (para el prototipo visual rápido)
-    setTimeout(() => {
-      setGeneratedImage(roomImageSrc); // Aquí iría la llamada real a Replicate
-      setStep(3);
+    setStep(2); // Move to visualization step while generating
+    setPredictionId(null); // Reset previous prediction ID
+    setGeneratedImage(null); // Clear previous generated image
+
+    try {
+      // Capture the current state of the mask canvas
+      captureMask(); 
+
+      const payload = {
+        roomImage: roomImageSrc,
+        maskImage: maskDataUrl, // Send the captured mask
+        wallpaperId: selectedWallpaper.id,
+        wallpaperName: selectedWallpaper.nameEs || selectedWallpaper.name,
+        wallpaperImageUrl: selectedWallpaper.imageUrl || selectedWallpaper.images?.[0],
+      };
+
+      const res = await fetch('/api/ai/visualize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to start AI generation.');
+      }
+
+      setPredictionId(data.predictionId);
+      // If predictionId is available, start polling for status
+      if (data.predictionId) {
+        pollPredictionStatus(data.predictionId);
+      } else if (data.generatedImage) { // Fallback for immediate generation (e.g., demo mode)
+        setGeneratedImage(data.generatedImage);
+        setStep(3);
+        toast.success('¡Diseño aplicado con éxito!');
+      }
+
+    } catch (error: any) {
+      console.error('AI Generation Error:', error);
+      toast.error(`Error generating design: ${error.message}`);
       setIsGenerating(false);
-      toast.success('¡Diseño aplicado con éxito!');
-    }, 3000);
+      setStep(2); // Go back to selection step if error occurs
+    }
   };
+
+  // Polling function to check Replicate prediction status
+  const pollPredictionStatus = async (id: string) => {
+    setIsGenerating(true);
+    setStep(2); // Keep in visualization step while polling
+
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`/api/ai/visualize/status/${id}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to fetch prediction status.');
+        }
+
+        if (data.status === 'succeeded' && data.output) {
+          setGeneratedImage(data.output);
+          setStep(3);
+          setIsGenerating(false);
+          toast.success('¡Diseño aplicado con éxito!');
+          return; // Stop polling
+        } else if (data.status === 'failed' || data.error) {
+          throw new Error(data.error || 'AI generation failed.');
+        } else if (data.status === 'processing' || data.status === 'starting') {
+          // Continue polling
+          setTimeout(checkStatus, 3000); // Poll every 3 seconds
+        } else {
+          // Handle unexpected statuses
+          throw new Error(`Unexpected prediction status: ${data.status}`);
+        }
+      } catch (error: any) {
+        console.error('Polling Error:', error);
+        toast.error(`Error checking status: ${error.message}`);
+        setIsGenerating(false);
+        setStep(2); // Go back to selection step if polling fails
+      }
+    };
+
+    // Start polling
+    checkStatus();
+  };
+  // --- END NEW: handleGenerate function ---
 
   return (
     <div className="min-h-screen bg-premium pt-24 pb-20">
@@ -235,13 +340,13 @@ function DesignVisualizerContent() {
                 <Button className="rounded-full px-12 h-14 text-lg font-bold bg-black hover:bg-gray-800 shadow-xl">
                   Seleccionar Imagen
                 </Button>
-                <input type="file" ref={fileInputRef} hidden onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])} />
+                <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])} />
               </div>
             </motion.div>
           )}
 
           {/* PASO 1: PINTAR PAREDES */}
-          {step === 1 && (
+          {step === 1 && roomImageSrc && (
             <motion.div key="s1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               <div className="lg:col-span-1 space-y-6">
                 <div className="glass-card rounded-3xl p-6">
@@ -259,7 +364,7 @@ function DesignVisualizerContent() {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Tamaño: {brushSize}px</label>
                   <input type="range" min={10} max={120} value={brushSize} onChange={(e) => setBrushSize(Number(e.target.value))} className="w-full accent-black mb-8" />
                   
-                  <Button variant="outline" className="w-full rounded-xl border-gray-200" onClick={() => setStep(0)}>
+                  <Button variant="outline" className="w-full rounded-xl border-gray-200" onClick={() => { setRoomImageSrc(null); setStep(0); }}>
                     <RefreshCcw className="w-4 h-4 mr-2" /> Cambiar Foto
                   </Button>
                 </div>
@@ -268,14 +373,19 @@ function DesignVisualizerContent() {
               <div className="lg:col-span-3">
                 <div className="glass rounded-[2.5rem] p-4 shadow-2xl relative overflow-hidden">
                   <div className="relative inline-block cursor-crosshair select-none w-full">
-                    <canvas ref={canvasRef} className="block rounded-3xl w-full h-auto" />
+                    {/* The main image displays the uploaded room */}
+                    <canvas ref={canvasRef} className="block rounded-3xl w-full h-auto" /> 
+                    {/* The overlay canvas is for drawing the mask */}
                     <canvas
                       ref={overlayRef}
                       className="absolute top-0 left-0 rounded-3xl w-full h-auto"
-                      onMouseDown={(e) => { isDrawing.current = true; draw(e); }}
-                      onMouseMove={(e) => { if (isDrawing.current) draw(e); }}
+                      onMouseDown={(e) => { isDrawing.current = true; draw(e as any); }}
+                      onMouseMove={(e) => { if (isDrawing.current) draw(e as any); }}
                       onMouseUp={() => { isDrawing.current = false; }}
                       onMouseLeave={() => { isDrawing.current = false; }}
+                      onTouchStart={(e) => { isDrawing.current = true; draw(e as any); }}
+                      onTouchMove={(e) => { if (isDrawing.current) draw(e as any); }}
+                      onTouchEnd={() => { isDrawing.current = false; }}
                     />
                   </div>
                 </div>
@@ -300,7 +410,11 @@ function DesignVisualizerContent() {
                     return (
                       <button
                         key={wp.id}
-                        onClick={() => setSelectedWallpaper(wp)}
+                        onClick={() => {
+                          setSelectedWallpaper(wp);
+                          // Automatically advance to generate if a wallpaper is selected
+                          // handleGenerate(); // Uncomment to auto-generate on selection
+                        }}
                         className={`relative aspect-square rounded-2xl overflow-hidden border-4 transition-all ${isSelected ? 'border-black scale-105 shadow-2xl' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-95'}`}
                       >
                         <Image src={imgUrl} alt={wp.name} fill className="object-cover" unoptimized />
@@ -324,10 +438,11 @@ function DesignVisualizerContent() {
                   </div>
                   <Button 
                     onClick={handleGenerate} 
-                    disabled={!selectedWallpaper}
+                    disabled={!selectedWallpaper || isGenerating} // Disable if no wallpaper or already generating
                     className="h-14 px-12 bg-black hover:bg-gray-800 text-white rounded-full font-bold shadow-2xl uppercase tracking-widest text-xs"
                   >
-                    <Wand2 className="w-4 h-4 mr-2" /> Aplicar Diseño
+                    {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                    {isGenerating ? 'Generando...' : 'Aplicar Diseño'}
                   </Button>
                 </div>
               </div>
@@ -356,7 +471,7 @@ function DesignVisualizerContent() {
                     <p className="text-gray-400 font-medium">Diseño: {selectedWallpaper?.nameEs || selectedWallpaper?.name}</p>
                   </div>
                   <div className="flex gap-4">
-                    <Button variant="outline" className="rounded-full h-14 px-8" onClick={() => setStep(2)}>
+                    <Button variant="outline" className="rounded-full h-14 px-8" onClick={() => { setStep(1); setGeneratedImage(null); }}> {/* Go back to drawing step to retry */}
                       Probar Otro
                     </Button>
                     <Button 

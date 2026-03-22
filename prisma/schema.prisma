@@ -32,7 +32,21 @@ model User {
   @@map("users") // Asume que la tabla en la base de datos se llama 'users'
 }
 
+// Nueva tabla para capturar leads antes de finalizar el checkout
+model Lead {
+  id        String   @id @default(cuid())
+  email     String
+  whatsapp  String?
+  createdAt DateTime @default(now())
+}
+
+// Nueva tabla para seguimiento de carritos
+model CartAbandonment {
+  id        String   @id @default(cuid())
+  email     String
+  items     Json
+  status    String   @default("PENDING") // PENDING, RECOVERED, IGNORED
+  createdAt DateTime @default(now())
+}
+
 // Puedes añadir otros modelos aquí según sea necesario para tu aplicación.
-// Por ejemplo, si tienes modelos para 'Order', 'Product', etc.
-// model Order { ... }
-// model Product { ... }

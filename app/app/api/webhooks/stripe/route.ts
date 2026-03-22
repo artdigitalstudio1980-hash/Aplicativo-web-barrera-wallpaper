@@ -37,50 +37,38 @@ export async function POST(req: Request) {
     // Handle checkout session completion
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      
       const orderId = session.metadata?.orderId;
       
+      // Marcar como recuperado si existía en nuestro sistema de abandono
+      // (requeriría buscar por email o ID en nuestra tabla de CartAbandonment)
+      
       if (orderId) {
-        // Find the pending order
         const order = await prisma.order.findUnique({
           where: { id: orderId },
           include: { orderItems: { include: { product: true } } }
         });
 
-        if (order) {
-          // Verify it hasn't been confirmed yet
-          if (order.status === 'PENDING') {
-            // Update the order status to Paid/Confirmed
-            await prisma.order.update({
-              where: { id: orderId },
-              data: {
-                status: 'CONFIRMED',
-                stripePaymentId: session.payment_intent as string,
-              }
-            });
+        if (order && order.status === 'PENDING') {
+          await prisma.order.update({
+            where: { id: orderId },
+            data: { status: 'CONFIRMED', stripePaymentId: session.payment_intent as string }
+          });
 
-            // Parse order items for the email
-            const itemsList = order.orderItems.map(item => ({
-              name: item.product?.name || 'Custom AI Wallpaper',
-              measurements: item.customization,
-              price: item.price
-            }));
-
-            // Dispatch Confirmation Email using the free Nodemailer Setup
-            const customerEmail = session.customer_details?.email || order.shippingEmail;
-            const customerName = session.customer_details?.name || order.shippingName;
-            
-            await sendOrderConfirmationEmail(
-              order.orderNumber,
-              customerEmail as string,
-              customerName as string,
-              session.amount_total! / 100, // Converts from cents
-              itemsList
-            );
-            
-            console.log(`Order ${order.orderNumber} confirmed and email sent.`);
-          }
+          const customerEmail = session.customer_details?.email || order.shippingEmail;
+          await sendOrderConfirmationEmail(order.orderNumber, customerEmail as string, session.customer_details?.name || order.shippingName || '', session.amount_total! / 100, order.orderItems.map(item => ({ name: item.product?.name || 'Custom AI Wallpaper', price: item.price })));
+          console.log(`Order ${order.orderNumber} confirmed.`);
         }
+      }
+    }
+
+    // Handle checkout session expired or payment failed (Cart Abandonment)
+    if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const customerEmail = session.customer_details?.email;
+      
+      if (customerEmail) {
+        console.log(`Cart abandoned by: ${customerEmail}. Registering in system.`);
+        await SalesService.registerCartAbandonment(customerEmail, [{ cartTotal: session.amount_total }]);
       }
     }
 

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createS3Client, getBucketConfig } from '@/lib/aws-config';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { ratelimit } from '@/lib/ratelimit';
 
 interface GenerateRequest {
   prompt: string;
@@ -15,35 +16,50 @@ interface GenerateRequest {
   userId?: string;
 }
 
+const sanitizePrompt = (prompt: string): string => {
+  return prompt
+    .replace(/[<>]/g, '') // Remove HTML tags
+    .substring(0, 500);   // Limit length
+};
+
 export async function POST(req: NextRequest) {
   try {
+    // 1. Rate Limiting
+    const ip = req.ip ?? '127.0.0.1';
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body: GenerateRequest = await req.json();
-    const { prompt, style, colors = [], width = 1024, height = 1024, userId } = body;
+    const rawPrompt = body.prompt;
+    const userId = body.userId;
 
-    if (!prompt) {
-      return NextResponse.json(
-        { error: 'Prompt is required' },
-        { status: 400 }
-      );
+    if (!rawPrompt) {
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    // Enhanced prompt with style and color preferences
+    // 2. Sanitization & Enhancement
+    const prompt = sanitizePrompt(rawPrompt);
     let enhancedPrompt = prompt;
-    if (style) {
-      enhancedPrompt += `, ${style} style`;
+    if (body.style) enhancedPrompt += `, ${sanitizePrompt(body.style)} style`;
+    if (body.colors && body.colors.length > 0) {
+      enhancedPrompt += `, featuring colors: ${body.colors.map(c => sanitizePrompt(c)).join(', ')}`;
     }
-    if (colors.length > 0) {
-      enhancedPrompt += `, featuring colors: ${colors.join(', ')}`;
-    }
-    enhancedPrompt += `, high quality wallpaper design, 8k resolution, professional interior design, suitable for large wall printing, seamless pattern`;
+    enhancedPrompt += `, high quality wallpaper design, 8k resolution, professional interior design, seamless pattern`;
 
-    // Create AI generation request record
+    // 3. Environment Validation (Remove insecure demo mode)
+    const googleApiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
+    if (!googleApiKey) {
+      return NextResponse.json({ error: 'AI service unavailable' }, { status: 503 });
+    }
+
     const generationRequest = await prisma.aIGenerationRequest.create({
       data: {
         userId,
         prompt: enhancedPrompt,
-        style,
-        colors,
+        style: body.style,
+        colors: body.colors,
         status: 'PROCESSING'
       }
     });
@@ -128,7 +144,6 @@ export async function POST(req: NextRequest) {
       console.log('Google AI Studio response received');
 
       // Extract image from response
-      // The response contains the image in base64 format in the parts array
       const imagePart = result.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData);
       
       if (!imagePart || !imagePart.inlineData) {
@@ -142,7 +157,7 @@ export async function POST(req: NextRequest) {
       console.log('Uploading generated image to S3...');
       const s3Client = createS3Client();
       const { bucketName, folderPrefix } = getBucketConfig();
-      const fileName = `ai-generated-${Date.now()}.jpg`;
+      const fileName = `ai-generated-${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
       const s3Key = `${folderPrefix}public/uploads/${fileName}`;
 
       // Convert base64 to buffer
@@ -170,7 +185,7 @@ export async function POST(req: NextRequest) {
           generatedImageUrl: imageUrl,
           status: 'COMPLETED',
           processingTime,
-          cost: 0.02 // Nano Banana cost is approximately $0.02 per image
+          cost: 0.02 
         }
       });
 
@@ -180,8 +195,7 @@ export async function POST(req: NextRequest) {
           id: generationRequest.id,
           imageUrl,
           prompt: enhancedPrompt,
-          processingTime,
-          usingDemo: false
+          processingTime
         }
       });
 

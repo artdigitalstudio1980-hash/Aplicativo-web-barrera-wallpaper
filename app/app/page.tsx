@@ -26,11 +26,11 @@ export default function HomePage() {
 
   return (
     <div className="relative">
-      {/* Hero Section */}
       <section 
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center bg-white"
       >
+        {/* Hero Section */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div
             className="space-y-12"

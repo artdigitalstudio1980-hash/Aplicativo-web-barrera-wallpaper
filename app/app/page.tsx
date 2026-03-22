@@ -24,17 +24,13 @@ export default function HomePage() {
   const [featuresRef, featuresInView] = useInView({ triggerOnce: true, threshold: 0.1 });
   const [statsRef, statsInView] = useInView({ triggerOnce: true, threshold: 0.1 });
 
-  return (
-    <div className="relative">
+  return <div className="relative">
       <section 
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center bg-white"
       >
-        {/* Hero Section */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div
-            className="space-y-12"
-          >
+          <div className="space-y-12">
             {/* Main Logo */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -86,7 +82,7 @@ export default function HomePage() {
                 </Button>
               </Link>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -306,6 +302,5 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 }

@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // Asegúrate de que este provider coincida con tu base de datos (ej: postgresql, sqlite)
+  url      = env("DATABASE_URL") // La URL de conexión debe estar configurada en tus variables de entorno
+}
+
+// Define el modelo User, incluyendo los campos para verificación de email
+model User {
+  id                  String    @id @default(cuid()) // Identificador único del usuario
+  email               String    @unique // Email del usuario, debe ser único
+  emailVerified       DateTime? // Marca de tiempo cuando el email fue verificado
+  hashedPassword      String?   @map("password") // Contraseña hasheada del usuario (mapeado a 'password' si es necesario)
+  firstName           String?   // Nombre del usuario
+  lastName            String?   // Apellido del usuario
+  name                String?   // Nombre completo (puede ser concatenación de first/last name)
+  role                String?   @default("USER") // Rol del usuario (ej: USER, ADMIN)
+  isAdmin             Boolean?  @default(false) // Indicador si el usuario es administrador
+
+  // Campos para el token de verificación de email
+  emailToken          String?   @unique // Token único para la verificación de email
+  emailTokenExpires   DateTime? // Fecha de expiración del token de verificación
+
+  createdAt           DateTime  @default(now()) // Fecha de creación del registro
+  updatedAt           DateTime  @updatedAt // Fecha de última actualización
+
+  @@map("users") // Asume que la tabla en la base de datos se llama 'users'
+}
+
+// Puedes añadir otros modelos aquí según sea necesario para tu aplicación.
+// Por ejemplo, si tienes modelos para 'Order', 'Product', etc.
+// model Order { ... }
+// model Product { ... }

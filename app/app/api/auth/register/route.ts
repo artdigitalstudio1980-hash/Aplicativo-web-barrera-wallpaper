@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/mailer";
 
-// Helper function to sanitize string inputs for security (e.g., prevent XSS)
+// Helper function to sanitize string inputs for security
 function sanitizeString(str: string): string {
   if (!str) return '';
   return str
@@ -10,41 +11,34 @@ function sanitizeString(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
-    .replace(/&/g, '&amp;')
-    .replace(/\//g, '\\/'); // Escape forward slashes
+    .replace(/&/g, '&amp;');
 }
 
 // Basic email format validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+// Password complexity: Requires at least 8 characters
+const PASSWORD_MIN_LENGTH = 8;
+
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json();
+    const body = await req.json();
+    const { firstName, lastName, email, password, phone } = body;
 
     // --- Input Validation ---
-    if (!name || !email || !password) {
-      return NextResponse.json({ message: "Missing required data (name, email, password)" }, { status: 400 });
+    if (!firstName || !email || !password) {
+      return NextResponse.json({ error: "Missing required fields (First Name, Email, Password)" }, { status: 400 });
     }
 
     // Email format validation
     if (!EMAIL_REGEX.test(email)) {
-      return NextResponse.json({ message: "Invalid email format" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }
 
-    // Name validation: length constraints
-    if (name.length < 2 || name.length > 50) {
-      return NextResponse.json({ message: "Name must be between 2 and 50 characters" }, { status: 400 });
+    // Password validation: length constraint
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      return NextResponse.json({ error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters long` }, { status: 400 });
     }
-
-    // Password validation: length constraint (minimum complexity can be added here)
-    if (password.length < 8) {
-      return NextResponse.json({ message: "Password must be at least 8 characters long" }, { status: 400 });
-    }
-    // TODO: Implement password complexity requirements (e.g., uppercase, lowercase, number, special character)
-    // Example: const PASSWORD_COMPLEXITY_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    // if (!PASSWORD_COMPLEXITY_REGEX.test(password)) {
-    //   return NextResponse.json({ message: "Password does not meet complexity requirements" }, { status: 400 });
-    // }
     // --- End Input Validation ---
 
     // Check if email already exists
@@ -53,27 +47,54 @@ export async function POST(req: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ message: "Email is already registered" }, { status: 409 });
+      return NextResponse.json({ error: "This email is already registered" }, { status: 409 });
     }
 
-    // Sanitize name before saving to prevent XSS
-    const sanitizedName = sanitizeString(name);
+    // Sanitize names
+    const sanitizedFirstName = sanitizeString(firstName);
+    const sanitizedLastName = sanitizeString(lastName || "");
+    const fullName = `${sanitizedFirstName} ${sanitizedLastName}`.trim();
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Create user in database
     const user = await prisma.user.create({
       data: {
-        name: sanitizedName, // Use sanitized name
-        email,
+        firstName: sanitizedFirstName,
+        lastName: sanitizedLastName,
+        name: fullName,
+        email: email.toLowerCase(),
         password: hashedPassword,
-        // Default role: USER, isAdmin: false
+        phone: phone || null,
+        role: "USER",
+        isAdmin: false
       },
     });
 
+    // Send welcome email asynchronously
+    // Note: We don't await this if we want to return response faster, 
+    // but for registration confirmation it's better to ensure it's sent or at least attempted.
+    try {
+      await sendWelcomeEmail(user.email, user.firstName || "Customer");
+    } catch (mailError) {
+      console.error("Failed to send welcome email:", mailError);
+      // We don't fail the registration if email fails
+    }
+
     // Return minimal user info, avoid sending sensitive data
-    return NextResponse.json({ message: "User created successfully", user: { id: user.id, name: user.name, email: user.email } }, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      message: "User created successfully", 
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email 
+      } 
+    }, { status: 201 });
+
   } catch (error) {
     console.error("Register Error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error during registration" }, { status: 500 });
   }
 }

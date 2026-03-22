@@ -32,10 +32,7 @@ export default function HomePage() {
         className="relative min-h-screen flex items-center justify-center bg-white"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+          <div
             className="space-y-12"
           >
             {/* Main Logo */}

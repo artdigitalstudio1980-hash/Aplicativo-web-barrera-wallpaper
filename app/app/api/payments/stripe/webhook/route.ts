@@ -1,15 +1,11 @@
-
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
-import Stripe from 'stripe';
+import { stripe } from '@/lib/stripe';
 import { sendOrderConfirmationEmail } from '@/lib/mailer';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-08-27.basil'
-});
+import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
@@ -75,7 +71,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   try {
-    // Update payment transaction
+    // Update payment transaction status
     await prisma.paymentTransaction.updateMany({
       where: {
         orderId,
@@ -87,7 +83,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       }
     });
 
-    // Update order status and fetch order data
+    // Update order status and fetch full data for confirmation email
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -97,31 +93,40 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       include: {
         orderItems: {
           include: { product: true }
-        }
+        },
+        aiWallpaperOrders: true
       }
     });
 
-    // Update AI wallpaper order status
-    await prisma.aIWallpaperOrder.updateMany({
-      where: { orderId },
-      data: { status: 'PAID' }
-    });
+    // Update AI wallpaper order status if applicable
+    if (order.aiWallpaperOrders.length > 0) {
+      await prisma.aIWallpaperOrder.updateMany({
+        where: { orderId },
+        data: { status: 'PAID' }
+      });
+    }
 
-    // Prepare items for email
-    const items = order.orderItems.map(item => ({
-      name: item.product.nameEs || item.product.name,
+    // Prepare items for premium email
+    const itemsForEmail = order.orderItems.map((item: any) => ({
+      name: item.product?.name || (order.isAIGenerated ? 'Custom AI Wallpaper' : 'Wallpaper'),
       measurements: item.customization ? (item.customization as any).measurements : null,
       price: (item.price * item.quantity).toFixed(2),
     }));
 
-    // Send order confirmation email
-    await sendOrderConfirmationEmail(
-      order.orderNumber,
-      order.shippingEmail,
-      order.shippingName,
-      order.total,
-      items
-    );
+    // Send order confirmation email asynchronously
+    try {
+      await sendOrderConfirmationEmail(
+        order.orderNumber,
+        order.shippingEmail,
+        order.shippingName,
+        order.total,
+        itemsForEmail
+      );
+    } catch (mailError) {
+      console.error('Failed to send Stripe order confirmation email:', mailError);
+    }
+
+    console.log(`Order ${order.orderNumber} successfully confirmed via Stripe Webhook`);
 
   } catch (error) {
     console.error('Error handling checkout completed:', error);
@@ -129,33 +134,29 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
-  // Additional payment success handling if needed
   console.log('Payment succeeded:', paymentIntent.id);
 }
 
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   try {
-    // Update payment transaction status
+    const orderId = paymentIntent.metadata?.orderId;
+    
+    // Update payment transaction status to FAILED
     await prisma.paymentTransaction.updateMany({
       where: { transactionId: paymentIntent.id },
       data: {
         status: 'FAILED',
-        errorMessage: paymentIntent.last_payment_error?.message
+        errorMessage: paymentIntent.last_payment_error?.message || 'Payment failed'
       }
     });
 
-    // Update AI wallpaper order status
-    const transaction = await prisma.paymentTransaction.findFirst({
-      where: { transactionId: paymentIntent.id },
-      include: { order: { include: { aiWallpaperOrders: true } } }
-    });
-
-    if (transaction?.order.aiWallpaperOrders.length) {
+    if (orderId) {
+      // Mark AI orders as error if applicable
       await prisma.aIWallpaperOrder.updateMany({
-        where: { orderId: transaction.orderId },
+        where: { orderId },
         data: {
           status: 'ERROR',
-          errorMessage: paymentIntent.last_payment_error?.message
+          errorMessage: paymentIntent.last_payment_error?.message || 'Payment failed'
         }
       });
     }
@@ -164,5 +165,3 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
     console.error('Error handling payment failed:', error);
   }
 }
-
-

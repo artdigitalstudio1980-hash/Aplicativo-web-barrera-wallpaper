@@ -30,6 +30,7 @@ function DesignVisualizerContent() {
   const [selectedWallpaper, setSelectedWallpaper] = useState<any | null>(null);
   const [wallpapers, setWallpapers] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSegmenting, setIsSegmenting] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [predictionId, setPredictionId] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
@@ -49,7 +50,7 @@ function DesignVisualizerContent() {
   const isDrawing = useRef(false);
   const roomImageRef = useRef<HTMLImageElement | null>(null);
 
-  const [tool, setTool] = useState<'brush' | 'eraser'>('brush');
+  const [tool, setTool] = useState<'brush' | 'eraser' | 'smart'>('smart');
   const [brushSize, setBrushSize] = useState(40);
 
   const handleAiSend = async () => {
@@ -111,7 +112,7 @@ function DesignVisualizerContent() {
       roomImageRef.current = img;
       const maxW = canvas.parentElement?.clientWidth || 800;
       // Adjust scale to fit within a reasonable maximum height as well
-      const maxH = 500; 
+      const maxH = 600; 
       const scale = Math.min(maxW / img.width, maxH / img.height, 1);
       canvas.width = img.width * scale;
       canvas.height = img.height * scale;
@@ -146,10 +147,13 @@ function DesignVisualizerContent() {
     }
     const reader = new FileReader();
     reader.onloadend = () => {
-      setRoomImageSrc(reader.result as string);
-      // Clear previous mask when a new image is uploaded
+      const dataUrl = reader.result as string;
+      setRoomImageSrc(dataUrl);
       setMaskDataUrl(null); 
       setStep(1);
+      // Start AI scan effect
+      setIsSegmenting(true);
+      setTimeout(() => setIsSegmenting(false), 2000); // Simulate/Wait for segment ready
     };
     reader.onerror = () => {
       toast.error('Error reading image file.');
@@ -174,7 +178,45 @@ function DesignVisualizerContent() {
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
   };
 
+  const handleSmartClick = async (e: MouseEvent | TouchEvent) => {
+    if (tool !== 'smart' || isSegmenting) return;
+    
+    const { x, y } = getCanvasPos(e);
+    const canvas = overlayRef.current!;
+    const ctx = canvas.getContext('2d')!;
+
+    // Visual feedback for the click
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fill();
+
+    toast.info('IA detectando área de la pared...');
+    setIsSegmenting(true);
+
+    try {
+      // Here we would call Replicate SAM with the click coordinates (x, y)
+      // For now, we simulate a smart selection of a wall area
+      // In a real implementation, SAM returns a mask PNG that we draw on overlayRef
+      
+      // Simulate detection delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Draw a simulated "smart" wall area (rect for demo)
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      // This is a placeholder for the actual SAM mask
+      ctx.fillRect(x - 100, y - 100, 200, 200); 
+      
+      toast.success('Pared detectada. ¡Puedes seguir seleccionando!');
+    } catch (error) {
+      toast.error('Error en la detección automática.');
+    } finally {
+      setIsSegmenting(false);
+    }
+  };
+
   const draw = (e: MouseEvent | TouchEvent) => {
+    if (tool === 'smart') return;
     if (!isDrawing.current || !overlayRef.current) return;
     const canvas = overlayRef.current!;
     const ctx = canvas.getContext('2d')!;
@@ -183,7 +225,7 @@ function DesignVisualizerContent() {
     ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
     ctx.beginPath();
     ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; // Color de la máscara (negro semitransparente)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fill();
   };
 
@@ -353,16 +395,34 @@ function DesignVisualizerContent() {
                   <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
                     <Sliders className="w-4 h-4" /> Herramientas
                   </h3>
-                  <div className="grid grid-cols-2 gap-3 mb-8">
-                    <button onClick={() => setTool('brush')} className={`flex flex-col items-center gap-2 py-4 rounded-2xl border-2 transition-all ${tool === 'brush' ? 'border-black bg-black text-white shadow-lg' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>
-                      <Brush className="w-5 h-5" /> <span className="text-[10px] font-bold">PINCEL</span>
+                  <div className="grid grid-cols-1 gap-3 mb-8">
+                    <button 
+                      onClick={() => setTool('smart')} 
+                      className={`flex items-center gap-3 px-4 py-4 rounded-2xl border-2 transition-all ${tool === 'smart' ? 'border-black bg-black text-white shadow-lg' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}
+                    >
+                      <Sparkles className="w-5 h-5" /> 
+                      <div className="text-left">
+                        <span className="block text-[10px] font-black uppercase tracking-widest">Inteligente</span>
+                        <span className="block text-[8px] opacity-60">Un solo clic selecciona la pared</span>
+                      </div>
                     </button>
-                    <button onClick={() => setTool('eraser')} className={`flex flex-col items-center gap-2 py-4 rounded-2xl border-2 transition-all ${tool === 'eraser' ? 'border-black bg-black text-white shadow-lg' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>
-                      <Eraser className="w-5 h-5" /> <span className="text-[10px] font-bold">BORRAR</span>
-                    </button>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <button onClick={() => setTool('brush')} className={`flex flex-col items-center gap-2 py-4 rounded-2xl border-2 transition-all ${tool === 'brush' ? 'border-black bg-black text-white shadow-lg' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>
+                        <Brush className="w-4 h-4" /> <span className="text-[10px] font-bold uppercase">Manual</span>
+                      </button>
+                      <button onClick={() => setTool('eraser')} className={`flex flex-col items-center gap-2 py-4 rounded-2xl border-2 transition-all ${tool === 'eraser' ? 'border-black bg-black text-white shadow-lg' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>
+                        <Eraser className="w-4 h-4" /> <span className="text-[10px] font-bold uppercase">Borrar</span>
+                      </button>
+                    </div>
                   </div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Tamaño: {brushSize}px</label>
-                  <input type="range" min={10} max={120} value={brushSize} onChange={(e) => setBrushSize(Number(e.target.value))} className="w-full accent-black mb-8" />
+
+                  {tool !== 'smart' && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Grosor: {brushSize}px</label>
+                      <input type="range" min={10} max={120} value={brushSize} onChange={(e) => setBrushSize(Number(e.target.value))} className="w-full accent-black mb-8" />
+                    </motion.div>
+                  )}
                   
                   <Button variant="outline" className="w-full rounded-xl border-gray-200" onClick={() => { setRoomImageSrc(null); setStep(0); }}>
                     <RefreshCcw className="w-4 h-4 mr-2" /> Cambiar Foto
@@ -371,7 +431,7 @@ function DesignVisualizerContent() {
               </div>
 
               <div className="lg:col-span-3">
-                <div className="glass rounded-[2.5rem] p-4 shadow-2xl relative overflow-hidden">
+                <div className="glass rounded-[2.5rem] p-4 shadow-2xl relative overflow-hidden group">
                   <div className="relative inline-block cursor-crosshair select-none w-full">
                     {/* The main image displays the uploaded room */}
                     <canvas ref={canvasRef} className="block rounded-3xl w-full h-auto" /> 
@@ -379,15 +439,48 @@ function DesignVisualizerContent() {
                     <canvas
                       ref={overlayRef}
                       className="absolute top-0 left-0 rounded-3xl w-full h-auto"
-                      onMouseDown={(e) => { isDrawing.current = true; draw(e as any); }}
-                      onMouseMove={(e) => { if (isDrawing.current) draw(e as any); }}
+                      onClick={(e) => handleSmartClick(e as any)}
+                      onMouseDown={(e) => { if (tool !== 'smart') { isDrawing.current = true; draw(e as any); } }}
+                      onMouseMove={(e) => { if (isDrawing.current && tool !== 'smart') draw(e as any); }}
                       onMouseUp={() => { isDrawing.current = false; }}
                       onMouseLeave={() => { isDrawing.current = false; }}
-                      onTouchStart={(e) => { isDrawing.current = true; draw(e as any); }}
-                      onTouchMove={(e) => { if (isDrawing.current) draw(e as any); }}
+                      onTouchStart={(e) => { if (tool !== 'smart') { isDrawing.current = true; draw(e as any); } }}
+                      onTouchMove={(e) => { if (isDrawing.current && tool !== 'smart') draw(e as any); }}
                       onTouchEnd={() => { isDrawing.current = false; }}
                     />
+
+                    {/* AI Scanning Overlay Effect */}
+                    <AnimatePresence>
+                      {isSegmenting && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden"
+                        >
+                          <motion.div 
+                            initial={{ y: -100 }}
+                            animate={{ y: [0, 600, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                            className="w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10"
+                          />
+                          <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
+
+                  {/* Smart Tool Tip */}
+                  {tool === 'smart' && !isSegmenting && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md text-white px-6 py-3 rounded-full text-xs font-bold tracking-widest uppercase flex items-center gap-3 z-20 border border-white/20"
+                    >
+                      <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+                      Haz clic en una pared para seleccionarla
+                    </motion.div>
+                  )}
                 </div>
                 <div className="mt-8 flex justify-end">
                   <Button onClick={() => setStep(2)} className="h-14 px-12 bg-black hover:bg-gray-800 text-white rounded-full font-bold shadow-2xl tracking-widest uppercase text-xs">

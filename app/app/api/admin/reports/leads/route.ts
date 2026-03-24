@@ -1,14 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
 
 export async function GET(req: NextRequest) {
   try {
-    // Basic admin protection could be added here (e.g., checking session/token)
-    
-    const leadsCount = await prisma.lead.count();
-    const abandonmentsCount = await prisma.cartAbandonment.count();
-    const recoveredCount = await prisma.cartAbandonment.count({
-      where: { status: 'RECOVERED' }
+    // 1. Protección de Administrador
+    const session = await getServerSession(authOptions);
+    if (!(session?.user as any)?.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // 2. Contar Leads Reales desde la tabla de Contacto
+    const leadsCount = await prisma.contactSubmission.count();
+
+    // 3. Contar Carritos Abandonados (Órdenes pendientes por más de 1 hora)
+    const oneHourAgo = new Date(Date.now() - 3600 * 1000);
+    const abandonmentsCount = await prisma.order.count({
+      where: {
+        status: 'PENDING',
+        createdAt: {
+          lt: oneHourAgo,
+        },
+      },
+    });
+
+    // 4. Contar Órdenes Totales (para calcular la tasa de conversión)
+    const totalOrders = await prisma.order.count();
+    const confirmedOrders = await prisma.order.count({
+        where: {
+            status: {
+                in: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+            }
+        }
     });
 
     return NextResponse.json({
@@ -16,16 +40,18 @@ export async function GET(req: NextRequest) {
       data: {
         totalLeads: leadsCount,
         totalAbandonments: abandonmentsCount,
-        recoveredAbandonments: recoveredCount,
-        recoveryRate: abandonmentsCount > 0 
-          ? ((recoveredCount / abandonmentsCount) * 100).toFixed(2) + '%' 
+        totalOrders: totalOrders,
+        confirmedOrders: confirmedOrders,
+        // Tasa de conversión simple: (Confirmadas / Totales)
+        conversionRate: totalOrders > 0 
+          ? ((confirmedOrders / totalOrders) * 100).toFixed(2) + '%' 
           : '0%'
       }
     });
   } catch (error: any) {
-    console.error('Report error:', error);
+    console.error('Admin report error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate report', details: error.message },
+      { error: 'Failed to generate admin report', details: error.message },
       { status: 500 }
     );
   }

@@ -255,51 +255,56 @@ export default function AIStudioPage() {
     }
   };
 
-  const initiateStripePayment = async () => {
-    if (!orderId) return;
+  const handleCheckout = async (method: 'stripe' | 'paypal') => {
+    if (!generatedDesign || !productConfig.customerPrice) return;
 
+    setIsOrderCreating(true);
     try {
-      const response = await fetch('/api/payments/stripe/create-session', {
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId,
-          successUrl: `${window.location.origin}/ai-studio/success`,
-          cancelUrl: `${window.location.origin}/ai-studio?step=4`
+          paymentMethod: method,
+          shippingDetails: {
+            name: customerInfo.name,
+            email: customerInfo.email,
+            address1: shippingAddress.address1,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            zip: shippingAddress.zip,
+            country: shippingAddress.country
+          },
+          items: [{
+            wallpaperId: 'custom',
+            name: `AI Custom Design: ${generatedDesign.prompt.substring(0, 30)}...`,
+            price: productConfig.customerPrice,
+            quantity: 1,
+            imageUrl: generatedDesign.imageUrl,
+            measurements: { 
+              width: productConfig.width, 
+              height: productConfig.height,
+              material: productConfig.material,
+              type: productConfig.type
+            }
+          }]
         })
       });
 
       const data = await response.json();
 
-      if (data.success && data.data.url) {
-        window.location.href = data.data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.orderId && method === 'paypal') {
+        toast.success('Order created. Redirecting to payment...');
+        // For now, redirect to success/payment page
       } else {
-        toast.error('Failed to initiate payment');
+        throw new Error(data.message || 'Checkout failed');
       }
-    } catch (error) {
-      toast.error('Failed to initiate payment');
-    }
-  };
-
-  const initiatePayPalPayment = async () => {
-    if (!orderId) return;
-
-    try {
-      const response = await fetch('/api/payments/paypal/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId })
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.data.approvalUrl) {
-        window.location.href = data.data.approvalUrl;
-      } else {
-        toast.error('Failed to initiate PayPal payment');
-      }
-    } catch (error) {
-      toast.error('Failed to initiate PayPal payment');
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to initiate checkout. Please try again.');
+    } finally {
+      setIsOrderCreating(false);
     }
   };
 
@@ -825,16 +830,24 @@ export default function AIStudioPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Button
-                      onClick={initiateStripePayment}
+                      onClick={() => handleCheckout('stripe')}
+                      disabled={isOrderCreating}
                       size="lg"
                       className="h-16 bg-blue-600 hover:bg-blue-700"
                     >
-                      <CreditCard className="w-6 h-6 mr-3" />
-                      Pay with Credit Card (Stripe)
+                      {isOrderCreating ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                      ) : (
+                        <>
+                          <CreditCard className="w-6 h-6 mr-3" />
+                          Pay with Credit Card (Stripe)
+                        </>
+                      )}
                     </Button>
 
                     <Button
-                      onClick={initiatePayPalPayment}
+                      onClick={() => handleCheckout('paypal')}
+                      disabled={isOrderCreating}
                       size="lg"
                       variant="outline"
                       className="h-16 border-2 border-blue-500 text-blue-600 hover:bg-blue-50"

@@ -1,10 +1,10 @@
-
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createS3Client, getBucketConfig } from '@/lib/aws-config';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import Replicate from "replicate";
+import fs from 'fs';
+import path from 'path';
 import { ratelimit } from '@/lib/ratelimit';
 
 interface GenerateRequest {
@@ -24,11 +24,15 @@ const sanitizePrompt = (prompt: string): string => {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Rate Limiting
+    // 1. Rate Limiting (Opcional, si Upstash está configurado)
     const ip = req.ip ?? '127.0.0.1';
-    const { success } = await ratelimit.limit(ip);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    try {
+      const { success } = await ratelimit.limit(ip);
+      if (!success) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      }
+    } catch (e) {
+      console.warn('Rate limiting skipped due to missing config');
     }
 
     const body: GenerateRequest = await req.json();
@@ -39,153 +43,90 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    // 2. Sanitization & Enhancement
+    // 2. Preparar el Prompt Mejorado para Flux
     const prompt = sanitizePrompt(rawPrompt);
-    let enhancedPrompt = prompt;
+    let enhancedPrompt = `A luxurious and high-end wallpaper design, ${prompt}`;
     if (body.style) enhancedPrompt += `, ${sanitizePrompt(body.style)} style`;
     if (body.colors && body.colors.length > 0) {
       enhancedPrompt += `, featuring colors: ${body.colors.map(c => sanitizePrompt(c)).join(', ')}`;
     }
-    enhancedPrompt += `, high quality wallpaper design, 8k resolution, professional interior design, seamless pattern`;
+    enhancedPrompt += `, 8k resolution, professional interior design, architectural pattern, hyperrealistic, elegant texture.`;
 
-    // 3. Environment Validation (Remove insecure demo mode)
-    const googleApiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
-    if (!googleApiKey) {
-      return NextResponse.json({ error: 'AI service unavailable' }, { status: 503 });
+    // 3. Validar API Key de Replicate
+    const replicateToken = process.env.REPLICATE_API_TOKEN || "r8_JHL6qzgT2WD9ziIcA7pCEHWK6IKdtCO1nFWFT";
+    if (!replicateToken) {
+      return NextResponse.json({ error: 'AI service token missing' }, { status: 503 });
     }
 
+    // 4. Crear registro inicial en la DB de Hostinger
     const generationRequest = await prisma.aIGenerationRequest.create({
       data: {
         userId,
         prompt: enhancedPrompt,
         style: body.style,
-        colors: body.colors,
-        status: 'PROCESSING'
+        colors: body.colors || [],
+        status: 'PROCESSING',
+        aiProvider: 'replicate'
       }
     });
 
     const startTime = Date.now();
 
     try {
-      let imageUrl: string;
-
-      // Check if Google AI Studio API key is configured
-      const googleApiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
+      const replicate = new Replicate({ auth: replicateToken });
       
-      if (!googleApiKey || googleApiKey === 'your_google_ai_studio_api_key_here') {
-        // Fallback to demo images if API key not configured
-        console.log('Google AI Studio API key not configured, using demo mode');
-        console.log('Prompt:', enhancedPrompt);
-        
-        const hash = prompt.length % 5;
-        const demoImages = [
-          'https://images.unsplash.com/photo-1618220179428-22790b461013?w=1024&h=1024&fit=crop',
-          'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=1024&h=1024&fit=crop',
-          'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1024&h=1024&fit=crop',
-          'https://images.unsplash.com/photo-1663162221489-385e5d75d29f?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c3F1YXJlJTIwaW1hZ2V8ZW58MHx8MHx8fDA%3D',
-          'https://images.unsplash.com/photo-1615874694520-474822394e73?w=1024&h=1024&fit=crop'
-        ];
-        
-        imageUrl = demoImages[hash];
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const processingTime = Math.round((Date.now() - startTime) / 1000);
-
-        await prisma.aIGenerationRequest.update({
-          where: { id: generationRequest.id },
-          data: {
-            generatedImageUrl: imageUrl,
-            status: 'COMPLETED',
-            processingTime,
-            cost: 0
-          }
-        });
-
-        return NextResponse.json({
-          success: true,
-          data: {
-            id: generationRequest.id,
-            imageUrl,
+      console.log('Using Replicate (Flux Schnell) for generation...');
+      
+      // Ejecutar el modelo Flux Schnell (Rápido y de Alta Calidad)
+      const output = await replicate.run(
+        "black-forest-labs/flux-schnell",
+        {
+          input: {
             prompt: enhancedPrompt,
-            processingTime,
-            usingDemo: true
+            aspect_ratio: "1:1",
+            output_format: "webp",
+            output_quality: 90,
           }
-        });
+        }
+      );
+
+      // Replicate devuelve una URL temporal o un array de URLs
+      const remoteImageUrl = Array.isArray(output) ? output[0] : output as string;
+      
+      if (!remoteImageUrl) {
+        throw new Error('No image URL received from Replicate');
       }
 
-      // Use Google AI Studio with Nano Banana
-      console.log('Using Google AI Studio (Nano Banana) for image generation');
-      console.log('Prompt:', enhancedPrompt);
-
-      const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
+      // 5. Descargar la imagen y guardarla LOCALMENTE en Hostinger
+      const response = await fetch(remoteImageUrl);
+      const buffer = Buffer.from(await response.arrayBuffer());
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': googleApiKey
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: enhancedPrompt
-            }]
-          }]
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Google AI Studio API error:', errorText);
-        throw new Error(`Google AI Studio API error: ${response.status} - ${errorText}`);
+      const fileName = `flux-${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'ai-generated');
+      
+      // Asegurar que el directorio existe
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      const result = await response.json();
-      console.log('Google AI Studio response received');
+      const localFilePath = path.join(uploadDir, fileName);
+      fs.writeFileSync(localFilePath, buffer);
 
-      // Extract image from response
-      const imagePart = result.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData);
+      // La URL que usará el navegador
+      const finalImageUrl = `/uploads/ai-generated/${fileName}`;
       
-      if (!imagePart || !imagePart.inlineData) {
-        throw new Error('No image data received from Google AI Studio');
-      }
-
-      const base64Image = imagePart.inlineData.data;
-      const mimeType = imagePart.inlineData.mimeType || 'image/jpeg';
-      
-      // Upload image to S3
-      console.log('Uploading generated image to S3...');
-      const s3Client = createS3Client();
-      const { bucketName, folderPrefix } = getBucketConfig();
-      const fileName = `ai-generated-${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-      const s3Key = `${folderPrefix}public/uploads/${fileName}`;
-
-      // Convert base64 to buffer
-      const imageBuffer = Buffer.from(base64Image, 'base64');
-
-      await s3Client.send(new PutObjectCommand({
-        Bucket: bucketName,
-        Key: s3Key,
-        Body: imageBuffer,
-        ContentType: mimeType
-      }));
-
-      // Generate public URL
-      const region = process.env.AWS_REGION || 'us-west-2';
-      imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${s3Key}`;
-      
-      console.log('Image uploaded successfully:', imageUrl);
+      console.log('Image saved locally on Hostinger:', finalImageUrl);
 
       const processingTime = Math.round((Date.now() - startTime) / 1000);
 
-      // Update generation request with result
+      // 6. Actualizar la DB de Hostinger con el resultado final
       await prisma.aIGenerationRequest.update({
         where: { id: generationRequest.id },
         data: {
-          generatedImageUrl: imageUrl,
+          generatedImageUrl: finalImageUrl,
           status: 'COMPLETED',
           processingTime,
-          cost: 0.02 
+          cost: 0.01 // Costo aproximado por uso de Flux Schnell
         }
       });
 
@@ -193,14 +134,13 @@ export async function POST(req: NextRequest) {
         success: true,
         data: {
           id: generationRequest.id,
-          imageUrl,
+          imageUrl: finalImageUrl,
           prompt: enhancedPrompt,
           processingTime
         }
       });
 
     } catch (aiError: any) {
-      // Update generation request with error
       await prisma.aIGenerationRequest.update({
         where: { id: generationRequest.id },
         data: {
@@ -212,13 +152,13 @@ export async function POST(req: NextRequest) {
 
       console.error('AI Generation error:', aiError);
       return NextResponse.json(
-        { error: 'Failed to generate wallpaper design', details: aiError.message },
+        { error: 'Failed to generate wallpaper', details: aiError.message },
         { status: 500 }
       );
     }
 
   } catch (error: any) {
-    console.error('Generate wallpaper error:', error);
+    console.error('Global API error:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error.message },
       { status: 500 }

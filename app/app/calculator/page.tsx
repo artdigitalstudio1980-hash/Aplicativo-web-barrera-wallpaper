@@ -25,6 +25,7 @@ function CalculatorContent() {
   const [wallpaper, setWallpaper] = useState<any | null>(null);
   const [width, setWidth] = useState<string>('');
   const [height, setHeight] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
   // IA Assistant States
@@ -112,6 +113,7 @@ function CalculatorContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          paymentMethod,
           items: [{
             wallpaperId: wallpaper?.id || 'custom',
             name: wallpaper ? (locale === 'es' ? wallpaper.nameEs : wallpaper.name) : 'Custom Wallpaper Order',
@@ -270,6 +272,33 @@ function CalculatorContent() {
                       ${estimatedTotal.toFixed(2)}
                     </span>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('stripe')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                      paymentMethod === 'stripe' 
+                        ? 'border-white bg-white/10' 
+                        : 'border-gray-700 bg-transparent opacity-50 hover:opacity-100'
+                    }`}
+                  >
+                    <Image src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" width={40} height={20} className="h-4 brightness-200 mb-1" />
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400">Card</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('paypal')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                      paymentMethod === 'paypal' 
+                        ? 'border-white bg-white/10' 
+                        : 'border-gray-700 bg-transparent opacity-50 hover:opacity-100'
+                    }`}
+                  >
+                    <Image src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" width={40} height={20} className="h-4 brightness-200 mb-1" />
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400">PayPal</span>
+                  </button>
                 </div>
 
                 <Button 

@@ -26,7 +26,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, Loader2, Image as ImageIcon, RefreshCw } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -69,6 +69,7 @@ export default function ProductsAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -98,6 +99,32 @@ export default function ProductsAdminPage() {
       }
     }
   }, [status, session, router]);
+
+  const handleSync = async () => {
+    if (!confirm('Are you sure you want to sync products from the master catalog? This will update existing products and create new ones.')) {
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      const res = await fetch('/api/admin/products/sync', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        toast.success(data.message || 'Catalog synced successfully');
+        fetchProducts(); // Refresh the list
+      } else {
+        throw new Error(data.message || 'Failed to sync catalog');
+      }
+    } catch (error: any) {
+      console.error('Sync error:', error);
+      toast.error(error.message || 'Error syncing catalog');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -323,15 +350,29 @@ export default function ProductsAdminPage() {
             Manage your wallpaper products and images
           </p>
         </div>
-        <Button
-          onClick={() => {
-            resetForm();
-            setShowDialog(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleSync}
+            disabled={syncing}
+          >
+            {syncing ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
+            Sync Catalog
+          </Button>
+          <Button
+            onClick={() => {
+              resetForm();
+              setShowDialog(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

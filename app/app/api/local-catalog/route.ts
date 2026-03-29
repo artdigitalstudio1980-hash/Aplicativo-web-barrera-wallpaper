@@ -14,7 +14,19 @@ export async function GET(req: NextRequest) {
     }
 
     const files = fs.readdirSync(catalogPath);
-    const images = files.filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f));
+    const images = files.filter(f => {
+      const isImg = /\.(png|jpg|jpeg|webp)$/i.test(f);
+      if (!isImg) return false;
+      
+      const lower = f.toLowerCase();
+      // Filter out non-product informational images
+      if (lower.includes('description') || lower.includes('overview') || 
+          lower.includes('lifestyle') || lower.includes('glassfleece') ||
+          lower.includes('logo')) {
+        return false;
+      }
+      return true;
+    });
 
     // Load master metadata
     const masterPath = path.join(process.cwd(), 'prisma', 'catalog_master.json');
@@ -36,28 +48,38 @@ export async function GET(req: NextRequest) {
 
     // Map images to product data
     const catalog = images.map(fileName => {
-      const lowerFile = fileName.toLowerCase();
-      let type: 'pure' | 'active' | 'phantasy' = 'pure';
+      const lowerFile = fileName.toLowerCase().replace(/\.[^/.]+$/, ""); // remove extension
+      const parts = lowerFile.split('-');
       
+      let type: 'pure' | 'active' | 'phantasy' = 'pure';
       if (lowerFile.startsWith('active-')) type = 'active';
       else if (lowerFile.startsWith('phantasy-')) type = 'phantasy';
       else if (lowerFile.startsWith('pure-')) type = 'pure';
 
-      // Try to find a match in metadata by SKU or name in the filename
-      // e.g. "active-absorb-060.png" might match something with "060" in SKU
+      // Try to find a match in metadata
+      // Algorithm: Check if the SKU ends with the last part of the filename (numeric code)
+      // OR check if the product name is contained in the filename
       const match = productsMetadata.find(p => {
         const skuPart = p.sku.split('-').pop()?.toLowerCase();
-        return skuPart && lowerFile.includes(skuPart);
+        const namePart = p.name.toLowerCase().replace(/\s+/g, '-');
+        
+        // Exact numeric match at the end
+        if (skuPart && parts.includes(skuPart)) return true;
+        // Name match
+        if (lowerFile.includes(namePart)) return true;
+        
+        return false;
       });
 
       return {
-        id: fileName.replace(/\.[^/.]+$/, ""), // File name as ID
+        id: lowerFile, 
         fileName,
         imageUrl: `/catalogo/${fileName}`,
-        name: match?.name || fileName.split('-').slice(1).join(' ').replace(/\.[^/.]+$/, "").split(' ').map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
-        sku: match?.sku || `SYS-${type.substring(0, 3).toUpperCase()}-${fileName.split('-').pop()?.replace(/\.[^/.]+$/, "") || '000'}`,
+        name: match?.name || parts.slice(1).map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
+        sku: match?.sku || `SYS-${type.substring(0, 3).toUpperCase()}-${parts.pop()?.toUpperCase() || '000'}`,
         type,
         dimensions: match?.dimensions || '1.00 x 25.00 m',
+        weight: match?.weight || '225 g/m²',
         description: match?.description || 'Premium German-engineered glass fiber wallcovering.',
         price: match?.price || 45.00
       };

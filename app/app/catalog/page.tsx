@@ -134,36 +134,43 @@ export default function CatalogPage() {
             </motion.div>
           </AnimatePresence>
           
-          <div className="absolute bottom-12 right-12 flex gap-4">
+          <div className="absolute bottom-12 right-12 flex gap-4 z-20">
             {ADS.map((_, i) => (
               <button 
                 key={i} 
                 onClick={() => setAdIndex(i)}
-                className={`h-1.5 rounded-full transition-all duration-1000 ${adIndex === i ? 'w-16 bg-white' : 'w-4 bg-white/20 hover:bg-white/40'}`}
+                className={`h-2 rounded-full transition-all duration-1000 border border-white/20 ${adIndex === i ? 'w-16 bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'w-4 bg-white/20 hover:bg-white/40'}`}
               />
             ))}
           </div>
         </div>
 
-        {/* --- STORE HEADER & NAVIGATION --- */}
-        <div className="flex flex-col space-y-12 mb-20">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-[2px] bg-black"></div>
-                <span className="text-[10px] font-black tracking-[0.4em] uppercase opacity-40">Digital Showroom v2</span>
+        {/* --- PREMIUM NAVIGATION BAR --- */}
+        <div className="flex flex-col space-y-12 mb-24">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 mb-2">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: 48 }}
+                  className="h-[2px] bg-black"
+                />
+                <span className="text-[11px] font-black tracking-[0.5em] uppercase opacity-40">Barrera Digital Showroom</span>
               </div>
-              <h1 className="text-6xl md:text-8xl font-black text-gray-900 tracking-tighter uppercase italic leading-[0.85]">
-                Wallpaper <br/> <span className="text-gray-300" style={{ WebkitTextStroke: '2px #d1d5db' }}>Catalog</span>
+              <h1 className="text-7xl md:text-9xl font-black text-gray-900 tracking-tighter uppercase italic leading-[0.8] mb-4">
+                The <br/> <span className="text-transparent" style={{ WebkitTextStroke: '2px #000' }}>Catalog</span>
               </h1>
+              <p className="text-gray-400 text-sm font-medium tracking-widest uppercase italic max-w-md border-l-2 border-gray-100 pl-6">
+                Explore our curated selection of German-engineered glass fiber textures.
+              </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 w-full lg:w-auto">
-              <div className="relative group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-black transition-colors" />
+            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+              <div className="relative group w-full sm:w-[500px]">
+                <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-black transition-all duration-500" />
                 <Input 
-                  placeholder="SEARCH COLLECTION..." 
-                  className="pl-16 h-20 w-full sm:w-[450px] rounded-[2rem] border-gray-100 bg-gray-50/50 focus:bg-white transition-all shadow-sm focus:shadow-2xl text-xs font-bold tracking-widest placeholder:opacity-50"
+                  placeholder="SEARCH BY NAME OR SKU..." 
+                  className="pl-20 h-24 w-full rounded-[2.5rem] border-gray-100 bg-gray-50/30 focus:bg-white focus:border-black transition-all duration-700 shadow-sm focus:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] text-xs font-black tracking-[0.2em] placeholder:opacity-30 border-2"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -264,17 +271,17 @@ export default function CatalogPage() {
                     </div>
                   </div>
 
-                  <div className="pt-2 flex gap-4">
+                  <div className="pt-4 flex gap-4">
                     <Button 
                       onClick={() => handleProductClick(product)}
                       variant="outline" 
-                      className="flex-1 h-14 rounded-2xl border-2 border-gray-100 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
+                      className="flex-1 h-16 rounded-[1.5rem] border-2 border-gray-100 font-black uppercase text-[10px] tracking-[0.25em] hover:bg-black hover:text-white hover:border-black transition-all duration-500 active:scale-95 shadow-sm"
                     >
                       INFO
                     </Button>
-                    <Link href={`/design/?wallpaperId=${product.id}`} className="flex-[2]">
-                      <Button className="w-full h-14 rounded-2xl bg-black text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all hover:scale-[1.02] active:scale-95 gap-3">
-                        <Wand2 className="w-4 h-4" />
+                    <Link href={`/design/?wallpaperId=${product.id}`} className="flex-[2.5]">
+                      <Button className="w-full h-16 rounded-[1.5rem] bg-black text-white font-black uppercase text-[10px] tracking-[0.25em] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:bg-blue-600 transition-all duration-500 hover:scale-[1.03] active:scale-95 gap-3 group/btn">
+                        <Wand2 className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
                         Simulador
                       </Button>
                     </Link>

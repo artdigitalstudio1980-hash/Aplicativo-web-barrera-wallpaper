@@ -24,6 +24,7 @@ interface WallpaperDetailModalProps {
     imageUrl: string;
     type: 'pure' | 'active' | 'phantasy';
     dimensions?: string;
+    weight?: string;
     description?: string;
     price?: number;
   } | null;
@@ -71,47 +72,52 @@ export function WallpaperDetailModal({ isOpen, onClose, product }: WallpaperDeta
             </div>
           </div>
 
-          {/* --- RIGHT: INFO PANEL --- */}
-          <div className="w-full md:w-[400px] flex flex-col bg-white overflow-y-auto">
+          {/* --- INFO PANEL --- */}
+          <div className="w-full md:w-[450px] flex flex-col bg-white overflow-y-auto border-l border-zinc-100">
             <div className="p-8 md:p-12 space-y-10 flex-1">
-              <div className="space-y-2">
-                <p className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">{product.sku}</p>
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-tight">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className={`text-[10px] font-black px-4 py-1.5 rounded-full text-white uppercase tracking-widest ${label.color}`}>
+                    {label.name}
+                  </span>
+                  <span className="text-[10px] text-gray-300 font-mono tracking-widest uppercase">/ {product.sku}</span>
+                </div>
+                <h2 className="text-5xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase italic leading-[0.85]">
                   {product.name}
                 </h2>
                 {product.price && (
-                  <p className="text-2xl font-black text-blue-600 mt-2">${product.price.toFixed(2)}</p>
+                  <p className="text-3xl font-black text-blue-600 tracking-tighter mt-4">${product.price.toFixed(2)}</p>
                 )}
               </div>
 
-              <div className="space-y-6">
-                <div className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                    <Layers className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+              <div className="grid grid-cols-1 gap-8">
+                <div className="flex items-center gap-5 group">
+                  <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-all">
+                    <Ruler className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Paper Type</p>
-                    <p className="text-sm font-bold text-gray-900 uppercase italic">{label.name}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Dimensions</p>
+                    <p className="text-base font-bold text-gray-900 tracking-tight">{product.dimensions || '1.00 x 25.00 m'}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                    <Ruler className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                <div className="flex items-center gap-5 group">
+                  <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-all">
+                    <Maximize2 className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Measurements</p>
-                    <p className="text-sm font-bold text-gray-900">{product.dimensions || '1.00 x 25.00 m'}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Weight / Density</p>
+                    <p className="text-base font-bold text-gray-900 tracking-tight">{product.weight || '225 g/m²'}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                    <Info className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                <div className="flex items-start gap-5 group">
+                  <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-all shrink-0">
+                    <Info className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Description</p>
-                    <p className="text-xs text-gray-500 leading-relaxed max-w-[280px]">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Description</p>
+                    <p className="text-sm text-gray-500 leading-relaxed font-medium">
                       {product.description || 'Premium German-engineered glass fiber wallcovering. Durable, impact-resistant, and aesthetically unmatched.'}
                     </p>
                   </div>
@@ -119,23 +125,34 @@ export function WallpaperDetailModal({ isOpen, onClose, product }: WallpaperDeta
               </div>
 
               {/* Calculator Section */}
-              <div className="pt-8 border-t border-gray-100">
+              <div className="pt-10 border-t border-gray-100">
                 <Link href={`/calculator/?wallpaperId=${product.id}`}>
-                  <Button variant="outline" className="w-full h-16 rounded-2xl border-2 border-dashed border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all gap-3 group">
-                    <Calculator className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
-                    <span className="font-black uppercase text-xs tracking-widest text-gray-600 group-hover:text-blue-600">Calculadora de Rollos</span>
+                  <Button variant="outline" className="w-full h-20 rounded-[2rem] border-2 border-dashed border-gray-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all gap-4 group">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                      <Calculator className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-black uppercase text-xs tracking-widest text-gray-900">Roll Calculator</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Calculadora de Rollos</p>
+                    </div>
                   </Button>
                 </Link>
-                <p className="text-[10px] text-gray-400 text-center mt-4">Compra directa sin simulación previa</p>
               </div>
             </div>
 
             {/* --- BOTTOM BAR: SIMULATOR --- */}
-            <div className="p-6 bg-gray-50 border-t border-gray-100 mt-auto">
+            <div className="p-8 bg-zinc-900 mt-auto">
               <Link href={`/design/?wallpaperId=${product.id}`} className="w-full block">
-                <Button className="w-full h-16 rounded-2xl bg-black text-white hover:bg-blue-600 transition-all gap-4 shadow-xl transform hover:-translate-y-1 active:scale-95 group">
-                  <Wand2 className="w-6 h-6 animate-pulse" />
-                  <span className="font-black uppercase text-sm tracking-[0.2em]">Open Simulador</span>
+                <Button className="w-full h-20 rounded-[2rem] bg-white text-black hover:bg-blue-600 hover:text-white transition-all gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.3)] transform hover:-translate-y-1 active:scale-95 group overflow-hidden relative">
+                  <motion.div 
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className="flex items-center gap-4 z-10"
+                  >
+                    <Wand2 className="w-7 h-7" />
+                    <span className="font-black uppercase text-base tracking-[0.25em] italic">Open Simulador</span>
+                  </motion.div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-1000 -translate-x-full" />
                 </Button>
               </Link>
             </div>

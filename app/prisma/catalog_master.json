@@ -9,16 +9,7 @@
         "weight": "225 g/m²",
         "dimensions": "1 x 12.5 | 25 m",
         "description": "Natural design with bamboo texture. Features Aqua Technology (water-activated adhesive).",
-        "descriptionEs": "Diseño natural con textura de bambú. Incluye Tecnología Aqua (adhesivo activado por agua)."
-      },
-      {
-        "sku": "SYS-PHA-072",
-        "name": "Diamond Dust 072",
-        "nameEs": "SYSTEXX Phantasy Diamond Dust 072",
-        "weight": "225 g/m²",
-        "dimensions": "1 x 12.5 | 25 m",
-        "description": "Elegant texture with a subtle diamond dust shimmer effect.",
-        "descriptionEs": "Textura elegante con un sutil efecto de brillo de polvo de diamante."
+        "descriptionEs": "Diseño natural con textura de bambú. Incluye Tecnología Aqua."
       },
       {
         "sku": "SYS-PHA-073",
@@ -27,25 +18,70 @@
         "weight": "225 g/m²",
         "dimensions": "1 x 12.5 | 25 m",
         "description": "Star-like texture patterns for a magical wall atmosphere.",
-        "descriptionEs": "Patrones de textura tipo estrella para una atmósfera mágica en la pared."
+        "descriptionEs": "Patrones de textura tipo estrella para una atmósfera mágica."
       },
       {
         "sku": "SYS-PHA-077",
         "name": "Icecubes 077",
         "nameEs": "SYSTEXX Phantasy Icecubes 077",
         "weight": "225 g/m²",
-        "dimensions": "1 x 12.5 | 25 m",
+        "dimensions": "1.00 x 25.00 m",
         "description": "Geometric ice cube inspired texture for modern interiors.",
-        "descriptionEs": "Textura geométrica inspirada en cubos de hielo para interiores modernos."
+        "descriptionEs": "Textura geométrica inspirada en cubos de hielo."
+      },
+      {
+        "sku": "SYS-PHA-EP77",
+        "name": "Icecubes EP77",
+        "nameEs": "SYSTEXX Phantasy Icecubes EP77",
+        "weight": "215 g/m²",
+        "dimensions": "0.95 x 15.5 m",
+        "description": "Enhanced performance ice cube texture.",
+        "descriptionEs": "Textura de cubos de hielo con rendimiento mejorado."
+      },
+      {
+        "sku": "SYS-PHA-082",
+        "name": "Orient 082",
+        "nameEs": "SYSTEXX Phantasy Orient 082",
+        "weight": "225 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Oriental-inspired texture for exotic and premium environments.",
+        "descriptionEs": "Textura de inspiración oriental para ambientes exóticos."
+      },
+      {
+        "sku": "SYS-PHA-083",
+        "name": "Desert 083",
+        "nameEs": "SYSTEXX Phantasy Desert 083",
+        "weight": "225 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Subtle desert sand patterns for a warm and natural feel.",
+        "descriptionEs": "Patrones sutiles de arena del desierto para una sensación cálida."
+      },
+      {
+        "sku": "SYS-PHA-084",
+        "name": "Stars 084",
+        "nameEs": "SYSTEXX Phantasy Stars 084",
+        "weight": "225 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Beautiful starry sky texture.",
+        "descriptionEs": "Hermosa textura de cielo estrellado."
       },
       {
         "sku": "SYS-PHA-087",
         "name": "Jungle 087",
         "nameEs": "SYSTEXX Phantasy Jungle 087",
         "weight": "225 g/m²",
-        "dimensions": "1 x 12.5 | 25 m",
+        "dimensions": "1.00 x 25.00 m",
         "description": "Organic jungle leaf patterns for a tropical feel.",
         "descriptionEs": "Patrones orgánicos de hojas de selva para una sensación tropical."
+      },
+      {
+        "sku": "SYS-PHA-EP08",
+        "name": "Waterfall EP08",
+        "nameEs": "SYSTEXX Phantasy Waterfall EP08",
+        "weight": "235 g/m²",
+        "dimensions": "0.95 x 15.5 m",
+        "description": "Vertical water flow texture for a fluid wall design.",
+        "descriptionEs": "Textura de flujo de agua vertical para un diseño fluido."
       }
     ]
   },
@@ -53,31 +89,175 @@
     "category": "SYSTEXX Pure",
     "products": [
       {
-        "sku": "SYS-PUR-J04",
+        "sku": "SYS-PUR-004",
         "name": "Jute 004",
         "nameEs": "SYSTEXX Pure Jute 004",
         "weight": "325 g/m²",
-        "dimensions": "1 x 25 m",
+        "dimensions": "1.00 x 25.00 m",
         "description": "Classic jute weave texture, timeless and durable.",
         "descriptionEs": "Clásica textura de tejido de yute, atemporal y duradera."
       },
       {
-        "sku": "SYS-PUR-S532",
-        "name": "Structure 532",
-        "nameEs": "SYSTEXX Pure Structure 532",
-        "weight": "170 g/m²",
-        "dimensions": "1 x 50 m",
-        "description": "Fine structural glass fabric for smooth, professional finish.",
-        "descriptionEs": "Tejido de vidrio de estructura fina para un acabado liso y profesional."
+        "sku": "SYS-PUR-075",
+        "name": "Dots 075",
+        "nameEs": "SYSTEXX Pure Dots 075",
+        "weight": "225 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Subtle dot patterns for a minimalist and modern finish.",
+        "descriptionEs": "Patrones sutiles de puntos para un acabado minimalista."
+      },
+      {
+        "sku": "SYS-PUR-006",
+        "name": "Big Stripes 006",
+        "nameEs": "SYSTEXX Pure Big Stripes 006",
+        "weight": "320 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Wide stripe patterns for a bold wall statement.",
+        "descriptionEs": "Patrones de rayas anchas para un diseño impactante."
+      },
+      {
+        "sku": "SYS-PUR-025",
+        "name": "Small Stripes 025",
+        "nameEs": "SYSTEXX Pure Small Stripes 025",
+        "weight": "320 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Fine stripe patterns for elegant and textured walls.",
+        "descriptionEs": "Patrones de rayas finas para paredes elegantes."
       },
       {
         "sku": "SYS-PUR-SKY88",
         "name": "Skyline EP88",
         "nameEs": "SYSTEXX Pure Skyline EP88",
-        "weight": "260 g/m²",
+        "weight": "360 g/m²",
         "dimensions": "0.95 x 15.5 m",
-        "description": "Impressive skyline inspired effects that vary with light.",
-        "descriptionEs": "Impresionantes efectos inspirados en el horizonte que varían con la luz."
+        "description": "Impressive skyline inspired effects.",
+        "descriptionEs": "Impresionantes efectos inspirados en el horizonte."
+      },
+      {
+        "sku": "SYS-PUR-532",
+        "name": "Structure 532",
+        "nameEs": "SYSTEXX Pure Structure 532",
+        "weight": "170 g/m²",
+        "dimensions": "1.00 x 50.00 m",
+        "description": "Fine structure for professional and smooth finish.",
+        "descriptionEs": "Estructura fina para un acabado profesional y liso."
+      },
+      {
+        "sku": "SYS-PUR-603",
+        "name": "Structure 603",
+        "nameEs": "SYSTEXX Pure Structure 603",
+        "weight": "195 g/m²",
+        "dimensions": "1.00 x 50.00 m",
+        "description": "Medium structure for versatile interior design.",
+        "descriptionEs": "Estructura media para un diseño interior versátil."
+      },
+      {
+        "sku": "SYS-PUR-604",
+        "name": "Structure 604",
+        "nameEs": "SYSTEXX Pure Structure 604",
+        "weight": "195 g/m²",
+        "dimensions": "1.00 x 50.00 m",
+        "description": "Defined structural pattern for contemporary spaces.",
+        "descriptionEs": "Patrón estructural definido para espacios contemporáneos."
+      },
+      {
+        "sku": "SYS-PUR-608",
+        "name": "Structure 608",
+        "nameEs": "SYSTEXX Pure Structure 608",
+        "weight": "250 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Heavy-duty structure for high durability.",
+        "descriptionEs": "Estructura de alta resistencia para máxima durabilidad."
+      },
+      {
+        "sku": "SYS-PUR-629",
+        "name": "Structure 629",
+        "nameEs": "SYSTEXX Pure Structure 629",
+        "weight": "165 g/m²",
+        "dimensions": "1.00 x 50.00 m",
+        "description": "Lightweight structural weave for elegant walls.",
+        "descriptionEs": "Tejido estructural ligero para paredes elegantes."
+      },
+      {
+        "sku": "SYS-PUR-633",
+        "name": "Structure 633",
+        "nameEs": "SYSTEXX Pure Structure 633",
+        "weight": "185 g/m²",
+        "dimensions": "1.00 x 50.00 m",
+        "description": "Distinctive structural pattern.",
+        "descriptionEs": "Patrón estructural distintivo."
+      },
+      {
+        "sku": "SYS-PUR-635",
+        "name": "Structure 635",
+        "nameEs": "SYSTEXX Pure Structure 635",
+        "weight": "215 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Reinforced structure for premium interiors.",
+        "descriptionEs": "Estructura reforzada para interiores de alta gama."
+      },
+      {
+        "sku": "SYS-PUR-639",
+        "name": "Structure 639",
+        "nameEs": "SYSTEXX Pure Structure 639",
+        "weight": "170 g/m²",
+        "dimensions": "1.00 x 50.00 m",
+        "description": "Versatile glass fiber structure.",
+        "descriptionEs": "Estructura versátil de fibra de vidrio."
+      },
+      {
+        "sku": "SYS-PUR-650",
+        "name": "Structure 650",
+        "nameEs": "SYSTEXX Pure Structure 650",
+        "weight": "200 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Solid and reliable structural wallcovering.",
+        "descriptionEs": "Revestimiento estructural sólido y confiable."
+      },
+      {
+        "sku": "SYS-PUR-V11",
+        "name": "Fleece V11",
+        "nameEs": "SYSTEXX Pure Fleece V11",
+        "weight": "115 g/m²",
+        "dimensions": "1.00 x 50.00 m",
+        "description": "Ultra-smooth fleece for a seamless wall finish.",
+        "descriptionEs": "Velo ultra liso para un acabado de pared sin costuras."
+      },
+      {
+        "sku": "SYS-PUR-V14",
+        "name": "Fleece V14",
+        "nameEs": "SYSTEXX Pure Fleece V14",
+        "weight": "140 g/m²",
+        "dimensions": "1.00 x 30.00 m",
+        "description": "Standard weight fleece for professional painting surface.",
+        "descriptionEs": "Velo de peso estándar para superficie de pintura profesional."
+      },
+      {
+        "sku": "SYS-PUR-V16",
+        "name": "Fleece V16",
+        "nameEs": "SYSTEXX Pure Fleece V16",
+        "weight": "160 g/m²",
+        "dimensions": "1.00 x 30.00 m",
+        "description": "Reinforced fleece for stability and smoothness.",
+        "descriptionEs": "Velo reforzado para mayor estabilidad y suavidad."
+      },
+      {
+        "sku": "SYS-PUR-V22",
+        "name": "Fleece V22",
+        "nameEs": "SYSTEXX Pure Fleece V22",
+        "weight": "220 g/m²",
+        "dimensions": "1.00 x 30 | 50 m",
+        "description": "Heavyweight premium fleece for maximum wall protection.",
+        "descriptionEs": "Velo premium de alto gramaje para máxima protección."
+      },
+      {
+        "sku": "SYS-PUR-060",
+        "name": "Silk 060",
+        "nameEs": "SYSTEXX Pure Silk 060",
+        "weight": "230 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Luxurious silk-like texture for sophisticated spaces.",
+        "descriptionEs": "Textura lujosa tipo seda para espacios sofisticados."
       }
     ]
   },
@@ -91,7 +271,16 @@
         "weight": "950 g/m²",
         "dimensions": "0.95 x 16.0 m",
         "description": "Magnetic surface solution, ideal for offices and creative spaces.",
-        "descriptionEs": "Solución de superficie magnética, ideal para oficinas y espacios creativos."
+        "descriptionEs": "Superficie magnética, ideal para oficinas."
+      },
+      {
+        "sku": "SYS-ACT-M39",
+        "name": "Magnetic M39",
+        "nameEs": "SYSTEXX Active Magnetic M39",
+        "weight": "1200 g/m²",
+        "dimensions": "0.95 x 10.0 m",
+        "description": "High-strength magnetic surface.",
+        "descriptionEs": "Superficie magnética de alta resistencia."
       },
       {
         "sku": "SYS-ACT-R938",
@@ -100,7 +289,16 @@
         "weight": "210 g/m²",
         "dimensions": "1 x 25 m",
         "description": "Perfect for covering irregular surfaces and wall renovations.",
-        "descriptionEs": "Perfecto para cubrir superficies irregulares y renovaciones de paredes."
+        "descriptionEs": "Perfecto para renovaciones sobre superficies irregulares."
+      },
+      {
+        "sku": "SYS-ACT-ABS60",
+        "name": "Absorb 060",
+        "nameEs": "SYSTEXX Active Absorb 060",
+        "weight": "250 g/m²",
+        "dimensions": "1.00 x 25.00 m",
+        "description": "Sound-absorbing texture for acoustic comfort.",
+        "descriptionEs": "Textura absorbente de sonido para confort acústico."
       }
     ]
   }

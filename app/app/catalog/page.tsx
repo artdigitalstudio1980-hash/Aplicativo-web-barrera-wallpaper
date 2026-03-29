@@ -1,28 +1,39 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Loader2, Wand2, ShoppingCart, 
-  Ruler, Info, ChevronRight, ChevronLeft, 
+  Ruler, Info, ChevronRight, X,
   Sparkles, ShieldCheck, Flame, Zap, Droplets,
-  Filter, Grid, LayoutGrid, Layers
+  Calculator, ArrowRight, Maximize2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useLocale } from '@/components/locale-context';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { WallpaperDetailModal } from '@/components/catalog/WallpaperDetailModal';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 // --- DATA CONFIGURATION ---
 const ADS = [
-  { src: '/publicidad/cover-systexx-collection.png', title: 'SYSTEXX Collection', desc: 'German engineering meets interior art.' },
-  { src: '/publicidad/active-acoustherm-description.png', title: 'AcousTherm Technology', desc: 'Heats rooms 4x faster and optimizes acoustics.' },
-  { src: '/publicidad/active-magnetic-description.png', title: 'Magnetic Walls', desc: 'Transform surfaces into interactive spaces.' },
-  { src: '/publicidad/active-fireprotect-description.png', title: 'Fire Protection', desc: 'Non-combustible safety for high-traffic areas.' },
+  { src: '/catalogo/active-magnetic-whiteboard-description.png', title: 'SYSTEXX Active', desc: 'Magnetic walls and whiteboard surfaces for interactive spaces.' },
+  { src: '/catalogo/active-absorb-description.png', title: 'Acoustic Comfort', desc: 'Reduce noise levels with our sound-absorbing glass textile.' },
+  { src: '/catalogo/phantasy-description.png', title: 'Phantasy Designs', desc: 'Exclusive patterns for sophisticated interior architectural statements.' },
+];
+
+const CATEGORIES = [
+  { id: 'all', name: 'All Collections', slug: 'all' },
+  { id: 'pure', name: 'Pure', slug: 'pure' },
+  { id: 'active', name: 'Active', slug: 'active' },
+  { id: 'phantasy', name: 'Phantasy', slug: 'phantasy' },
 ];
 
 export default function CatalogPage() {
@@ -30,29 +41,25 @@ export default function CatalogPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [adIndex, setAdIndex] = useState(0);
-  
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   useEffect(() => {
-    fetchLocalCatalog();
+    fetchProducts();
     const timer = setInterval(() => setAdIndex((prev) => (prev + 1) % ADS.length), 7000);
     return () => clearInterval(timer);
   }, []);
 
-  const fetchLocalCatalog = async () => {
+  const fetchProducts = async () => {
     try {
-      setLoading(true);
-      const res = await fetch('/api/local-catalog');
+      const res = await fetch('/api/products');
       const data = await res.json();
       if (data.success) {
         setProducts(data.products);
       }
     } catch (error) {
-      console.error('Error fetching local catalog:', error);
+      console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
@@ -60,73 +67,71 @@ export default function CatalogPage() {
 
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
-    if (activeTab !== 'all') {
-      filtered = filtered.filter(p => p.type === activeTab);
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(p => p.category.slug === selectedCategory);
     }
     if (searchQuery) {
       filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.nameEs || p.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
     return filtered;
-  }, [products, searchQuery, activeTab]);
+  }, [products, searchQuery, selectedCategory]);
 
-  const handleProductClick = (product: any) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
+  const handleOpenSimulador = (productId: string) => {
+    router.push(`/design/?wallpaperId=${productId}`);
+  };
+
+  const handleOpenCalculator = (productId: string) => {
+    router.push(`/calculator/?wallpaperId=${productId}`);
   };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Loader2 className="w-12 h-12 text-black mb-4" />
-        </motion.div>
-        <p className="text-sm font-black tracking-[0.3em] uppercase italic opacity-50">Sincronizando Catálogo...</p>
+        <Loader2 className="w-10 h-10 animate-spin text-black mb-4" />
+        <p className="text-sm font-bold tracking-widest uppercase">Initializing Virtual Showroom...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-white selection:bg-black selection:text-white">
+    <div className="min-h-screen pt-24 pb-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* --- LUXURY SCROLL ADVERTISING (TOP) --- */}
-        <div className="relative h-[400px] md:h-[500px] rounded-[3.5rem] overflow-hidden mb-20 shadow-[-20px_20px_60px_#d9d9d9,20px_-20px_60px_#ffffff] group cursor-default">
+        <div className="relative h-[300px] md:h-[400px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl group">
           <AnimatePresence mode="wait">
             <motion.div
               key={adIndex}
               initial={{ opacity: 0, scale: 1.1 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.2 }}
               className="absolute inset-0"
             >
               <Image 
                 src={ADS[adIndex].src} 
                 alt={ADS[adIndex].title} 
                 fill 
-                className="object-cover brightness-75 scale-100 group-hover:scale-105 transition-transform duration-[5s]"
+                className="object-cover brightness-90"
                 priority
+                unoptimized
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-12 md:p-20">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-10 md:p-16">
                 <motion.div
-                  initial={{ y: 50, opacity: 0 }}
+                  initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="max-w-3xl"
+                  transition={{ delay: 0.4 }}
                 >
-                  <span className="bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-[0.3em] mb-6 inline-block">
-                    SYSTEXX GERMANY
+                  <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] mb-4 inline-block">
+                    SYSTEXX Technology
                   </span>
-                  <h2 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter uppercase italic leading-[0.9]">
-                    {ADS[adIndex].title.split(' ').map((word, i) => i === 1 ? <span key={i} className="text-transparent border-b-4 border-white pb-1" style={{ WebkitTextStroke: '1px white' }}>{word} </span> : word + ' ')}
+                  <h2 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tighter uppercase italic">
+                    {ADS[adIndex].title}
                   </h2>
-                  <p className="text-gray-300 text-lg md:text-2xl font-light leading-relaxed opacity-80 decoration-white/30 underline underline-offset-8">
+                  <p className="text-gray-200 text-lg max-w-2xl font-light">
                     {ADS[adIndex].desc}
                   </p>
                 </motion.div>
@@ -134,187 +139,249 @@ export default function CatalogPage() {
             </motion.div>
           </AnimatePresence>
           
-          <div className="absolute bottom-12 right-12 flex gap-4 z-20">
+          <div className="absolute bottom-10 right-10 flex gap-3">
             {ADS.map((_, i) => (
               <button 
                 key={i} 
                 onClick={() => setAdIndex(i)}
-                className={`h-2 rounded-full transition-all duration-1000 border border-white/20 ${adIndex === i ? 'w-16 bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'w-4 bg-white/20 hover:bg-white/40'}`}
+                className={`h-1 rounded-full transition-all duration-500 ${adIndex === i ? 'w-12 bg-white' : 'w-3 bg-white/30'}`}
               />
             ))}
           </div>
         </div>
 
-        {/* --- PREMIUM NAVIGATION BAR --- */}
-        <div className="flex flex-col space-y-12 mb-24">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12">
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 mb-2">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: 48 }}
-                  className="h-[2px] bg-black"
-                />
-                <span className="text-[11px] font-black tracking-[0.5em] uppercase opacity-40">Barrera Digital Showroom</span>
-              </div>
-              <h1 className="text-7xl md:text-9xl font-black text-gray-900 tracking-tighter uppercase italic leading-[0.8] mb-4">
-                The <br/> <span className="text-transparent" style={{ WebkitTextStroke: '2px #000' }}>Catalog</span>
+        {/* --- STORE HEADER & FILTERS --- */}
+        <div className="flex flex-col gap-10 mb-16">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+            <div className="space-y-4">
+              <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
+                Virtual <span className="text-gray-400">Showroom</span>
               </h1>
-              <p className="text-gray-400 text-sm font-medium tracking-widest uppercase italic max-w-md border-l-2 border-gray-100 pl-6">
-                Explore our curated selection of German-engineered glass fiber textures.
+              <p className="text-gray-500 max-w-md font-light">
+                Explore the exclusive German SYSTEXX collection. 
+                Pure aesthetics, functional excellence, and creative freedom.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
-              <div className="relative group w-full sm:w-[500px]">
-                <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-black transition-all duration-500" />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input 
-                  placeholder="SEARCH BY NAME OR SKU..." 
-                  className="pl-20 h-24 w-full rounded-[2.5rem] border-gray-100 bg-gray-50/30 focus:bg-white focus:border-black transition-all duration-700 shadow-sm focus:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] text-xs font-black tracking-[0.2em] placeholder:opacity-30 border-2"
+                  placeholder="Search wallpaper..." 
+                  className="pl-12 h-14 w-full sm:w-[350px] rounded-full border-gray-100 bg-gray-50/50 focus:bg-white transition-all shadow-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+              <Link href="/design/">
+                <Button className="h-14 px-8 rounded-full bg-black text-white hover:bg-gray-800 gap-3 shadow-xl transition-all hover:scale-105">
+                  <Wand2 className="w-5 h-5" />
+                  <span className="font-bold uppercase text-xs tracking-widest">AI Designer</span>
+                </Button>
+              </Link>
             </div>
           </div>
 
-          {/* --- TABS / CLASSIFICATION --- */}
-          <div className="flex flex-col md:flex-row items-center justify-between border-b border-gray-100 pb-8 gap-8">
-            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-              <TabsList className="bg-transparent h-auto p-0 flex gap-10">
-                {['all', 'pure', 'active', 'phantasy'].map((tab) => (
-                  <TabsTrigger 
-                    key={tab}
-                    value={tab} 
-                    className={`
-                      relative p-0 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] data-[state=active]:text-black text-gray-400
-                      hover:text-gray-600 transition-all after:absolute after:bottom-[-2rem] after:left-0 after:h-1 after:w-0 
-                      after:bg-black after:transition-all data-[state=active]:after:w-full
-                    `}
-                  >
-                    {tab}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            <div className="flex items-center gap-6">
-              <LayoutGrid className="w-5 h-5 text-black" />
-              <div className="h-4 w-[1px] bg-gray-200"></div>
-              <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase italic">
-                {filteredProducts.length} DESIGNS FOUND
-              </p>
-            </div>
+          {/* CATEGORY TABS */}
+          <div className="flex flex-wrap gap-3 border-b border-gray-100 pb-6">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.slug)}
+                className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                  selectedCategory === cat.slug 
+                    ? 'bg-black text-white shadow-lg' 
+                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* --- PRODUCT GRID --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-20">
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.map((product, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+          {filteredProducts.map((product, idx) => {
+            const imgUrl = product.images?.[0] || '/images/placeholder.png';
+            
+            return (
               <motion.div
                 key={product.id}
-                layout
                 initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: idx * 0.03, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05, duration: 0.6 }}
+                viewport={{ once: true }}
                 className="group relative flex flex-col bg-white"
               >
                 <div 
-                  className="relative aspect-[3/4.5] rounded-[3rem] overflow-hidden bg-gray-50 mb-8 cursor-pointer shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] group-hover:shadow-[0_45px_100px_-20px_rgba(0,0,0,0.2)] transition-all duration-1000"
-                  onClick={() => handleProductClick(product)}
+                  className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden bg-gray-50 mb-6 cursor-pointer shadow-sm group-hover:shadow-2xl transition-all duration-700"
+                  onClick={() => setSelectedProduct(product)}
                 >
                   <Image 
-                    src={product.imageUrl} 
+                    src={imgUrl} 
                     alt={product.name} 
                     fill 
-                    className="object-cover transition-transform duration-[2s] group-hover:scale-110"
+                    className="object-cover transition-transform duration-1000 group-hover:scale-110"
                     unoptimized
                   />
                   
-                  {/* Type Badge */}
-                  <div className="absolute top-6 left-6 z-10 transition-transform duration-700 group-hover:-translate-y-2">
-                    <span className={`
-                      text-white text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md shadow-lg
-                      ${product.type === 'active' ? 'bg-orange-600/80' : product.type === 'phantasy' ? 'bg-purple-600/80' : 'bg-blue-600/80'}
-                    `}>
-                      {product.type}
-                    </span>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-8 text-center backdrop-blur-[2px]">
+                    <Maximize2 className="w-8 h-8 text-white mb-2" />
+                    <p className="text-white font-black text-xs uppercase tracking-widest">Quick View</p>
                   </div>
 
-                  <div className="absolute inset-x-0 bottom-0 p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[0.22, 1, 0.36, 1]">
-                    <div className="bg-white/10 backdrop-blur-2xl border border-white/20 p-6 rounded-[2rem] flex flex-col items-center">
-                      <Sparkles className="w-8 h-8 text-white mb-3" />
-                      <p className="text-white font-black text-xs mb-6 uppercase tracking-widest italic text-center">Open Technical Sheet</p>
-                      <Button variant="secondary" className="w-full rounded-2xl h-14 font-black text-[10px] tracking-[0.2em] bg-white text-black hover:bg-blue-600 hover:text-white transition-all">
-                        VIEW DETAILS
-                      </Button>
-                    </div>
+                  <div className="absolute top-6 right-6">
+                    <Badge className="bg-white/90 backdrop-blur-md text-black border-none font-black text-[9px] uppercase tracking-tighter px-3 py-1">
+                      {product.category.name}
+                    </Badge>
                   </div>
                 </div>
 
-                <div className="px-4 space-y-4">
+                <div className="px-2 space-y-3">
                   <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <h3 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic leading-[0.9] group-hover:text-blue-600 transition-colors duration-500">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-black text-gray-900 tracking-tighter uppercase italic leading-tight group-hover:text-blue-600 transition-colors truncate">
                         {product.name}
                       </h3>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">{product.sku}</p>
-                        <div className="w-1 h-1 rounded-full bg-gray-200"></div>
-                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Premium Fiber</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-2xl font-black text-gray-900 leading-none">${product.price.toFixed(2)}</span>
+                      <p className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">{product.sku}</p>
                     </div>
                   </div>
 
-                  <div className="pt-4 flex gap-4">
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                    <span className="text-xl font-black text-gray-900">${product.price.toFixed(2)}</span>
                     <Button 
-                      onClick={() => handleProductClick(product)}
-                      variant="outline" 
-                      className="flex-1 h-16 rounded-[1.5rem] border-2 border-gray-100 font-black uppercase text-[10px] tracking-[0.25em] hover:bg-black hover:text-white hover:border-black transition-all duration-500 active:scale-95 shadow-sm"
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setSelectedProduct(product)}
+                      className="rounded-full h-8 px-4 text-[9px] font-black uppercase tracking-widest gap-2 hover:bg-gray-100"
                     >
-                      INFO
+                      Details <ArrowRight className="w-3 h-3" />
                     </Button>
-                    <Link href={`/design/?wallpaperId=${product.id}`} className="flex-[2.5]">
-                      <Button className="w-full h-16 rounded-[1.5rem] bg-black text-white font-black uppercase text-[10px] tracking-[0.25em] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:bg-blue-600 transition-all duration-500 hover:scale-[1.03] active:scale-95 gap-3 group/btn">
-                        <Wand2 className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
-                        Simulador
-                      </Button>
-                    </Link>
                   </div>
                 </div>
               </motion.div>
-            ))}
-          </AnimatePresence>
+            );
+          })}
         </div>
 
-        {/* --- EMPTY STATE --- */}
         {filteredProducts.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-40 border-2 border-dashed border-gray-100 rounded-[4rem]">
-            <Filter className="w-16 h-16 text-gray-100 mb-6" />
-            <h3 className="text-3xl font-black text-gray-400 tracking-tighter uppercase italic">No designs found</h3>
-            <p className="text-gray-300 text-sm tracking-widest uppercase mt-2">Try adjusting your filters or search query.</p>
-            <Button 
-              variant="link" 
-              onClick={() => {setActiveTab('all'); setSearchQuery('');}}
-              className="mt-8 text-black font-black uppercase text-xs tracking-widest underline underline-offset-8"
-            >
-              Reset All Filters
-            </Button>
+          <div className="py-40 text-center">
+            <Info className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+            <h3 className="text-2xl font-black text-gray-900 uppercase italic">No wallpapers found</h3>
+            <p className="text-gray-400">Try adjusting your filters or search query.</p>
           </div>
         )}
       </div>
 
-      {/* --- MODAL --- */}
-      <WallpaperDetailModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-      />
+      {/* --- PRODUCT DETAIL MODAL --- */}
+      <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border-none rounded-[3rem] shadow-2xl">
+          {selectedProduct && (
+            <div className="flex flex-col md:flex-row h-full max-h-[90vh] overflow-y-auto md:overflow-hidden">
+              {/* Image Side */}
+              <div className="relative w-full md:w-[55%] aspect-square md:aspect-auto h-[400px] md:h-auto bg-gray-100 group">
+                <Image 
+                  src={selectedProduct.images?.[0] || '/images/placeholder.png'} 
+                  alt={selectedProduct.name} 
+                  fill 
+                  className="object-cover"
+                  unoptimized
+                />
+                <div className="absolute top-8 left-8 flex flex-col gap-2">
+                   <Badge className="bg-black text-white border-none font-black text-[10px] uppercase tracking-widest px-4 py-2">
+                    {selectedProduct.category.name} Collection
+                  </Badge>
+                  {selectedProduct.sku.includes('ACT') && (
+                    <Badge className="bg-blue-600 text-white border-none font-black text-[10px] uppercase tracking-widest px-4 py-2">
+                      Technical Performance
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Info Side */}
+              <div className="flex-1 p-8 md:p-12 flex flex-col justify-between bg-white relative">
+                <button 
+                  onClick={() => setSelectedProduct(null)}
+                  className="absolute top-8 right-8 p-2 rounded-full hover:bg-gray-100 transition-colors md:hidden"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                <div className="space-y-8">
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-mono tracking-[0.3em] uppercase mb-2">{selectedProduct.sku}</p>
+                    <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-4">
+                      {selectedProduct.name}
+                    </h2>
+                    <p className="text-3xl font-black text-gray-900">${selectedProduct.price.toFixed(2)}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Material</p>
+                      <p className="text-sm font-bold text-gray-800">{selectedProduct.material || 'Premium Glass Textile'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Dimensions</p>
+                      <p className="text-sm font-bold text-gray-800">{selectedProduct.dimensions || '1m x 25m'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Origin</p>
+                      <p className="text-sm font-bold text-gray-800">Germany (Vitrulan)</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Rating</p>
+                      <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(i => <Sparkles key={i} className="w-3 h-3 text-yellow-500 fill-yellow-500" />)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-6 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 leading-relaxed font-light">
+                      Professional-grade wallcovering engineered for durability and style. 
+                      Suitable for both residential and high-traffic commercial environments. 
+                      Impact resistant, fire rated, and Oeko-Tex certified.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bottom Buttons Barra */}
+                <div className="mt-12 space-y-3">
+                  <Button 
+                    onClick={() => handleOpenSimulador(selectedProduct.id)}
+                    className="w-full h-16 rounded-2xl bg-black text-white hover:bg-gray-800 font-black uppercase text-xs tracking-[0.2em] gap-3 shadow-xl group/sim"
+                  >
+                    <Wand2 className="w-5 h-5 group-hover/sim:animate-pulse" />
+                    Open Simulador
+                  </Button>
+                  
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleOpenCalculator(selectedProduct.id)}
+                      className="flex-1 h-16 rounded-2xl border-gray-200 hover:bg-gray-50 text-black font-black uppercase text-[10px] tracking-widest gap-2"
+                    >
+                      <Calculator className="w-4 h-4" />
+                      Calculadora
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="flex-1 h-16 rounded-2xl border-gray-200 hover:bg-gray-50 text-black font-black uppercase text-[10px] tracking-widest gap-2"
+                      onClick={() => router.push(`/cart/?add=${selectedProduct.id}`)}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Buy Direct
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -14,6 +14,32 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Inyección de Cabeceras de Seguridad (NIVEL BARRERA)
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -30,7 +56,6 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.cloudinary.com' },
     ],
   },
-
 };
 
 module.exports = nextConfig;

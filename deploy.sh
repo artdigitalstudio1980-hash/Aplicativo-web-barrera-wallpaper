@@ -16,7 +16,6 @@ NC='\033[0m' # No Color
 # Verificar que estamos en el directorio correcto
 if [ ! -f "package.json" ]; then
     echo -e "${RED}❌ Error: No se encuentra package.json${NC}"
-    echo -e "${YELLOW}Asegurate de estar en el directorio /app${NC}"
     exit 1
 fi
 

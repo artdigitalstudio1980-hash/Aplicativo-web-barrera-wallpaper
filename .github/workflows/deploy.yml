@@ -20,16 +20,14 @@ jobs:
         with:
           node-version: '20.x'
           cache: 'yarn'
-          cache-dependency-path: 'app/yarn.lock'
+          cache-dependency-path: 'yarn.lock'
 
       - name: Install Dependencies
-        working-directory: ./app
         run: |
           yarn install --frozen-lockfile
           yarn prisma generate
 
       - name: Build
-        working-directory: ./app
         run: yarn build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -37,7 +35,6 @@ jobs:
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
 
       - name: Prepare Deployment Package
-        working-directory: ./app
         run: |
           # Solo incluimos lo necesario para ejecutar la app
           tar -czf ../deploy.tar.gz \

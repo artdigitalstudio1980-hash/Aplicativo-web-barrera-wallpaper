@@ -11,7 +11,6 @@ echo "🔄 Actualizando desde GitHub..."
 git pull origin main
 
 echo "📦 Instalando dependencias..."
-cd app
 yarn install
 
 echo "🔨 Regenerando Prisma Client..."

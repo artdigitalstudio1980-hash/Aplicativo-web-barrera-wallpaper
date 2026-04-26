@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
-  apiVersion: '2023-10-16',
-});
 
 export async function POST(req: Request) {
   try {
@@ -90,8 +86,9 @@ export async function POST(req: Request) {
 
     // Default to Stripe
     // If Stripe isn't configured, return a mock success URL (Demo Mode)
-    if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_mock')) {
-      console.log('Stripe not configured. Redirecting to mock success.');
+    const isMockStripe = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder';
+    if (isMockStripe) {
+      console.log('Stripe not configured or using placeholder. Redirecting to mock success.');
       return NextResponse.json({ 
         url: `${baseUrl}/checkout/success?session_id=mock_session_${order.id}` 
       });

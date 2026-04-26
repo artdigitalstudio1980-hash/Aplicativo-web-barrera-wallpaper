@@ -36,8 +36,8 @@ jobs:
 
       - name: Prepare Deployment Package
         run: |
-          # Solo incluimos lo necesario para ejecutar la app
-          tar -czf ../deploy.tar.gz \
+          # Creamos el paquete en el directorio actual para evitar errores de ruta en SCP
+          tar -czf deploy.tar.gz \
             .next \
             public \
             package.json \
@@ -79,13 +79,26 @@ jobs:
             cd /home/u425976741/domains/barrerawallpaper.com/nodejs
 
             # Limpiar directorio .next antes de extraer el nuevo paquete
+            echo "Limpiando archivos antiguos..."
             rm -rf .next
 
             # Descomprimir el paquete nuevo
+            echo "Extrayendo paquete..."
             tar -xzf deploy.tar.gz
+            
+            # VERIFICACIÓN CRÍTICA: Listar archivos para depuración
+            echo "Contenido del directorio tras la extracción:"
+            ls -la
+            
+            if [ ! -f "package.json" ]; then
+              echo "ERROR: package.json no encontrado tras la extracción. Abortando."
+              exit 1
+            fi
+
             rm deploy.tar.gz
 
             # Instalar solo dependencias de producción (rápido)
+            echo "Instalando dependencias..."
             yarn install --production --frozen-lockfile
             
             # Asegurar que el .env existe (si no, usar el backup o pedirlo)

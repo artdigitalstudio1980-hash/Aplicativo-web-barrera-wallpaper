@@ -78,44 +78,32 @@ jobs:
 
             cd /home/u425976741/domains/barrerawallpaper.com/nodejs
 
-            # Limpiar directorio .next antes de extraer el nuevo paquete
-            echo "Limpiando archivos antiguos..."
+            # Limpieza profunda para evitar conflictos con el auto-deploy de Hostinger
+            echo "Realizando limpieza profunda..."
             rm -rf .next
-
+            rm -f package.json yarn.lock next.config.js
+            
             # Descomprimir el paquete nuevo
-            echo "Extrayendo paquete..."
+            echo "Extrayendo paquete fresco..."
             tar -xzf deploy.tar.gz
-            
-            # VERIFICACIÓN CRÍTICA: Listar archivos para depuración
-            echo "Contenido del directorio tras la extracción:"
-            ls -la
-            
-            if [ ! -f "package.json" ]; then
-              echo "ERROR: package.json no encontrado tras la extracción. Abortando."
-              exit 1
-            fi
-
             rm deploy.tar.gz
+            
+            # VERIFICACIÓN: Listar para confirmar presencia de package.json
+            echo "Verificando archivos extraídos:"
+            ls -la package.json || (echo "ERROR: package.json sigue sin aparecer tras la extracción" && exit 1)
 
             # Instalar solo dependencias de producción (rápido)
             echo "Instalando dependencias..."
             yarn install --production --frozen-lockfile
             
-            # Ejecutar Sincronización de Catálogo (Seed)
-            echo "Sincronizando catálogo de productos e imágenes..."
+            # Ejecutar Sincronización de Catálogo (Seed) directamente desde el workflow
+            echo "Sincronizando catálogo..."
             npx tsx scripts/seed-master.ts
             
-            # Asegurar que el .env existe (si no, usar el backup o pedirlo)
+            # Asegurar que el .env existe
             if [ ! -f ".env" ]; then
               cp .env.example .env
-              echo "ADVERTENCIA: .env creado desde .env.example. Por favor configura las variables reales."
             fi
-
-            # --- NUEVO: Limpiar caché de Redis y reiniciar PM2 ---
-            # Asumimos que Redis está instalado y FLUSHALL es seguro.
-            # Si Redis no está disponible o FLUSHALL es destructivo, esto fallará.
-            echo "Intentando limpiar caché de Redis..."
-            redis-cli FLUSHALL || echo "Advertencia: No se pudo limpiar la caché de Redis. Asegúrate de que redis-cli esté instalado y accesible."
 
             echo "Reiniciando la aplicación con PM2..."
             if pm2 describe barrera-wallpaper > /dev/null 2>&1; then

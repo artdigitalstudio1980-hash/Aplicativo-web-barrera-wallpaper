@@ -101,6 +101,10 @@ jobs:
             echo "Instalando dependencias..."
             yarn install --production --frozen-lockfile
             
+            # Ejecutar Sincronización de Catálogo (Seed)
+            echo "Sincronizando catálogo de productos e imágenes..."
+            npx tsx scripts/seed-master.ts
+            
             # Asegurar que el .env existe (si no, usar el backup o pedirlo)
             if [ ! -f ".env" ]; then
               cp .env.example .env

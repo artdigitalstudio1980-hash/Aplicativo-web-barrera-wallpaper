@@ -26,7 +26,7 @@ const ADS = [
 ];
 
 const CATEGORIES_INFO: Record<string, any> = {
-  pure: {
+  'systexx-pure': {
     title: 'SYSTEXX Pure',
     subtitle: 'High-Performance Minimalism',
     description: 'Smooth glass textiles that offer extreme durability and fire protection.',
@@ -34,7 +34,7 @@ const CATEGORIES_INFO: Record<string, any> = {
     image: '/publicidad/review-Captura-desde-2026-03-13-16-36-53.png',
     label: 'Durability & Elegance'
   },
-  phantasy: {
+  'systexx-phantasy': {
     title: 'SYSTEXX Phantasy',
     subtitle: 'Luxury Jacquard Patterns',
     description: 'Exclusive designs woven into the fabric for dramatic interior statements.',
@@ -42,7 +42,7 @@ const CATEGORIES_INFO: Record<string, any> = {
     image: '/publicidad/phantasy-versailles-lifestyle.png',
     label: 'Exclusive Designer Patterns'
   },
-  active: {
+  'systexx-active': {
     title: 'SYSTEXX Active',
     subtitle: 'The Functional Revolution',
     description: 'Magnetic surfaces, acoustic comfort, and whiteboard capabilities.',
@@ -222,14 +222,19 @@ export default function CatalogPage() {
         {/* --- DYNAMIC SECTIONS --- */}
         <div className="space-y-32">
           {Object.entries(productsByCategory).map(([catSlug, catProducts]) => {
-            const info = CATEGORIES_INFO[catSlug] || { title: catSlug.toUpperCase() };
+            const info = CATEGORIES_INFO[catSlug] || { 
+              title: catSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+              image: '/publicidad/active-category-overview.png',
+              label: 'SYSTEXX Collection',
+              description: 'Premium German glass textiles for high-performance wall surfaces.'
+            };
             
             return (
               <section key={catSlug} className="scroll-mt-32">
                 {/* --- SECTION HERO HEADER (PUBLICITY) --- */}
                 <div className="relative h-[250px] md:h-[350px] rounded-[3rem] overflow-hidden mb-16 shadow-sm border border-gray-100 group">
                    <Image 
-                    src={info.image} 
+                    src={info.image || '/publicidad/active-category-overview.png'} 
                     alt={info.title} 
                     fill 
                     className="object-cover brightness-75 group-hover:scale-105 transition-transform duration-[5s]" 

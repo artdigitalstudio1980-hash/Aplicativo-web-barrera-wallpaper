@@ -18,38 +18,44 @@ async function main() {
     console.warn('⚠️ La carpeta public/catalogo no existe.');
   }
 
-  // Helper para buscar imagen con lógica difusa
+  // Helper para buscar imagen con lógica ultra-flexible
   const findImage = (category: string, sku: string, name: string) => {
-    const cat = category.toLowerCase();
-    const catPrefix = cat.includes('pure') ? 'pure' : 
-                     cat.includes('phantasy') ? 'phantasy' : 
-                     cat.includes('active') ? 'active' : '';
+    const lowerCategory = category.toLowerCase();
+    const lowerSku = sku.toLowerCase();
+    const lowerName = name.toLowerCase();
     
-    // Extraer número o identificador del SKU (ej: SYS-PUR-044 -> 044)
-    const skuParts = sku.split('-');
-    const skuNum = skuParts[skuParts.length - 1]?.toLowerCase() || '';
-    
-    // Limpiar nombre para búsqueda
-    const nameClean = name.toLowerCase().replace(/\s+/g, '-');
-    const nameSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    // Extraer la parte numérica o identificativa del SKU (ej: 071, M20, etc)
+    const skuParts = lowerSku.split('-');
+    const skuLastPart = skuParts[skuParts.length - 1];
 
-    // 1. Prioridad: Prefijo de categoría + número de SKU (ej: pure...044)
-    let match = availableImages.find(img => {
+    // Limpiar el nombre (ej: "Bamboo 050" -> ["bamboo", "050"])
+    const nameParts = lowerName.split(/\s+/).filter(p => p.length > 2);
+
+    for (const img of availableImages) {
       const lowerImg = img.toLowerCase();
-      return lowerImg.includes(catPrefix) && lowerImg.includes(skuNum) && skuNum.length > 1;
-    });
+      
+      // 1. Coincidencia por SKU exacto en el nombre del archivo
+      if (lowerImg.includes(skuLastPart) && skuLastPart.length > 1) {
+        // Verificar que la categoría también coincida para evitar falsos positivos
+        if (lowerCategory.includes('pure') && lowerImg.includes('pure')) return `/catalogo/${img}`;
+        if (lowerCategory.includes('phantasy') && lowerImg.includes('phantasy')) return `/catalogo/${img}`;
+        if (lowerCategory.includes('active') && lowerImg.includes('active')) return `/catalogo/${img}`;
+        
+        // Si no hay categoría en el nombre, pero el SKU coincide mucho, lo aceptamos
+        if (!lowerImg.includes('pure') && !lowerImg.includes('phantasy') && !lowerImg.includes('active')) {
+             return `/catalogo/${img}`;
+        }
+      }
 
-    // 2. Por nombre del producto
-    if (!match) {
-      match = availableImages.find(img => img.toLowerCase().includes(nameClean));
+      // 2. Coincidencia por partes del nombre (ej: "bamboo" en "phantasy-bamboo-050.png")
+      for (const part of nameParts) {
+        if (lowerImg.includes(part) && lowerImg.includes(skuLastPart)) {
+          return `/catalogo/${img}`;
+        }
+      }
     }
 
-    // 3. Por slug de nombre
-    if (!match) {
-      match = availableImages.find(img => img.toLowerCase().includes(nameSlug));
-    }
-
-    return match ? `/catalogo/${match}` : null;
+    return null;
   };
 
   // 2. Cargar Categorías Base
@@ -90,13 +96,11 @@ async function main() {
       let missingCount = 0;
 
       for (const prod of section.products) {
-        // Generar un slug único combinando el nombre y el SKU para evitar colisiones
         const namePart = prod.nameEs.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         const skuPart = prod.sku.toLowerCase().replace(/[^a-z0-9]/g, '-');
         const prodSlug = `${namePart}-${skuPart}`;
         
         const imagePath = findImage(section.category, prod.sku, prod.name);
-        
         if (imagePath) mappedCount++; else missingCount++;
 
         const images = imagePath ? [imagePath] : [];

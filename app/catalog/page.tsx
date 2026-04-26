@@ -203,7 +203,7 @@ export default function CatalogPage() {
         {/* --- PRODUCT GRID --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           {filteredProducts.map((product, idx) => {
-            const imgUrl = product.images?.[0] || '/images/placeholder.png';
+            const imgUrl = product.imageUrl || product.images?.[0] || '/images/placeholder.png';
             
             return (
               <motion.div
@@ -282,7 +282,7 @@ export default function CatalogPage() {
               {/* Image Side */}
               <div className="relative w-full md:w-[55%] aspect-square md:aspect-auto h-[400px] md:h-auto bg-gray-100 group">
                 <Image 
-                  src={selectedProduct.images?.[0] || '/images/placeholder.png'} 
+                  src={selectedProduct.imageUrl || selectedProduct.images?.[0] || '/images/placeholder.png'} 
                   alt={selectedProduct.name} 
                   fill 
                   className="object-cover"

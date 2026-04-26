@@ -66,8 +66,8 @@ export default function ShopPage() {
           // Process products to ensure correct image paths and category structure
           const processedProducts = data.products.map((p: any) => ({
             ...p,
-            // Adjust image path: assuming API returns filename and we need to prefix with /catalogo/
-            image: p.image ? `/catalogo/${p.image.split('/').pop()}` : '/images/placeholder.png',
+            // Use imageUrl if available, fallback to the first image in images array, or placeholder
+            image: p.imageUrl || (p.images && p.images[0]) || '/images/placeholder.png',
             // Ensure category is an object with slug and name, default if missing
             category: p.category?.slug ? p.category : { slug: 'uncategorized', name: 'Uncategorized' }
           }));

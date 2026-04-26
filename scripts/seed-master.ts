@@ -90,7 +90,11 @@ async function main() {
       let missingCount = 0;
 
       for (const prod of section.products) {
-        const prodSlug = prod.nameEs.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        // Generar un slug único combinando el nombre y el SKU para evitar colisiones
+        const namePart = prod.nameEs.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const skuPart = prod.sku.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        const prodSlug = `${namePart}-${skuPart}`;
+        
         const imagePath = findImage(section.category, prod.sku, prod.name);
         
         if (imagePath) mappedCount++; else missingCount++;

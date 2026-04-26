@@ -1,14 +1,25 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn('⚠️ STRIPE_SECRET_KEY is missing from environment variables');
-}
+// Safe Stripe initialization
+const getStripe = () => {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('⚠️ STRIPE_SECRET_KEY is missing in production!');
+    }
+    // Return a dummy instance for build time or handle missing key gracefully
+    return new Stripe('sk_test_placeholder', {
+      apiVersion: '2023-10-16' as any,
+      typescript: true,
+    });
+  }
+  return new Stripe(key, {
+    apiVersion: '2023-10-16' as any,
+    typescript: true,
+  });
+};
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  // @ts-ignore
-  apiVersion: '2023-10-16', // Use a stable API version
-  typescript: true,
-});
+export const stripe = getStripe();
 
 export const formatAmountForStripe = (amount: number, currency: string) => {
   let numberFormat = new Intl.NumberFormat(['en-US'], {

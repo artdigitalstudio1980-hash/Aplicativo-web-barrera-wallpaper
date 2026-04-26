@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import Replicate from "replicate";
 import fs from 'fs';
 import path from 'path';
-import { ratelimit } from '@/lib/ratelimit';
+import { limit } from '@/lib/ratelimit';
 
 interface GenerateRequest {
   prompt: string;
@@ -24,15 +24,11 @@ const sanitizePrompt = (prompt: string): string => {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Rate Limiting (Opcional, si Upstash está configurado)
+    // 1. Rate Limiting
     const ip = req.ip ?? '127.0.0.1';
-    try {
-      const { success } = await ratelimit.limit(ip);
-      if (!success) {
-        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-      }
-    } catch (e) {
-      console.warn('Rate limiting skipped due to missing config');
+    const { success } = await limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     const body: GenerateRequest = await req.json();

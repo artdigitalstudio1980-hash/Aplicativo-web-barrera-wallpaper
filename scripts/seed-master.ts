@@ -8,7 +8,41 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🚀 Iniciando Sincronización Maestra del Catálogo...');
 
-  // 1. Cargar Categorías Base
+  // 1. Obtener lista de imágenes disponibles
+  const catalogDir = path.join(process.cwd(), 'public/catalogo');
+  let availableImages: string[] = [];
+  if (fs.existsSync(catalogDir)) {
+    availableImages = fs.readdirSync(catalogDir).filter(f => f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.webp'));
+    console.log(`📸 Encontradas ${availableImages.length} imágenes en public/catalogo/`);
+  } else {
+    console.warn('⚠️ La carpeta public/catalogo no existe.');
+  }
+
+  // Helper para buscar imagen
+  const findImage = (category: string, sku: string, name: string) => {
+    const catPrefix = category.toLowerCase().includes('pure') ? 'pure' : 
+                     category.toLowerCase().includes('phantasy') ? 'phantasy' : 
+                     category.toLowerCase().includes('active') ? 'active' : '';
+    
+    const skuNum = sku.split('-').pop()?.toLowerCase() || '';
+    const nameClean = name.toLowerCase().replace(/\s+/g, '-');
+
+    // Buscar por SKU (ej: pure-weave-044 contiene '044')
+    let match = availableImages.find(img => 
+      img.toLowerCase().includes(catPrefix) && img.toLowerCase().includes(skuNum)
+    );
+
+    // Si no, buscar por nombre
+    if (!match) {
+      match = availableImages.find(img => 
+        img.toLowerCase().includes(catPrefix) && img.toLowerCase().includes(nameClean)
+      );
+    }
+
+    return match ? `/catalogo/${match}` : null;
+  };
+
+  // 2. Cargar Categorías Base
   const baseCategories = [
     { name: 'Modern', nameEs: 'Moderno', slug: 'modern', order: 1 },
     { name: 'Classic', nameEs: 'Clásico', slug: 'classic', order: 2 },
@@ -24,10 +58,9 @@ async function main() {
       create: { ...cat, isActive: true }
     });
   }
-  console.log('✅ Categorías base listas.');
 
-  // 2. Cargar SYSTEXX desde JSON
-  const dataPath = path.join(__dirname, '../prisma/catalog_master.json');
+  // 3. Cargar SYSTEXX desde JSON
+  const dataPath = path.join(process.cwd(), 'prisma/catalog_master.json');
   if (fs.existsSync(dataPath)) {
     const catalogData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
@@ -47,7 +80,9 @@ async function main() {
 
       for (const prod of section.products) {
         const prodSlug = prod.nameEs.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        
+        const imagePath = findImage(section.category, prod.sku, prod.name);
+        const images = imagePath ? [imagePath] : [];
+
         await prisma.product.upsert({
           where: { sku: prod.sku },
           update: {
@@ -59,6 +94,7 @@ async function main() {
             dimensions: prod.dimensions,
             isActive: true,
             categoryId: category.id,
+            images: images, // Actualizar imágenes si se encuentran
           },
           create: {
             sku: prod.sku,
@@ -68,7 +104,7 @@ async function main() {
             descriptionEs: prod.descriptionEs,
             slug: prodSlug,
             price: 45.0,
-            images: [],
+            images: images,
             colors: [],
             styles: [section.category.split(' ')[1]?.toLowerCase() || 'systexx'],
             dimensions: prod.dimensions,
@@ -83,7 +119,7 @@ async function main() {
       console.log(`✅ Categoría SYSTEXX: ${section.category} (${section.products.length} productos) cargada.`);
     }
   } else {
-    console.warn('⚠️ No se encontró catalog_master.json en app/prisma/');
+    console.warn(`⚠️ No se encontró catalog_master.json en ${dataPath}`);
   }
 
   console.log('🎉 Sincronización Maestra completada con éxito.');

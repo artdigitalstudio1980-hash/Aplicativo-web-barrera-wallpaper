@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
+import { paypal } from '@/lib/paypal';
+import { sendOrderConfirmationEmail } from '@/lib/mailer';
 
 interface CapturePayPalOrderRequest {
   paypalOrderId: string;
@@ -20,13 +21,13 @@ export async function POST(req: NextRequest) {
 
     if (!paypalOrderId || !orderId) {
       return NextResponse.json(
-        { error: 'PayPal order ID and order ID are required' },
+        { success: false, error: 'PayPal order ID and order ID are required' },
         { status: 400 }
       );
     }
 
-    // Capture PayPal payment
-    const captureData = await capturePayPalOrder(paypalOrderId);
+    // Use the centralized PayPal service instead of duplicated logic
+    const captureData = await paypal.captureOrder(paypalOrderId);
 
     if (captureData.status === 'COMPLETED') {
       // Update payment transaction
@@ -42,16 +43,34 @@ export async function POST(req: NextRequest) {
       });
 
       // Update order status
-      await prisma.order.update({
+      const order = await prisma.order.update({
         where: { id: orderId },
-        data: { status: 'CONFIRMED' }
+        data: { status: 'CONFIRMED' },
+        include: { orderItems: { include: { product: true } } }
       });
 
-      // Update AI wallpaper order status
+      // Update AI wallpaper order status if applicable
       await prisma.aIWallpaperOrder.updateMany({
         where: { orderId },
         data: { status: 'PAID' }
       });
+
+      // Send confirmation email (consistent with Stripe flow)
+      if (order.shippingEmail) {
+        const emailItems = order.orderItems.map((item: any) => ({
+          name: item.product?.name || 'Custom AI Wallpaper',
+          price: item.price,
+          measurements: item.customization,
+        }));
+
+        await sendOrderConfirmationEmail(
+          order.orderNumber,
+          order.shippingEmail,
+          order.shippingName || 'Customer',
+          order.total,
+          emailItems
+        ).catch((err: any) => console.error('Email send error (non-blocking):', err));
+      }
 
       return NextResponse.json({
         success: true,
@@ -83,45 +102,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to capture PayPal payment', details: error.message },
+      { success: false, error: 'Failed to capture PayPal payment', details: error.message },
       { status: 500 }
     );
   }
-}
-
-async function capturePayPalOrder(paypalOrderId: string) {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const environment = process.env.PAYPAL_ENVIRONMENT || 'sandbox';
-  
-  const base = environment === 'sandbox' 
-    ? 'https://api-m.sandbox.paypal.com'
-    : 'https://api-m.paypal.com';
-
-  // Get access token
-  const authResponse = await fetch(`${base}/v1/oauth2/token`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Accept-Language': 'en_US',
-      'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: 'grant_type=client_credentials'
-  });
-
-  const authData = await authResponse.json();
-  const accessToken = authData.access_token;
-
-  // Capture the order
-  const captureResponse = await fetch(`${base}/v2/checkout/orders/${paypalOrderId}/capture`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
-      'PayPal-Request-Id': `capture-${paypalOrderId}-${Date.now()}`
-    }
-  });
-
-  return await captureResponse.json();
 }

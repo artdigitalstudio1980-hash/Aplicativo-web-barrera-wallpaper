@@ -4,10 +4,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { generatePresignedUploadUrl, getFileUrl } from '@/lib/s3';
 
+import { authOptions } from '@/lib/auth-options';
+
 export async function POST(req: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },

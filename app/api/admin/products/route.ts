@@ -5,10 +5,12 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { getFileUrl } from '@/lib/s3';
 
+import { authOptions } from '@/lib/auth-options';
+
 // GET - List all products
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -64,7 +66,7 @@ export async function GET(req: NextRequest) {
 // POST - Create new product
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },

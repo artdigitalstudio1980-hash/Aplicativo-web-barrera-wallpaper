@@ -6,12 +6,14 @@ import { prisma } from '@/lib/prisma';
 import { deleteFile } from '@/lib/s3';
 
 // GET - Get single product
+import { authOptions } from '@/lib/auth-options';
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -52,7 +54,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -187,7 +189,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },

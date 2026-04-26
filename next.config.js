@@ -14,7 +14,17 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Inyección de Cabeceras de Seguridad (NIVEL BARRERA)
+
+  // Redirects for removed duplicate routes
+  async redirects() {
+    return [
+      { source: '/auth/login', destination: '/login', permanent: true },
+      { source: '/auth/register', destination: '/register', permanent: true },
+      { source: '/shop', destination: '/catalog', permanent: true },
+    ];
+  },
+
+  // Security Headers
   async headers() {
     return [
       {
@@ -36,6 +46,10 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
         ],
       },
     ];
@@ -46,12 +60,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'replicate.delivery' },
       { protocol: 'https', hostname: 'pbxt.replicate.delivery' },
       { protocol: 'https', hostname: '**.replicate.com' },
-      { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: '**.amazonaws.com' },
-      { protocol: 'https', hostname: 'oaidalleapiprodscus.blob.core.windows.net' },
       { protocol: 'https', hostname: '**.blob.core.windows.net' },
-      { protocol: 'https', hostname: 'i.pinimg.com' },
-      { protocol: 'https', hostname: '**.pinimg.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: '**.cloudinary.com' },
     ],

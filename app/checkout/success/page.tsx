@@ -17,96 +17,78 @@ function SuccessContent() {
 
   useEffect(() => {
     if (sessionId) {
-      // Aquí podríamos verificar el estado real con Stripe/DB
-      setTimeout(() => setLoading(false), 2000);
-      toast.success(locale === 'es' ? '¡Pago confirmado!' : 'Payment confirmed!');
+      const timer = setTimeout(() => setLoading(false), 1500);
+      return () => clearTimeout(timer);
+    } else {
+      setLoading(false);
     }
-  }, [sessionId, locale]);
+  }, [sessionId]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-premium">
-        <Loader2 className="w-12 h-12 animate-spin text-black mb-4" />
-        <p className="text-sm font-medium animate-pulse tracking-widest uppercase">Verificando transacción...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white text-black">
+        <Loader2 className="w-12 h-12 animate-spin mb-4" />
+        <p className="text-sm font-medium animate-pulse tracking-widest uppercase">Verifying Order...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-20 bg-premium">
+    <div className="min-h-screen pt-32 pb-20 bg-white text-black">
       <div className="max-w-3xl mx-auto px-4 text-center">
-        
-        {/* Icono de Éxito Animado */}
         <motion.div 
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-green-200"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl"
         >
           <CheckCircle className="w-12 h-12 text-white" />
         </motion.div>
 
-        {/* Mensaje Principal */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h1 className="text-5xl font-black text-gray-900 mb-4 tracking-tighter uppercase">
-            ¡PEDIDO <span className="text-gray-400 italic">CONFIRMADO!</span>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-5xl font-black mb-4 tracking-tighter uppercase">
+            ORDER <span className="text-gray-400 italic">CONFIRMED!</span>
           </h1>
           <p className="text-gray-500 text-lg mb-12 max-w-xl mx-auto">
             {locale === 'es' 
-              ? 'Gracias por confiar en Barrera Wallpaper. Tu pedido está siendo procesado por nuestros especialistas en Alemania.' 
-              : 'Thank you for choosing Barrera Wallpaper. Your order is being processed by our specialists in Germany.'}
+              ? 'Gracias por confiar en Barrera Wallpaper. Tu pedido está siendo procesado.' 
+              : 'Thank you for choosing Barrera Wallpaper. Your order is being processed.'}
           </p>
         </motion.div>
 
-        {/* Card de Detalles Rápidos */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-card rounded-[3rem] p-10 mb-12 flex flex-col md:flex-row items-center justify-around gap-8"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 bg-gray-50 p-10 rounded-[2rem] border border-gray-100">
           <div className="text-center">
             <Package className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Estado</p>
-            <p className="font-bold text-lg">En Preparación</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</p>
+            <p className="font-bold">In Preparation</p>
           </div>
-          <div className="h-px w-full md:w-px md:h-12 bg-gray-100"></div>
           <div className="text-center">
             <Star className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Garantía</p>
-            <p className="font-bold text-lg">10 Años Vitrulan</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Warranty</p>
+            <p className="font-bold">10 Years</p>
           </div>
-          <div className="h-px w-full md:w-px md:h-12 bg-gray-100"></div>
           <div className="text-center">
             <Download className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Factura</p>
-            <button className="font-bold text-lg text-black hover:underline">Descargar PDF</button>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Invoice</p>
+            <button className="font-bold text-black hover:underline">Download PDF</button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Acciones Finales */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/catalog">
             <Button variant="outline" className="rounded-full px-10 h-14 font-bold border-gray-200">
-              Seguir Comprando
+              Continue Shopping
             </Button>
           </Link>
-          <Link href="/account">
-            <Button className="rounded-full px-12 h-14 bg-black text-white font-bold shadow-2xl hover:bg-gray-800">
-              Ver Mi Pedido <ArrowRight className="w-4 h-4 ml-2" />
+          <Link href="/catalog">
+            <Button className="rounded-full px-12 h-14 bg-black text-white font-bold shadow-xl">
+              Back to Showroom
             </Button>
           </Link>
         </div>
 
-        {/* Footer Nota */}
         <p className="mt-16 text-gray-400 text-xs uppercase tracking-[0.2em]">
-          Barrera Wallpaper — Luxury Wallcoverings & AI Technology
+          Barrera Wallpaper — Miami & Germany
         </p>
-
       </div>
     </div>
   );
@@ -114,7 +96,7 @@ function SuccessContent() {
 
 export default function SuccessPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-premium"><Loader2 className="w-10 h-10 animate-spin text-black" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="w-10 h-10 animate-spin text-black" /></div>}>
       <SuccessContent />
     </Suspense>
   );

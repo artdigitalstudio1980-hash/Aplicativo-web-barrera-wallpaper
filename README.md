@@ -1,167 +1,100 @@
-# 🎨 Barrera Wallpaper - Premium Wallpaper E-Commerce Platform
+# Barrera Wallpaper — E-Commerce Platform
 
-## 📋 Descripción
+Premium wallpaper e-commerce platform with AI-powered design tools.  
+Built with **Next.js 14**, **Prisma**, **MySQL**, and deployed on **Hostinger**.
 
-Plataforma web completa para venta de papeles tapiz premium con:
-- ✅ Catálogo de diseños exclusivos
-- ✅ Panel de administración
-- ✅ Procesamiento de pagos (Stripe + PayPal)
-- ✅ Sistema de cotizaciones y contacto
+## Tech Stack
 
-## 🚀 Tech Stack
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 14 (App Router), React, Framer Motion |
+| UI | shadcn/ui, Tailwind CSS, Lucide Icons |
+| Backend | Next.js API Routes, Prisma ORM |
+| Database | MySQL (Hostinger) |
+| Payments | Stripe + PayPal |
+| Storage | AWS S3 |
+| AI | Google Gemini, Replicate |
+| Analytics | Chart.js, Plotly.js, Recharts |
+| Email | Nodemailer (Hostinger SMTP) |
+| Deploy | GitHub Actions → Hostinger (PM2) |
 
-- **Framework:** Next.js 14 (App Router)
-- **UI:** React 18, Tailwind CSS, shadcn/ui
-- **Base de Datos:** PostgreSQL (Supabase)
-- **ORM:** Prisma 6.7
-- **Autenticación:** NextAuth.js 4.24
-- **Pagos:** Stripe + PayPal
-- **Almacenamiento:** MYsql hostinger
+## Getting Started
 
-
-## 📦 Instalación Local
-
-### Prerequisitos
-- Node.js 18+ o 20+
-- Yarn
-- MYsql hostinger
-
-### Pasos
-
-1. **Clonar el repositorio:**
 ```bash
-git clone <your-repo-url>
-cd app
-```
-
-2. **Instalar dependencias:**
-```bash
+# 1. Install dependencies
 yarn install
-```
 
-3. **Configurar variables de entorno:**
-```bash
+# 2. Configure environment
 cp .env.example .env
-```
-Edita `.env` con tus credenciales reales.
+# Fill in all required values
 
-4. **Generar Prisma Client:**
-```bash
+# 3. Generate Prisma client
 yarn prisma generate
-```
 
-5. **Ejecutar migraciones (opcional si ya tienes DB):**
-```bash
-yarn prisma db push
-```
-
-6. **Seed de datos (opcional):**
-```bash
-yarn prisma db seed
-```
-
-7. **Iniciar servidor de desarrollo:**
-```bash
+# 4. Run development server
 yarn dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000)
-
-## 🔐 Variables de Entorno Requeridas
-
-Ver `.env.example` para la lista completa. Las variables críticas son:
-
-- `DATABASE_URL` - Connection string de PostgreSQL (usa Session Pooler en Supabase)
-- `NEXTAUTH_SECRET` - Secret key para autenticación (min 32 caracteres)
-- `NEXTAUTH_URL` - URL de tu aplicación
-- `GOOGLE_AI_STUDIO_API_KEY` - Para generación de imágenes con IA
-- `AWS_BUCKET_NAME` - Bucket de S3 para almacenar imágenes
-- `STRIPE_SECRET_KEY` - Para procesamiento de pagos
-- `PAYPAL_CLIENT_ID` - Para procesamiento de pagos con PayPal
-
-## 🌐 Despliegue en Hostinger
-
-### Opción 1: Deployment Manual
-
-1. Comprimir el proyecto (excluyendo node_modules, .next, etc)
-2. Subir a Hostinger vía FTP
-3. Configurar variables de entorno en Hostinger
-4. Ejecutar `npm install --legacy-peer-deps` en Hostinger
-
-### Opción 2: Deployment Automático con Git (Recomendado)
-
-1. **En GitHub:**
-   - Crear repositorio privado
-   - Push del código
-
-2. **En Hostinger:**
-   - Panel → "Aplicaciones web" → Tu app
-   - Scroll hasta "Implementación de Git"
-   - Conectar con GitHub
-   - Seleccionar repositorio y rama (main/master)
-   - Configurar variables de entorno
-   - Habilitar "Deploy automático"
-
-3. **Cada push a la rama main desplegará automáticamente**
-
-## 📁 Estructura del Proyecto
+## Project Structure
 
 ```
-app/
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes
-│   │   ├── admin/        # Admin endpoints
-│   │   ├── ai-wallpaper/ # IA generation
-│   │   ├── payments/     # Stripe/PayPal
-│   │   └── pictorem/     # Dropshipping
-│   ├── admin/            # Admin panel
-│   ├── ai-studio/        # AI wallpaper generator
-│   ├── catalog/          # Product catalog
-│   └── ...
-├── components/           # React components
-│   ├── ui/              # shadcn/ui components
-│   ├── header.tsx
-│   └── footer.tsx
-├── lib/                 # Utilities
-│   ├── auth-options.ts  # NextAuth config
-│   ├── db.ts           # Database utilities
-│   ├── prisma.ts       # Prisma client
-│   └── s3.ts           # AWS S3 utilities
+├── app/                    # Next.js App Router pages & API routes
+│   ├── api/                # Backend API endpoints
+│   │   ├── auth/           # Authentication (register, NextAuth)
+│   │   ├── checkout/       # Unified checkout (Stripe + PayPal)
+│   │   ├── payments/       # Payment webhooks & capture
+│   │   ├── products/       # Product CRUD
+│   │   └── admin/          # Admin-only endpoints
+│   ├── catalog/            # Product catalog/showroom
+│   ├── cart/               # Shopping cart
+│   ├── checkout/success/   # Post-payment confirmation
+│   ├── design/             # AI wallpaper designer
+│   ├── login/              # Authentication pages
+│   └── register/
+├── components/             # Reusable React components
+│   ├── ui/                 # shadcn/ui primitives
+│   └── layout/             # Header, Footer, etc.
+├── lib/                    # Shared utilities & service configs
+│   ├── prisma.ts           # Database client (singleton)
+│   ├── stripe.ts           # Stripe initialization (lazy)
+│   ├── paypal.ts           # PayPal API service
+│   ├── mailer.ts           # Email templates & sending
+│   ├── s3.ts               # S3 file operations
+│   ├── aws-config.ts       # AWS client configuration
+│   └── utils.ts            # Shared helpers (parseProductImage, sanitize, etc.)
 ├── prisma/
-│   └── schema.prisma   # Database schema
-├── public/
-│   └── images/         # Static images
-└── package.json
+│   ├── schema.prisma       # Database schema
+│   └── catalog_master.json # Master product data for seeding
+├── scripts/
+│   └── seed-master.ts      # Database seeding script
+└── .github/workflows/
+    └── deploy.yml          # CI/CD pipeline
 ```
 
-## 👤 Usuario Admin por Defecto
+## Key Architecture Decisions
 
-**Email:** admin@barrera.com  
-**Password:** admin123  
+- **Single Prisma client** (`lib/prisma.ts`) — prevents connection pool exhaustion
+- **Lazy Stripe initialization** — fails clearly if env vars are missing, never uses placeholder keys
+- **Centralized PayPal service** (`lib/paypal.ts`) — auth token management in one place
+- **Unified checkout** (`/api/checkout`) — single entry point for both Stripe and PayPal flows
+- **Server-side price validation** — product prices are always fetched from DB, never trusted from client
+- **Hybrid Validation Strategy** — critical flows use Zod, while others maintain native Next.js validation patterns for maximum compatibility.
 
-⚠️ **Cambiar en producción**
+## Deployment
 
-## 🔧 Scripts Disponibles
+Automatic via GitHub Actions on push to `main`:
 
-```bash
-yarn dev          # Servidor de desarrollo
-yarn build        # Build de producción
-yarn start        # Servidor de producción
-yarn lint         # Linting
-yarn prisma generate  # Generar Prisma Client
-```
+1. Build on GitHub CI
+2. Package as tarball
+3. Upload via SCP to Hostinger
+4. Install production dependencies
+5. Seed catalog data
+6. Restart via PM2
 
-## 📞 Soporte
+## Environment Variables
 
-- **Email:** oscarbarrera@barrerawallpaper.com
-- **WhatsApp:** +57 311 266 27 09
-- **Sitio Web:** https://barrerawallpaper.com
+See [`.env.example`](.env.example) for all required configuration.
 
-## 📄 Licencia
+## License
 
-Propietario - Barrera Wallpaper © 2026
-
----
-
-**Desarrollado por:** Barrera Wallpaper Team  
-**Año:** 2026
+Proprietary — Barrera Wallpaper © 2024-2026

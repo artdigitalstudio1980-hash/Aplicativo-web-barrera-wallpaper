@@ -38,8 +38,18 @@ export async function GET(req: NextRequest) {
     // Generate URLs for cloudStoragePath if exists
     const productsWithUrls = await Promise.all(
       products.map(async (product) => {
-        // Handle Json type safely - images can be null or array
-        const imagesArray = Array.isArray(product.images) ? product.images : [];
+        // Handle Json type safely - images can be null, string, or array
+        let parsedImages = product.images;
+        if (typeof product.images === 'string') {
+          try {
+            parsedImages = JSON.parse(product.images);
+          } catch (e) {
+            // If it's a simple string starting with '/', treat it as the only image
+            parsedImages = product.images.startsWith('/') ? [product.images] : [];
+          }
+        }
+        
+        const imagesArray = Array.isArray(parsedImages) ? parsedImages : [];
         let imageUrl = imagesArray[0] || null;
         
         // If cloudStoragePath exists, generate URL

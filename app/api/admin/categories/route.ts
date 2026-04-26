@@ -5,9 +5,11 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 
 // GET - List all categories
+import { authOptions } from '@/lib/auth-options';
+
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },

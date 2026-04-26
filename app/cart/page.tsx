@@ -71,16 +71,16 @@ export default function CartPage() {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center space-x-2 mb-8">
-            <Link href="/shop">
+            <Link href="/catalog">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Seguir Comprando
+                Continue Shopping
               </Button>
             </Link>
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            Carrito de Compras ({cartItems.length})
+            Shopping Cart ({cartItems.length})
           </h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -89,9 +89,9 @@ export default function CartPage() {
               {cartItems.length === 0 ? (
                 <Card className="p-8 text-center">
                   <div className="text-gray-500">
-                    <p className="text-lg mb-4">Tu carrito está vacío</p>
-                    <Link href="/shop">
-                      <Button>Explorar Productos</Button>
+                    <p className="text-lg mb-4">Your cart is empty</p>
+                    <Link href="/catalog">
+                      <Button>Browse Products</Button>
                     </Link>
                   </div>
                 </Card>
@@ -111,7 +111,7 @@ export default function CartPage() {
                         
                         <div className="flex-1 space-y-2">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                          <p className="text-sm text-gray-600">Cobertura: {item.coverage}</p>
+                          <p className="text-sm text-gray-600">Coverage: {item.coverage}</p>
                           <p className="text-lg font-bold text-blue-600">${item.price}</p>
                         </div>
                         
@@ -158,7 +158,7 @@ export default function CartPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Resumen del Pedido</CardTitle>
+                  <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
@@ -166,11 +166,11 @@ export default function CartPage() {
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Envío</span>
-                    <span>{shipping === 0 ? 'Gratis' : `$${shipping.toFixed(2)}`}</span>
+                    <span>Shipping</span>
+                    <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Impuestos</span>
+                    <span>Tax</span>
                     <span>${tax.toFixed(2)}</span>
                   </div>
                   <div className="border-t pt-4">
@@ -187,7 +187,7 @@ export default function CartPage() {
                     }}
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
-                    Proceder al Pago
+                    Proceed to Checkout
                   </Button>
                 </CardContent>
               </Card>
@@ -196,11 +196,11 @@ export default function CartPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Truck className="w-4 h-4" />
-                    <span>Envío gratis en pedidos sobre $200</span>
+                    <span>Free shipping on orders over $200</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Shield className="w-4 h-4" />
-                    <span>Garantía de devolución 30 días</span>
+                    <span>30-day money-back guarantee</span>
                   </div>
                 </CardContent>
               </Card>

@@ -18,25 +18,35 @@ async function main() {
     console.warn('⚠️ La carpeta public/catalogo no existe.');
   }
 
-  // Helper para buscar imagen
+  // Helper para buscar imagen con lógica difusa
   const findImage = (category: string, sku: string, name: string) => {
-    const catPrefix = category.toLowerCase().includes('pure') ? 'pure' : 
-                     category.toLowerCase().includes('phantasy') ? 'phantasy' : 
-                     category.toLowerCase().includes('active') ? 'active' : '';
+    const cat = category.toLowerCase();
+    const catPrefix = cat.includes('pure') ? 'pure' : 
+                     cat.includes('phantasy') ? 'phantasy' : 
+                     cat.includes('active') ? 'active' : '';
     
-    const skuNum = sku.split('-').pop()?.toLowerCase() || '';
+    // Extraer número o identificador del SKU (ej: SYS-PUR-044 -> 044)
+    const skuParts = sku.split('-');
+    const skuNum = skuParts[skuParts.length - 1]?.toLowerCase() || '';
+    
+    // Limpiar nombre para búsqueda
     const nameClean = name.toLowerCase().replace(/\s+/g, '-');
+    const nameSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    // Buscar por SKU (ej: pure-weave-044 contiene '044')
-    let match = availableImages.find(img => 
-      img.toLowerCase().includes(catPrefix) && img.toLowerCase().includes(skuNum)
-    );
+    // 1. Prioridad: Prefijo de categoría + número de SKU (ej: pure...044)
+    let match = availableImages.find(img => {
+      const lowerImg = img.toLowerCase();
+      return lowerImg.includes(catPrefix) && lowerImg.includes(skuNum) && skuNum.length > 1;
+    });
 
-    // Si no, buscar por nombre
+    // 2. Por nombre del producto
     if (!match) {
-      match = availableImages.find(img => 
-        img.toLowerCase().includes(catPrefix) && img.toLowerCase().includes(nameClean)
-      );
+      match = availableImages.find(img => img.toLowerCase().includes(nameClean));
+    }
+
+    // 3. Por slug de nombre
+    if (!match) {
+      match = availableImages.find(img => img.toLowerCase().includes(nameSlug));
     }
 
     return match ? `/catalogo/${match}` : null;
@@ -44,11 +54,9 @@ async function main() {
 
   // 2. Cargar Categorías Base
   const baseCategories = [
-    { name: 'Modern', nameEs: 'Moderno', slug: 'modern', order: 1 },
-    { name: 'Classic', nameEs: 'Clásico', slug: 'classic', order: 2 },
-    { name: 'Tropical', nameEs: 'Tropical', slug: 'tropical', order: 3 },
-    { name: 'Abstract', nameEs: 'Abstracto', slug: 'abstract', order: 4 },
-    { name: 'Minimalist', nameEs: 'Minimalista', slug: 'minimalist', order: 5 },
+    { name: 'SYSTEXX Pure', nameEs: 'SYSTEXX Pure', slug: 'systexx-pure', order: 1 },
+    { name: 'SYSTEXX Phantasy', nameEs: 'SYSTEXX Phantasy', slug: 'systexx-phantasy', order: 2 },
+    { name: 'SYSTEXX Active', nameEs: 'SYSTEXX Active', slug: 'systexx-active', order: 3 },
   ];
 
   for (const cat of baseCategories) {
@@ -78,9 +86,15 @@ async function main() {
         },
       });
 
+      let mappedCount = 0;
+      let missingCount = 0;
+
       for (const prod of section.products) {
         const prodSlug = prod.nameEs.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         const imagePath = findImage(section.category, prod.sku, prod.name);
+        
+        if (imagePath) mappedCount++; else missingCount++;
+
         const images = imagePath ? [imagePath] : [];
 
         await prisma.product.upsert({
@@ -94,7 +108,7 @@ async function main() {
             dimensions: prod.dimensions,
             isActive: true,
             categoryId: category.id,
-            images: images, // Actualizar imágenes si se encuentran
+            images: images,
           },
           create: {
             sku: prod.sku,
@@ -116,18 +130,16 @@ async function main() {
           },
         });
       }
-      console.log(`✅ Categoría SYSTEXX: ${section.category} (${section.products.length} productos) cargada.`);
+      console.log(`📊 Categoría: ${section.category} | Éxito: ${mappedCount} | Faltan: ${missingCount}`);
     }
-  } else {
-    console.warn(`⚠️ No se encontró catalog_master.json en ${dataPath}`);
   }
 
-  console.log('🎉 Sincronización Maestra completada con éxito.');
+  console.log('🎉 Sincronización Maestra completada.');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error en el Master Seed:', e);
+    console.error('❌ Error en el Seed:', e);
     process.exit(1);
   })
   .finally(async () => {

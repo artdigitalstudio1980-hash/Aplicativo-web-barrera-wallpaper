@@ -3,10 +3,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run seed",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "tsx scripts/seed-master.ts"
   },
   "prisma": {
     "seed": "tsx --require dotenv/config scripts/seed-master.ts"

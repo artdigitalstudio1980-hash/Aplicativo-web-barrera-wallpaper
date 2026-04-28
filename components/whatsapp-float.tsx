@@ -65,7 +65,7 @@ export default function WhatsAppFloat() {
             initial={{ opacity: 0, scale: 0.9, y: 40, x: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 40, x: 20 }}
-            className="fixed bottom-24 right-4 z-50 w-[350px] md:w-[400px] h-[500px] flex flex-col glass rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/40"
+            className="fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] md:w-[400px] h-[500px] flex flex-col glass rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/40"
           >
             {/* Header */}
             <div className="p-6 bg-black text-white flex items-center justify-between shadow-lg">

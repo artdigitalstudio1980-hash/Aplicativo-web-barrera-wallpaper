@@ -270,14 +270,14 @@ export default function CatalogPage() {
                       >
                         {/* IMAGE ON THE LEFT (SHOWING RECTANGLE ON RIGHT) */}
                         <div 
-                          className="relative w-full sm:w-[220px] h-[220px] sm:h-full bg-gray-50 border-r border-gray-50 cursor-pointer overflow-hidden"
+                          className="relative w-full sm:w-[220px] aspect-square sm:aspect-auto sm:h-full bg-gray-50 border-r border-gray-50 cursor-pointer overflow-hidden"
                           onClick={() => setSelectedProduct(product)}
                         >
                           <Image 
                             src={imgUrl} 
                             alt={product.name} 
                             fill 
-                            className="object-cover object-right transition-transform duration-700 group-hover:scale-110"
+                            className="object-contain sm:object-cover object-center sm:object-right transition-transform duration-700 group-hover:scale-110"
                             unoptimized
                           />
                           <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-[1px]">
@@ -287,8 +287,8 @@ export default function CatalogPage() {
 
                         {/* INFO ON THE RIGHT - NO OVERLAP */}
                         <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
-                          <div>
-                            <div className="flex justify-between items-start mb-2">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
                                <Badge className="bg-gray-50 text-gray-400 border-none font-black text-[8px] uppercase tracking-widest px-2 py-1">
                                 {product.sku}
                               </Badge>
@@ -299,18 +299,18 @@ export default function CatalogPage() {
                             </h3>
                           </div>
 
-                          <div className="flex items-center gap-4 mt-4">
+                          <div className="flex flex-wrap items-center gap-3 mt-6">
                              <Button 
                               variant="ghost" 
                               onClick={() => setSelectedProduct(product)}
-                              className="rounded-xl h-10 px-4 text-[9px] font-black uppercase tracking-widest gap-2 bg-gray-50 hover:bg-gray-100"
+                              className="flex-1 sm:flex-none rounded-xl h-10 px-4 text-[9px] font-black uppercase tracking-widest gap-2 bg-gray-50 hover:bg-gray-100"
                             >
                               Details <ArrowRight className="w-3 h-3" />
                             </Button>
                             <Button 
                               variant="ghost" 
                               onClick={() => handleOpenCalculator(product.id)}
-                              className="rounded-xl h-10 px-4 text-[9px] font-black uppercase tracking-widest gap-2 bg-gray-50 hover:bg-gray-100"
+                              className="flex-1 sm:flex-none rounded-xl h-10 px-4 text-[9px] font-black uppercase tracking-widest gap-2 bg-gray-50 hover:bg-gray-100"
                             >
                               <Calculator className="w-3 h-3" /> Calculator
                             </Button>

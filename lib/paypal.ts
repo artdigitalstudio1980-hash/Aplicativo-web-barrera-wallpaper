@@ -21,6 +21,12 @@ export const paypal = {
     });
 
     const authData = await authResponse.json();
+    
+    if (!authResponse.ok || !authData.access_token) {
+      console.error('PayPal Auth Error:', authData);
+      throw new Error(`PayPal Auth Failed: ${authData.error_description || authData.error || 'Invalid credentials'}`);
+    }
+    
     return { accessToken: authData.access_token, base };
   },
 

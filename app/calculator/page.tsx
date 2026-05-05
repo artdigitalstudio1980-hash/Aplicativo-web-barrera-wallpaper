@@ -90,7 +90,7 @@ function CalculatorContent() {
   const rawArea = calculateArea();
   const wasteFactor = 1.15; 
   const totalAreaWithWaste = rawArea * wasteFactor;
-  const pricePerM2 = wallpaper?.price || 45.00;
+  const pricePerM2 = wallpaper?.price || 95.00;
   const estimatedTotal = totalAreaWithWaste * pricePerM2;
 
   const handleCheckout = async () => {

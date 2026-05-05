@@ -83,7 +83,7 @@ function getLocalCatalogProducts(categorySlug?: string | null): any[] {
         descriptionEs: prod.descriptionEs,
         sku: prod.sku,
         slug: prod.nameEs.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-        price: 45.0,
+        price: 95.0,
         salePrice: null,
         images: imageUrl ? [imageUrl] : [],
         imageUrl: imageUrl,

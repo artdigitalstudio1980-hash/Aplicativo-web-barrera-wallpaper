@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
       RULES:
       - Short answers (max 3 sentences).
-      - Prices start at ~$45/m².
+      - Prices start at ~$95/m².
       - Never say "I am an AI" unless asked directly.
     `;
 

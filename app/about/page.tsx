@@ -39,8 +39,8 @@ export default function AboutPage() {
         {/* Background Image/Video Placeholder */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop"
-            alt="Luxury Interior"
+            src="/images/about/hero.png"
+            alt="Luxury Interior Wallcoverings"
             fill
             className="object-cover brightness-50"
             priority
@@ -64,12 +64,12 @@ export default function AboutPage() {
             Miami's Premier Wallcoverings
           </motion.div>
           
-          <h1 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tighter uppercase italic">
-            Art on <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400">Every Wall</span>
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter uppercase italic leading-tight">
+            The Difference Between <br/> Common & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Extraordinary</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-light leading-relaxed">
-            Redefining spaces through the fusion of traditional craftsmanship and cutting-edge AI technology.
+            "The difference between a common space and an extraordinary place is a Wallpaper." We transform luxury showrooms, residential spaces, and nurseries with unparalleled precision.
           </p>
         </motion.div>
 
@@ -94,8 +94,8 @@ export default function AboutPage() {
               className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10"
             >
               <Image
-                src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop" // Replace with Oscar's real photo
-                alt="Oscar Barrera"
+                src="/images/about/designer.png"
+                alt="Oscar Barrera - Precision and Luxury"
                 fill
                 className="object-cover"
               />
@@ -123,8 +123,9 @@ export default function AboutPage() {
               <div className="space-y-6 text-lg text-gray-600 font-light leading-relaxed">
                 <p>{t('oscarBio1')}</p>
                 <p>{t('oscarBio2')}</p>
-                <div className="bg-gray-50 border-l-4 border-black p-8 italic text-gray-900 text-xl rounded-r-3xl">
-                  "{t('missionStatement')}"
+                <div className="bg-gray-50 border-l-4 border-blue-600 p-8 italic text-gray-900 text-xl rounded-r-3xl relative overflow-hidden shadow-sm">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+                  "The difference between a common space and an extraordinary place is a Wallpaper. Our mission is to elevate Miami's most exclusive interiors—from luxury auto showrooms to high-end nurseries—through flawless artistry."
                 </div>
                 <p>{t('oscarBio3')}</p>
               </div>
@@ -166,14 +167,14 @@ export default function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+            {['/images/about/showroom.png', '/catalogo/phantasy-arabesque-084.png', '/catalogo/active-absorb-060.png'].map((src, i) => (
               <motion.div 
                 key={i}
                 whileHover={{ scale: 1.02 }}
                 className="relative aspect-video rounded-3xl overflow-hidden bg-gray-900 group cursor-pointer"
               >
                 <Image
-                  src={`https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=800&auto=format&fit=crop&v=${i}`}
+                  src={src}
                   alt="Installation"
                   fill
                   className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"

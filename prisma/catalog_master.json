@@ -1,7 +1,174 @@
 [
   {
+    "category": "SYSTEXX Active",
+    "products": [
+      {
+        "sku": "SYSTEXX-ACTIVE-ABSORB-060",
+        "name": "SYSTEXX Active Absorb 060",
+        "nameEs": "SYSTEXX Active Absorb 060",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-ABSORB-633",
+        "name": "SYSTEXX Active Absorb 633",
+        "nameEs": "SYSTEXX Active Absorb 633",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-ABSORB-639",
+        "name": "SYSTEXX Active Absorb 639",
+        "nameEs": "SYSTEXX Active Absorb 639",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-ACOUSTHERM-233",
+        "name": "SYSTEXX Active Acoustherm 233",
+        "nameEs": "SYSTEXX Active Acoustherm 233",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-ACOUSTIC-102",
+        "name": "SYSTEXX Active Acoustic 102",
+        "nameEs": "SYSTEXX Active Acoustic 102",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-FIREPROTECT-FP04",
+        "name": "SYSTEXX Active Fireprotect Fp04",
+        "nameEs": "SYSTEXX Active Fireprotect Fp04",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-FIREPROTECT-FP78",
+        "name": "SYSTEXX Active Fireprotect Fp78",
+        "nameEs": "SYSTEXX Active Fireprotect Fp78",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-FIREPROTECT-FP79",
+        "name": "SYSTEXX Active Fireprotect Fp79",
+        "nameEs": "SYSTEXX Active Fireprotect Fp79",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-MAGNETIC-101",
+        "name": "SYSTEXX Active Magnetic 101",
+        "nameEs": "SYSTEXX Active Magnetic 101",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-ACTIVE-MAGNETIC-M39",
+        "name": "SYSTEXX Active Magnetic M39",
+        "nameEs": "SYSTEXX Active Magnetic M39",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 15m (15m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYS-ACT-M20",
+        "name": "Magnetic M20",
+        "nameEs": "SYSTEXX Active Magnetic M20",
+        "weight": "225 g/m²",
+        "dimensions": "0.95 x 16.0 m",
+        "description": "Magnetic surface solution, ideal for offices and creative spaces.",
+        "descriptionEs": "Solución de superficie magnética, ideal para oficinas y espacios creativos."
+      },
+      {
+        "sku": "SYS-ACT-R938",
+        "name": "Reno 938",
+        "nameEs": "SYSTEXX Active Reno 938",
+        "weight": "225 g/m²",
+        "dimensions": "1 x 25 m",
+        "description": "Perfect for covering irregular surfaces and wall renovations.",
+        "descriptionEs": "Perfecto para cubrir superficies irregulares y renovaciones de paredes."
+      }
+    ]
+  },
+  {
     "category": "SYSTEXX Phantasy",
     "products": [
+      {
+        "sku": "SYSTEXX-PHANTASY-ARABESQUE-084",
+        "name": "SYSTEXX Phantasy Arabesque 084",
+        "nameEs": "SYSTEXX Phantasy Arabesque 084",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PHANTASY-BAMBOO-050",
+        "name": "SYSTEXX Phantasy Bamboo 050",
+        "nameEs": "SYSTEXX Phantasy Bamboo 050",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PHANTASY-DAMASK-083",
+        "name": "SYSTEXX Phantasy Damask 083",
+        "nameEs": "SYSTEXX Phantasy Damask 083",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PHANTASY-ORIENT-082",
+        "name": "SYSTEXX Phantasy Orient 082",
+        "nameEs": "SYSTEXX Phantasy Orient 082",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PHANTASY-STARDUST-073",
+        "name": "SYSTEXX Phantasy Stardust 073",
+        "nameEs": "SYSTEXX Phantasy Stardust 073",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PHANTASY-VERSAILLES-080",
+        "name": "SYSTEXX Phantasy Versailles 080",
+        "nameEs": "SYSTEXX Phantasy Versailles 080",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
       {
         "sku": "SYS-PHA-050",
         "name": "Bamboo 050",
@@ -53,10 +220,172 @@
     "category": "SYSTEXX Pure",
     "products": [
       {
+        "sku": "SYSTEXX-PURE-BARK-071",
+        "name": "SYSTEXX Pure Bark 071",
+        "nameEs": "SYSTEXX Pure Bark 071",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-CANVAS-043",
+        "name": "SYSTEXX Pure Canvas 043",
+        "nameEs": "SYSTEXX Pure Canvas 043",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-CHEVRON-054",
+        "name": "SYSTEXX Pure Chevron 054",
+        "nameEs": "SYSTEXX Pure Chevron 054",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-COBBLESTONE-063",
+        "name": "SYSTEXX Pure Cobblestone 063",
+        "nameEs": "SYSTEXX Pure Cobblestone 063",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-DIAGONAL-053",
+        "name": "SYSTEXX Pure Diagonal 053",
+        "nameEs": "SYSTEXX Pure Diagonal 053",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-DIAMOND-051",
+        "name": "SYSTEXX Pure Diamond 051",
+        "nameEs": "SYSTEXX Pure Diamond 051",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-GRID-052",
+        "name": "SYSTEXX Pure Grid 052",
+        "nameEs": "SYSTEXX Pure Grid 052",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-HERRINGBONE-034",
+        "name": "SYSTEXX Pure Herringbone 034",
+        "nameEs": "SYSTEXX Pure Herringbone 034",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-HONEYCOMB-061",
+        "name": "SYSTEXX Pure Honeycomb 061",
+        "nameEs": "SYSTEXX Pure Honeycomb 061",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-JUTE-032",
+        "name": "SYSTEXX Pure Jute 032",
+        "nameEs": "SYSTEXX Pure Jute 032",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-LINEN-004",
+        "name": "SYSTEXX Pure Linen 004",
+        "nameEs": "SYSTEXX Pure Linen 004",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-MOSAIC-062",
+        "name": "SYSTEXX Pure Mosaic 062",
+        "nameEs": "SYSTEXX Pure Mosaic 062",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-PEBBLE-064",
+        "name": "SYSTEXX Pure Pebble 064",
+        "nameEs": "SYSTEXX Pure Pebble 064",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-PINSTRIPE-033",
+        "name": "SYSTEXX Pure Pinstripe 033",
+        "nameEs": "SYSTEXX Pure Pinstripe 033",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-STONE-072",
+        "name": "SYSTEXX Pure Stone 072",
+        "nameEs": "SYSTEXX Pure Stone 072",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-TWILL-042",
+        "name": "SYSTEXX Pure Twill 042",
+        "nameEs": "SYSTEXX Pure Twill 042",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-WAFFLE-041",
+        "name": "SYSTEXX Pure Waffle 041",
+        "nameEs": "SYSTEXX Pure Waffle 041",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
+        "sku": "SYSTEXX-PURE-WEAVE-044",
+        "name": "SYSTEXX Pure Weave 044",
+        "nameEs": "SYSTEXX Pure Weave 044",
+        "weight": "225 g/m²",
+        "dimensions": "1m x 25m (25m²)",
+        "description": null,
+        "descriptionEs": null
+      },
+      {
         "sku": "SYS-PUR-J04",
         "name": "Jute 004",
         "nameEs": "SYSTEXX Pure Jute 004",
-        "weight": "325 g/m²",
+        "weight": "225 g/m²",
         "dimensions": "1 x 25 m",
         "description": "Classic jute weave texture, timeless and durable.",
         "descriptionEs": "Clásica textura de tejido de yute, atemporal y duradera."
@@ -65,7 +394,7 @@
         "sku": "SYS-PUR-S532",
         "name": "Structure 532",
         "nameEs": "SYSTEXX Pure Structure 532",
-        "weight": "170 g/m²",
+        "weight": "225 g/m²",
         "dimensions": "1 x 50 m",
         "description": "Fine structural glass fabric for smooth, professional finish.",
         "descriptionEs": "Tejido de vidrio de estructura fina para un acabado liso y profesional."
@@ -74,33 +403,10 @@
         "sku": "SYS-PUR-SKY88",
         "name": "Skyline EP88",
         "nameEs": "SYSTEXX Pure Skyline EP88",
-        "weight": "260 g/m²",
+        "weight": "225 g/m²",
         "dimensions": "0.95 x 15.5 m",
         "description": "Impressive skyline inspired effects that vary with light.",
         "descriptionEs": "Impresionantes efectos inspirados en el horizonte que varían con la luz."
-      }
-    ]
-  },
-  {
-    "category": "SYSTEXX Active",
-    "products": [
-      {
-        "sku": "SYS-ACT-M20",
-        "name": "Magnetic M20",
-        "nameEs": "SYSTEXX Active Magnetic M20",
-        "weight": "950 g/m²",
-        "dimensions": "0.95 x 16.0 m",
-        "description": "Magnetic surface solution, ideal for offices and creative spaces.",
-        "descriptionEs": "Solución de superficie magnética, ideal para oficinas y espacios creativos."
-      },
-      {
-        "sku": "SYS-ACT-R938",
-        "name": "Reno 938",
-        "nameEs": "SYSTEXX Active Reno 938",
-        "weight": "210 g/m²",
-        "dimensions": "1 x 25 m",
-        "description": "Perfect for covering irregular surfaces and wall renovations.",
-        "descriptionEs": "Perfecto para cubrir superficies irregulares y renovaciones de paredes."
       }
     ]
   }

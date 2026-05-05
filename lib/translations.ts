@@ -11,6 +11,7 @@ export const translations = {
     services: 'Services',
     contact: 'Contact',
     account: 'Account',
+    new: 'NEW',
     
     // Homepage
     heroTitle: 'Premium Wall Coverings',

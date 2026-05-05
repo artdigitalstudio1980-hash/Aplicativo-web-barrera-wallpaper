@@ -328,40 +328,42 @@ export default function CatalogPage() {
 
       {/* --- PRODUCT DETAIL MODAL --- */}
       <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border-none rounded-[3rem] shadow-2xl">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border-none rounded-[2rem] sm:rounded-[3rem] shadow-2xl max-h-[95vh] sm:max-h-[90vh]">
           {selectedProduct && (
-            <div className="flex flex-col lg:flex-row h-full max-h-[90vh] overflow-y-auto lg:overflow-hidden">
-              <div className="relative w-full lg:w-[55%] aspect-square lg:aspect-auto h-[400px] lg:h-auto bg-gray-50 border-r border-gray-50">
+            <div className="flex flex-col lg:flex-row max-h-[95vh] sm:max-h-[90vh] overflow-y-auto lg:overflow-hidden">
+              {/* Image Panel */}
+              <div className="relative w-full lg:w-[50%] aspect-[4/3] sm:aspect-square lg:aspect-auto lg:min-h-[500px] bg-gray-50 border-b lg:border-b-0 lg:border-r border-gray-100 shrink-0">
                 <Image 
                   src={parseProductImage(selectedProduct)}
                   alt={selectedProduct.name} 
                   fill 
-                  className="object-contain" // Shows whole image with rectangle
+                  className="object-contain"
                   unoptimized
                 />
               </div>
 
-              <div className="flex-1 p-10 lg:p-14 flex flex-col justify-between bg-white relative">
+              {/* Info Panel - scrollable on desktop */}
+              <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col bg-white relative lg:overflow-y-auto lg:max-h-[90vh]">
                 <button 
                   onClick={() => setSelectedProduct(null)}
-                  className="absolute top-8 right-8 p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-400 transition-all"
+                  className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-400 transition-all z-10"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <div className="space-y-10">
+                <div className="space-y-6">
                   <div>
-                    <p className="text-[10px] text-blue-600 font-black tracking-[0.3em] uppercase mb-3">SYSTEXX GERMANY</p>
-                    <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-4">
+                    <p className="text-[10px] text-blue-600 font-black tracking-[0.3em] uppercase mb-2">SYSTEXX GERMANY</p>
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3 pr-10">
                       {selectedProduct.name}
                     </h2>
-                    <p className="text-3xl font-black text-gray-900 tracking-tighter">${selectedProduct.price.toFixed(2)} <span className="text-gray-300 text-xs tracking-widest uppercase">/ SQ FT</span></p>
+                    <p className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">${selectedProduct.price.toFixed(2)} <span className="text-gray-300 text-xs tracking-widest uppercase">/ SQ FT</span></p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-8 py-8 border-y border-gray-50">
+                  <div className="grid grid-cols-2 gap-6 py-5 border-y border-gray-100">
                     <div className="space-y-1">
                       <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Dimensions</p>
-                      <p className="text-sm font-bold text-gray-900">1m x 25m</p>
+                      <p className="text-sm font-bold text-gray-900">{selectedProduct.dimensions || '1m x 25m'}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Fire Class</p>
@@ -369,20 +371,21 @@ export default function CatalogPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <h4 className="text-[9px] font-black text-black uppercase tracking-widest flex items-center gap-2">
                        <Info className="w-3 h-3" /> Key Specifications
                     </h4>
                     <p className="text-gray-500 text-xs leading-relaxed font-light">
-                      High-durability glass textile. Impact resistant, repaintable, and fire-rated for commercial and residential use.
+                      {selectedProduct.description || 'High-durability glass textile. Impact resistant, repaintable, and fire-rated for commercial and residential use.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-12 flex flex-col gap-3">
+                {/* Action Buttons - always visible */}
+                <div className="mt-6 pt-4 flex flex-col gap-3 border-t border-gray-50">
                   <Button 
                     onClick={() => handleOpenSimulador(selectedProduct.id)}
-                    className="w-full h-16 rounded-2xl bg-black text-white hover:bg-gray-800 font-black uppercase text-xs tracking-[0.2em] gap-3 shadow-lg"
+                    className="w-full h-14 rounded-2xl bg-black text-white hover:bg-gray-800 font-black uppercase text-xs tracking-[0.2em] gap-3 shadow-lg"
                   >
                     <Wand2 className="w-5 h-5" />
                     Open Visualizer
@@ -392,7 +395,7 @@ export default function CatalogPage() {
                     <Button 
                       variant="outline"
                       onClick={() => handleOpenCalculator(selectedProduct.id)}
-                      className="h-16 rounded-2xl border-gray-200 bg-white hover:bg-gray-50 text-black font-black uppercase text-[9px] tracking-widest gap-2 shadow-sm"
+                      className="h-14 rounded-2xl border-gray-200 bg-white hover:bg-gray-50 text-black font-black uppercase text-[9px] tracking-widest gap-2 shadow-sm"
                     >
                       <Calculator className="w-4 h-4" />
                       Calculator
@@ -408,9 +411,10 @@ export default function CatalogPage() {
                           sku: selectedProduct.sku,
                           isRoll: true
                         });
+                        setSelectedProduct(null);
                         router.push('/checkout');
                       }}
-                      className="h-16 rounded-2xl bg-blue-600 text-white hover:bg-blue-500 font-black uppercase text-[9px] tracking-widest gap-2 shadow-md shadow-blue-600/10"
+                      className="h-14 rounded-2xl bg-blue-600 text-white hover:bg-blue-500 font-black uppercase text-[9px] tracking-widest gap-2 shadow-md shadow-blue-600/10"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       Buy Direct

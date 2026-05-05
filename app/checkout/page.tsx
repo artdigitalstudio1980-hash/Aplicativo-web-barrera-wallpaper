@@ -56,6 +56,7 @@ export default function UnifiedCheckoutPage() {
           needsInstallation,
           items: items.map(item => ({
             wallpaperId: item.id,
+            name: item.name,
             quantity: item.quantity,
             price: item.price,
             measurements: item.measurements
@@ -65,19 +66,31 @@ export default function UnifiedCheckoutPage() {
 
       const data = await res.json();
       
-      if (data.success && data.data) {
-        const redirectUrl = paymentMethod === 'stripe' ? data.data.url : data.data.approvalUrl;
-        if (redirectUrl) {
-          setTimeout(() => { window.location.href = redirectUrl; }, 100);
-          return;
-        } else {
-          throw new Error('No redirect URL received');
-        }
+      if (!res.ok || !data.success) {
+        const errorMsg = data.error || `Checkout failed (${res.status})`;
+        toast.error(errorMsg, {
+          description: paymentMethod === 'stripe' 
+            ? 'Please try PayPal or contact support.' 
+            : 'Please try Stripe or contact support.',
+          duration: 6000,
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Determine redirect URL based on payment method
+      const redirectUrl = paymentMethod === 'stripe' ? data.data?.url : data.data?.approvalUrl;
+      
+      if (redirectUrl) {
+        toast.success('Redirecting to secure payment...', { duration: 3000 });
+        setTimeout(() => { window.location.href = redirectUrl; }, 500);
+        return;
       } else {
-        throw new Error(data.error || 'Checkout failed');
+        toast.error('Payment gateway did not return a redirect URL. Please try another method.', { duration: 6000 });
+        setIsProcessing(false);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Error creating checkout session');
+      toast.error(error.message || 'Network error. Please check your connection and try again.', { duration: 6000 });
       setIsProcessing(false);
     }
   };

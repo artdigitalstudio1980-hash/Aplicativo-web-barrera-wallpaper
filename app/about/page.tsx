@@ -167,7 +167,7 @@ export default function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {['/images/about/installation_people_1.jpeg', '/images/about/installation_people_2.jpeg', '/images/about/installation_people_3.jpg'].map((src, i) => (
+            {['/images/about/installation_1.jpeg', '/images/about/installation_2.jpeg', '/images/about/installation_3.jpeg'].map((src, i) => (
               <motion.div 
                 key={i}
                 whileHover={{ scale: 1.02 }}
@@ -197,7 +197,7 @@ export default function AboutPage() {
             <h3 className="text-5xl font-bold text-gray-900 tracking-tighter uppercase italic">Transformed Spaces</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {['/images/about/space_1.jpg', '/images/about/space_2.jpg', '/images/about/space_3.jpeg'].map((src, i) => (
+            {['/images/about/real_space_1.jpeg', '/images/about/real_space_2.jpeg', '/images/about/real_space_3.jpeg'].map((src, i) => (
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
@@ -263,7 +263,7 @@ export default function AboutPage() {
           >
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
               <Image 
-                src="/images/about/space_2.jpg" 
+                src="/images/about/real_space_2.jpeg" 
                 alt="" 
                 fill 
                 className="object-cover"

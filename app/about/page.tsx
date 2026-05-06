@@ -167,26 +167,51 @@ export default function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {['/images/about/showroom.png', '/catalogo/phantasy-arabesque-084.png', '/catalogo/active-absorb-060.png'].map((src, i) => (
+            {['/images/about/installation_people_1.jpeg', '/images/about/installation_people_2.jpeg', '/images/about/installation_people_3.jpg'].map((src, i) => (
               <motion.div 
                 key={i}
                 whileHover={{ scale: 1.02 }}
-                className="relative aspect-video rounded-3xl overflow-hidden bg-gray-900 group cursor-pointer"
+                className="relative aspect-square md:aspect-[4/5] rounded-3xl overflow-hidden bg-gray-900 group cursor-pointer shadow-xl"
               >
                 <Image
                   src={src}
-                  alt="Installation"
+                  alt="Installation Team"
                   fill
-                  className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+                  className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform">
-                    <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
-                  </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute bottom-6 left-6 text-sm font-bold uppercase tracking-widest translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 text-white">
+                  Installation Team
                 </div>
-                <div className="absolute bottom-6 left-6 text-xs font-bold uppercase tracking-widest">
-                  Video Project 0{i}
-                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- TRANSFORMED SPACES GALLERY --- */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.4em]">Inspiration</h2>
+            <h3 className="text-5xl font-bold text-gray-900 tracking-tighter uppercase italic">Transformed Spaces</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {['/images/about/space_1.jpg', '/images/about/space_2.jpg', '/images/about/space_3.jpeg'].map((src, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.2, duration: 0.8 }}
+                className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-2xl group"
+              >
+                <Image
+                  src={src}
+                  alt="Decorative Space"
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
               </motion.div>
             ))}
           </div>
@@ -236,9 +261,9 @@ export default function AboutPage() {
             whileInView={{ opacity: 1, scale: 1 }}
             className="bg-black rounded-[4rem] p-16 md:p-24 text-white relative overflow-hidden"
           >
-            <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+            <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
               <Image 
-                src="https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1000&auto=format&fit=crop" 
+                src="/images/about/space_2.jpg" 
                 alt="" 
                 fill 
                 className="object-cover"

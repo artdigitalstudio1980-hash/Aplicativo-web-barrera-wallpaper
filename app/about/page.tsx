@@ -94,7 +94,7 @@ export default function AboutPage() {
               className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10"
             >
               <Image
-                src="/images/about/designer.png"
+                src="/images/about/oscar-barrera-portrait.png"
                 alt="Oscar Barrera - Precision and Luxury"
                 fill
                 className="object-cover"

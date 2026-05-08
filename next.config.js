@@ -21,6 +21,7 @@ const nextConfig = {
       { source: '/auth/login', destination: '/login', permanent: true },
       { source: '/auth/register', destination: '/register', permanent: true },
       { source: '/shop', destination: '/catalog', permanent: true },
+      { source: '/ai-studio', destination: '/design', permanent: true },
     ];
   },
 

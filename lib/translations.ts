@@ -7,7 +7,7 @@ export const translations = {
     about: 'About',
     catalog: 'Catalog',
     design: 'SYSTEXX Tech',
-    aiStudio: 'AI Studio',
+    // aiStudio: 'AI Studio', // Removed legacy key
     services: 'Services',
     contact: 'Contact',
     account: 'Account',
@@ -55,7 +55,7 @@ export const translations = {
     murals: 'Murals',
     residentialInstallation: 'Residential Installation',
     commercialSolutions2: 'Commercial Solutions',
-    aiDesignStudio: 'AI Design Studio',
+    // aiDesignStudio: 'AI Design Studio', // Removed legacy key
     consultation: 'Consultation',
     subscribeNewsletter: 'Subscribe to newsletter',
     subscribe: 'SUBSCRIBE',
@@ -250,7 +250,7 @@ export const translations = {
     about: 'Nosotros',
     catalog: 'Catálogo',
     design: 'Tecnología SYSTEXX',
-    aiStudio: 'Estudio IA',
+    // aiStudio: 'Estudio IA', // Removed legacy key
     services: 'Servicios',
     contact: 'Contacto',
     account: 'Cuenta',
@@ -297,7 +297,7 @@ export const translations = {
     murals: 'Murales',
     residentialInstallation: 'Instalación Residencial',
     commercialSolutions2: 'Soluciones Comerciales',
-    aiDesignStudio: 'Estudio de Diseño IA',
+    // aiDesignStudio: 'Estudio de Diseño IA', // Removed legacy key
     consultation: 'Consulta',
     subscribeNewsletter: 'Suscríbete al boletín',
     subscribe: 'SUSCRIBIRSE',

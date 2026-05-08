@@ -292,7 +292,7 @@ export default function CatalogPage() {
                                <Badge className="bg-gray-50 text-gray-400 border-none font-black text-[8px] uppercase tracking-widest px-2 py-1">
                                 {product.sku}
                               </Badge>
-                              <span className="text-xl font-black text-black tracking-tighter">${product.price.toFixed(2)}</span>
+                              <span className="text-xl font-black text-black tracking-tighter">${product.price.toFixed(2)} <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">/ ROLL</span></span>
                             </div>
                             <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tighter uppercase italic leading-[1.1] group-hover:text-blue-600 transition-colors">
                               {product.name}
@@ -357,7 +357,7 @@ export default function CatalogPage() {
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3 pr-10">
                       {selectedProduct.name}
                     </h2>
-                    <p className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">${selectedProduct.price.toFixed(2)} <span className="text-gray-300 text-xs tracking-widest uppercase">/ SQ FT</span></p>
+                    <p className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">${selectedProduct.price.toFixed(2)} <span className="text-gray-300 text-xs tracking-widest uppercase">/ ROLL</span></p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6 py-5 border-y border-gray-100">

@@ -125,7 +125,7 @@ async function main() {
             description: prod.description,
             descriptionEs: prod.descriptionEs,
             slug: prodSlug,
-            price: 45.0,
+            price: 350.0,
             images: images,
             colors: [],
             styles: [section.category.split(' ')[1]?.toLowerCase() || 'systexx'],

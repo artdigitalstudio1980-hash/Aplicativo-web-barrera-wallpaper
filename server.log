@@ -1,0 +1,31 @@
+  ▲ Next.js 14.2.28
+  - Local:        http://localhost:3100
+
+ ✓ Starting...
+ ✓ Ready in 322ms
+✅ DATABASE_URL is configured
+PayPal order creation failed: {"error":"invalid_token","error_description":"Token signature verification failed"}
+PayPal error: Error: PayPal rejected the request
+    at h (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/.next/server/app/api/checkout/route.js:1:3466)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async /home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
+    at async e_.execute (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
+    at async e_.handle (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
+    at async doRender (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1962:32)
+PayPal order creation failed: {"error":"invalid_token","error_description":"Token signature verification failed"}
+PayPal error: Error: PayPal rejected the request
+    at h (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/.next/server/app/api/checkout/route.js:1:3466)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async /home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
+    at async e_.execute (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
+    at async e_.handle (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
+    at async doRender (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/art-digital-studio/Documentos/aplicativo-web-barrera-wallpaper/node_modules/next/dist/server/base-server.js:1962:32)
+⚠️ Stripe is not configured. Redirecting to demo success.

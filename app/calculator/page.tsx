@@ -90,8 +90,10 @@ function CalculatorContent() {
   const rawArea = calculateArea();
   const wasteFactor = 1.15; 
   const totalAreaWithWaste = rawArea * wasteFactor;
-  const pricePerM2 = wallpaper?.price || 95.00;
-  const estimatedTotal = totalAreaWithWaste * pricePerM2;
+  const ROLL_SIZE = 25;
+  const rollsNeeded = rawArea > 0 ? Math.ceil(totalAreaWithWaste / ROLL_SIZE) : 0;
+  const pricePerRoll = wallpaper?.price || 350.00;
+  const estimatedTotal = rollsNeeded * pricePerRoll;
 
   const handleCheckout = async () => {
     if (estimatedTotal <= 0) {
@@ -99,14 +101,10 @@ function CalculatorContent() {
       return;
     }
 
-    const ROLL_SIZE = 25;
-    const rollsNeeded = Math.ceil(totalAreaWithWaste / ROLL_SIZE);
-    const finalPrice = wallpaper?.price ? wallpaper.price * ROLL_SIZE : pricePerM2 * ROLL_SIZE;
-
     addItem({
       id: wallpaper?.id || 'custom',
       name: wallpaper ? (locale === 'es' ? wallpaper.nameEs : wallpaper.name) : 'Custom Wallpaper',
-      price: finalPrice,
+      price: pricePerRoll,
       quantity: rollsNeeded,
       image: wallpaper ? parseProductImage(wallpaper) : '/placeholder.jpg',
       sku: wallpaper?.sku || 'CUSTOM',
@@ -271,7 +269,7 @@ function CalculatorContent() {
                           {wallpaper.sku}
                         </Badge>
                         <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-none">{wallpaper.name}</h4>
-                        <p className="text-gray-400 text-sm mt-2 font-bold">${pricePerM2.toFixed(2)} <span className="text-[10px] uppercase font-black tracking-widest">/ SQ FT</span></p>
+                        <p className="text-gray-400 text-sm mt-2 font-bold">${pricePerRoll.toFixed(2)} <span className="text-[10px] uppercase font-black tracking-widest">/ ROLL</span></p>
                       </div>
                     </div>
                   )}

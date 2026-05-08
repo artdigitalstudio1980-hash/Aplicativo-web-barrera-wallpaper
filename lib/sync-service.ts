@@ -92,7 +92,7 @@ export async function syncCatalog() {
           description: prodData.description,
           descriptionEs: prodData.descriptionEs,
           dimensions: prodData.dimensions,
-          price: 45.0,
+          price: 350.0,
           images: images,
           colors: [],
           styles: [catData.category.split(' ')[1]?.toLowerCase() || 'systexx'],

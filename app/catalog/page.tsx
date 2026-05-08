@@ -265,7 +265,7 @@ export default function CatalogPage() {
                             src={imgUrl} 
                             alt={product.name} 
                             fill 
-                            className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                            className="object-contain group-hover:scale-105 transition-transform duration-1000 p-2"
                             unoptimized
                           />
                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center backdrop-blur-[2px]">
@@ -318,7 +318,7 @@ export default function CatalogPage() {
                     src={parseProductImage(selectedProduct)}
                     alt={selectedProduct.name} 
                     fill 
-                    className="object-cover"
+                    className="object-contain p-4"
                     unoptimized
                   />
                   <div className="absolute top-8 left-8">

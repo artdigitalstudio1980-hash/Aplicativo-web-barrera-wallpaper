@@ -1,314 +1,222 @@
-
 'use client';
 
 import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLocale } from '@/components/locale-context';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
   Home,
   Building,
   CheckCircle,
-  Clock,
   Shield,
   MapPin,
   Phone,
-  Calendar,
-  Star,
   Award,
-  Truck,
-  Ruler
+  Ruler,
+  Clock,
+  ArrowRight,
+  Droplets,
+  Zap,
+  Hammer
 } from 'lucide-react';
 
 const getServices = (t: any) => [
   {
-    titleKey: 'residentialInstallationTitle',
-    descriptionKey: 'residentialInstallationDesc',
+    title: 'RESIDENTIAL',
+    subtitle: 'High-End Interiors',
+    description: 'Bespoke wallpaper installation for Miami\'s most exclusive residences. We specialize in delicate materials and complex architectural layouts.',
     icon: Home,
-    featuresKeys: [
-      'freeDesignConsultation',
-      'surfaceMeasurement',
-      'certifiedInstallation',
-      'twoYearWarranty',
-      'postInstallation'
-    ],
-    pricingKey: 'from',
-    pricingValue: '$15/m²',
-    durationValue: '1-2',
-    coverageValue: 'Miami, FL'
+    image: '/publicidad/review-Captura-desde-2026-03-13-16-36-53.png',
+    features: [
+      'Certified Master Installers',
+      'Surface Perfection Guarantee',
+      'Dust-Free Workspace Strategy',
+      '2-Year Premium Warranty'
+    ]
   },
   {
-    titleKey: 'commercialInstallationTitle',
-    descriptionKey: 'commercialInstallationDesc',
+    title: 'COMMERCIAL',
+    subtitle: 'Architectural Scale',
+    description: 'Industrial-strength wall solutions for luxury hotels, auto showrooms, and corporate headquarters using SYSTEXX high-performance technology.',
     icon: Building,
-    featuresKeys: [
-      'fullProjectPlanning',
-      'trafficResistant',
-      'afterHoursInstallation',
-      'safetyCertifications',
-      'preventiveMaintenance'
-    ],
-    pricingKey: 'customQuote',
-    pricingValue: '',
-    durationValue: '2-5',
-    coverageValue: 'Florida'
-  }
-];
-
-const getProcess = (t: any) => [
-  {
-    step: 1,
-    titleKey: 'initialConsultation',
-    descriptionKey: 'initialConsultationDesc',
-    icon: Phone
-  },
-  {
-    step: 2,
-    titleKey: 'measurementBudget',
-    descriptionKey: 'measurementBudgetDesc',
-    icon: Ruler
-  },
-  {
-    step: 3,
-    titleKey: 'spacePreparation',
-    descriptionKey: 'spacePreparationDesc',
-    icon: Shield
-  },
-  {
-    step: 4,
-    titleKey: 'professionalInstallation2',
-    descriptionKey: 'professionalInstallationDesc2',
-    icon: Award
-  },
-  {
-    step: 5,
-    titleKey: 'finalInspection',
-    descriptionKey: 'finalInspectionDesc',
-    icon: CheckCircle
+    image: '/publicidad/active-category-overview.png',
+    features: [
+      'High-Traffic Durability',
+      'After-Hours Integration',
+      'Safety & Fire Certifications',
+      'Project Planning & Management'
+    ]
   }
 ];
 
 export default function ServicesPage() {
   const { t } = useLocale();
-  const [heroRef, heroInView] = useInView({ triggerOnce: true, threshold: 0.1 });
-  const [servicesRef, servicesInView] = useInView({ triggerOnce: true, threshold: 0.1 });
-  const [processRef, processInView] = useInView({ triggerOnce: true, threshold: 0.1 });
-
   const services = getServices(t);
-  const process = getProcess(t);
 
   return (
-    <div className="relative min-h-screen">
-      {/* Hero Section */}
-      <section 
-        ref={heroRef}
-        className="relative py-20 bg-gradient-to-br from-green-50 to-blue-50"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white text-gray-900 selection:bg-black selection:text-white">
+      {/* --- HERO SECTION --- */}
+      <section className="relative pt-32 pb-20 overflow-hidden bg-gray-50 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8 }}
-            className="text-center space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl"
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
-              {t('installationServices')}
+            <span className="inline-block px-3 py-1 border border-black/10 rounded-full text-[10px] tracking-[0.2em] uppercase mb-6 bg-white/50 backdrop-blur-sm font-bold">
+              White-Glove Service
+            </span>
+            <h1 className="text-5xl md:text-8xl font-light tracking-tighter mb-8 leading-none">
+              Professional <br />
+              <span className="font-bold italic">Installation</span>
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {t('installationSubtitle')}
+            <p className="text-xl text-gray-500 font-light leading-relaxed mb-10">
+              Beyond product sales, we provide the architectural execution required for high-performance materials. Our team is trained in German installation standards for SYSTEXX glass textiles.
             </p>
-            
-            <div className="flex items-center justify-center space-x-2 text-green-600">
-              <MapPin className="w-5 h-5" />
-              <span className="font-semibold">{t('mainCoverage')}</span>
+            <div className="flex flex-wrap gap-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div className="text-[10px] font-bold tracking-widest uppercase">Certified Master <br /> Installers</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div className="text-[10px] font-bold tracking-widest uppercase">Lifetime Finish <br /> Support</div>
+              </div>
             </div>
           </motion.div>
         </div>
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-gray-200/50 to-transparent pointer-events-none hidden lg:block"></div>
       </section>
 
-      {/* Services Overview */}
-      <section ref={servicesRef} className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* --- MAIN SERVICES (POSTER STYLE) --- */}
+      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
+        {services.map((service, idx) => (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={servicesInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t('ourServices')}
-            </h2>
-            <p className="text-lg text-gray-600">
-              {t('ourServicesSubtitle')}
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {services.map((service, index) => {
-              const IconComponent = service.icon;
-              return (
-                <motion.div
-                  key={service.titleKey}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={servicesInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.6, delay: index * 0.2 }}
-                >
-                  <Card className="h-full hover:shadow-xl transition-shadow duration-300">
-                    <CardHeader>
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <IconComponent className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-2xl">{t(service.titleKey as any)}</CardTitle>
-                          <CardDescription className="text-base">
-                            {t(service.descriptionKey as any)}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-6">
-                      <div className="space-y-3">
-                        {service.featuresKeys.map((featureKey, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                            <span className="text-gray-700">{t(featureKey as any)}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t">
-                        <div className="text-center">
-                          <div className="font-semibold text-gray-900">
-                            {service.pricingValue ? `${t(service.pricingKey as any)} ${service.pricingValue}` : t(service.pricingKey as any)}
-                          </div>
-                          <div className="text-sm text-gray-600">{t('price')}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold text-gray-900">{service.durationValue} {t('days')}</div>
-                          <div className="text-sm text-gray-600">{t('duration')}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold text-gray-900">{service.coverageValue}</div>
-                          <div className="text-sm text-gray-600">{t('coverage')}</div>
-                        </div>
-                      </div>
-
-                      <Link href="/contact">
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                          {t('requestQuote')}
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Installation Process */}
-      <section ref={processRef} className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={processInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t('installationProcess')}
-            </h2>
-            <p className="text-lg text-gray-600">
-              {t('provenProcess')}
-            </p>
-          </motion.div>
-
-          <div className="space-y-8">
-            {process.map((step, index) => {
-              const IconComponent = step.icon;
-              return (
-                <motion.div
-                  key={step.step}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
-                  animate={processInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className={`flex items-center gap-8 ${index % 2 === 1 ? 'flex-row-reverse' : ''}`}
-                >
-                  <div className="flex-1">
-                    <Card className="hover:shadow-lg transition-shadow duration-300">
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <IconComponent className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                              {t(step.titleKey as any)}
-                            </h3>
-                            <p className="text-gray-600">
-                              {t(step.descriptionKey as any)}
-                            </p>
-                          </div>
-                          <div className="text-3xl font-bold text-blue-600 flex-shrink-0">
-                            {step.step}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-green-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            key={service.title}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="space-y-8"
+            className={`grid grid-cols-1 lg:grid-cols-12 gap-0 rounded-[3rem] overflow-hidden border border-gray-100 shadow-3xl bg-white ${idx % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-white">
-              {t('readyToTransformSpace')}
-            </h2>
-            <p className="text-xl text-blue-100">
-              {t('contactToday')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className={`lg:col-span-7 relative h-[400px] lg:h-[600px] ${idx % 2 === 1 ? 'lg:order-2' : ''}`}>
+              <Image 
+                src={service.image} 
+                alt={service.title} 
+                fill 
+                className="object-cover" 
+                unoptimized 
+              />
+              <div className="absolute inset-0 bg-black/10"></div>
+            </div>
+            <div className={`lg:col-span-5 p-12 lg:p-20 flex flex-col justify-center ${idx % 2 === 1 ? 'lg:order-1' : ''}`}>
+              <span className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block">Division 0{idx + 1}</span>
+              <h2 className="text-5xl md:text-6xl font-light tracking-tighter mb-4 leading-none">
+                {service.title} <br />
+                <span className="font-bold italic text-blue-600">{service.subtitle}</span>
+              </h2>
+              <p className="text-gray-500 text-lg font-light leading-relaxed mb-10">
+                {service.description}
+              </p>
+              
+              <div className="space-y-4 mb-12">
+                {service.features.map((feature, fIdx) => (
+                  <div key={fIdx} className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-black" />
+                    <span className="text-sm font-bold tracking-tight text-gray-800">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
               <Link href="/contact">
-                <Button 
-                  size="lg" 
-                  variant="secondary"
-                  className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg font-semibold"
-                >
-                  <Calendar className="w-5 h-5 mr-2" />
-                  {t('scheduleConsultation')}
+                <Button className="h-16 px-10 rounded-none bg-black text-white hover:bg-gray-800 font-bold uppercase text-[10px] tracking-[0.3em] gap-3 shadow-xl">
+                  REQUEST QUOTE <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <a href="tel:+13055550123">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="border-2 border-white text-white bg-blue-600 hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold"
-                >
-                  <Phone className="w-5 h-5 mr-2" />
-                  {t('callNow')}
-                </Button>
-              </a>
             </div>
           </motion.div>
+        ))}
+      </section>
+
+      {/* --- TECHNICAL SPECS SECTION --- */}
+      <section className="py-24 bg-black text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div>
+              <span className="text-blue-500 text-[10px] font-bold uppercase tracking-[0.5em] mb-6 block">Precision Standards</span>
+              <h2 className="text-5xl md:text-7xl font-light tracking-tighter mb-8 leading-tight">
+                Engineering <br />
+                <span className="font-bold italic">The Perfect Wall</span>
+              </h2>
+              <p className="text-gray-400 text-lg font-light leading-relaxed mb-12 max-w-xl">
+                Installation of high-performance glass textiles requires specific adhesive chemistry and seam management. We follow Vitrulan's technical protocols to ensure lifetime adhesion and fire-safety integrity.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h4 className="text-sm font-bold tracking-widest uppercase">Quick Bond</h4>
+                  <p className="text-xs text-gray-500 font-light">Rapid execution with zero structural compromise.</p>
+                </div>
+                <div className="space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center">
+                    <Droplets className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h4 className="text-sm font-bold tracking-widest uppercase">Hydro-Shield</h4>
+                  <p className="text-xs text-gray-500 font-light">Anti-microbial and moisture resistant finish.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative aspect-square lg:aspect-auto lg:h-[600px] rounded-[3rem] overflow-hidden border border-white/10 group">
+              <Image 
+                src="/publicidad/cover-systexx-collection.png" 
+                alt="Technical Installation" 
+                fill 
+                className="object-cover brightness-50 group-hover:scale-105 transition-transform duration-[10s]"
+                unoptimized
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="p-10 bg-white/5 backdrop-blur-md border border-white/20 rounded-[2rem] text-center max-w-xs">
+                    <Hammer className="w-10 h-10 text-white mx-auto mb-4" />
+                    <p className="text-xs font-bold tracking-widest uppercase mb-2">Service Area</p>
+                    <p className="text-2xl font-black tracking-tighter italic">MIAMI METRO</p>
+                    <div className="h-[1px] w-12 bg-blue-500 mx-auto my-4"></div>
+                    <p className="text-[10px] text-gray-400 leading-relaxed uppercase">Commercial and luxury residential projects throughout Florida.</p>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- CTA --- */}
+      <section className="py-32 bg-gray-50 text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-4xl md:text-6xl font-light tracking-tighter mb-8 leading-tight">
+            Ready to <span className="font-bold italic">Transform</span> Your Architecture?
+          </h2>
+          <p className="text-gray-500 text-lg font-light mb-12">
+            Schedule a site visit with our master installation team for a technical assessment and precision measurement.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/contact">
+              <Button size="lg" className="h-16 px-12 rounded-none bg-black text-white hover:bg-gray-800 font-bold uppercase text-[10px] tracking-[0.3em] shadow-xl">
+                BOOK CONSULTATION
+              </Button>
+            </Link>
+            <a href="tel:+19545441740">
+              <Button size="lg" variant="outline" className="h-16 px-12 rounded-none border-black text-black hover:bg-black hover:text-white font-bold uppercase text-[10px] tracking-[0.3em] transition-all">
+                DIRECT CALL
+              </Button>
+            </a>
+          </div>
         </div>
       </section>
     </div>

@@ -1,5 +1,5 @@
 
-// Complete translation system for the website
+// Complete translation system for the website - Updated: 2026-05-07
 export const translations = {
   en: {
     // Navigation

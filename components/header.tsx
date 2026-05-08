@@ -23,7 +23,6 @@ export default function Header() {
     { name: t('about'), href: '/about/' },
     { name: t('catalog'), href: '/catalog/' },
     { name: t('design'), href: '/design/' },
-    { name: t('aiStudio'), href: '/ai-studio/', isNew: true },
     { name: t('services'), href: '/services/' },
     { name: t('contact'), href: '/contact/' }
   ];

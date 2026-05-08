@@ -6,7 +6,7 @@ export const translations = {
     home: 'Home',
     about: 'About',
     catalog: 'Catalog',
-    design: 'Design',
+    design: 'SYSTEXX Tech',
     aiStudio: 'AI Studio',
     services: 'Services',
     contact: 'Contact',
@@ -17,7 +17,7 @@ export const translations = {
     heroTitle: 'Premium Wall Coverings',
     heroSubtitle: "Discover Oscar Barrera's artistic vision where design, art, and technology converge to create extraordinary spaces.",
     exploreCollection: 'EXPLORE COLLECTION',
-    designWithAI: 'DESIGN WITH AI',
+    designWithAI: 'SYSTEXX TECHNOLOGY',
     
     // Stats
     happyCustomers: 'Happy Customers',
@@ -249,7 +249,7 @@ export const translations = {
     home: 'Inicio',
     about: 'Nosotros',
     catalog: 'Catálogo',
-    design: 'Diseñar',
+    design: 'Tecnología SYSTEXX',
     aiStudio: 'Estudio IA',
     services: 'Servicios',
     contact: 'Contacto',
@@ -259,7 +259,7 @@ export const translations = {
     heroTitle: 'Revestimientos de Paredes Premium',
     heroSubtitle: 'Descubre la visión artística de Oscar Barrera donde diseño, arte y tecnología convergen para crear espacios extraordinarios.',
     exploreCollection: 'EXPLORAR COLECCIÓN',
-    designWithAI: 'DISEÑAR CON IA',
+    designWithAI: 'TECNOLOGÍA SYSTEXX',
     
     // Estadísticas
     happyCustomers: 'Clientes Satisfechos',

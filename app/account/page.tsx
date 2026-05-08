@@ -167,9 +167,9 @@ export default function AccountPage() {
                     </div>
 
                     <div className="pt-4">
-                      <Link href="/ai-studio">
+                      <Link href="/catalog">
                         <Button className="bg-black hover:bg-gray-800">
-                          Create AI Wallpaper Design
+                          Explore Catalog
                         </Button>
                       </Link>
                     </div>
@@ -193,8 +193,8 @@ export default function AccountPage() {
                       <div className="text-center py-8">
                         <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-600 mb-4">No orders yet</p>
-                        <Link href="/ai-studio">
-                          <Button variant="outline">Start Creating</Button>
+                        <Link href="/catalog">
+                          <Button variant="outline">Browse Catalog</Button>
                         </Link>
                       </div>
                     ) : (

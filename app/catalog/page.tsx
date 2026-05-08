@@ -7,65 +7,63 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseProductImage } from '@/lib/utils';
 import { 
-  Search, Loader2, Wand2, ShoppingCart, 
-  Ruler, Info, X, Sparkles, ShieldCheck, 
-  Flame, Zap, Droplets, Calculator, ArrowRight, 
-  Maximize2, Layers, Activity, Palette
+  Search, Loader2, ShoppingCart, 
+  Info, X, ShieldCheck, 
+  Zap, Calculator, ArrowRight, 
+  Maximize2, Palette,
+  ChevronRight,
+  Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useCart } from '@/lib/store/use-cart';
+import { useLocale } from '@/components/locale-context';
 
 // --- DATA CONFIGURATION ---
-const ADS = [
-  { src: '/catalogo/active-magnetic-whiteboard-description.png', title: 'SYSTEXX Active', desc: 'Magnetic walls and whiteboard surfaces for interactive spaces.' },
-  { src: '/catalogo/active-absorb-description.png', title: 'Acoustic Comfort', desc: 'Reduce noise levels with our sound-absorbing glass textile.' },
-  { src: '/catalogo/phantasy-description.png', title: 'Phantasy Designs', desc: 'Exclusive patterns for sophisticated interior architectural statements.' },
-];
-
 const CATEGORIES_INFO: Record<string, any> = {
   'systexx-pure': {
     title: 'SYSTEXX Pure',
-    subtitle: 'High-Performance Minimalism',
-    description: 'Smooth glass textiles that offer extreme durability and fire protection.',
-    icon: <ShieldCheck className="w-5 h-5 text-blue-600" />,
+    subtitle: 'German Precision',
+    tagline: 'High-Performance Minimalism',
+    description: 'Smooth glass textiles that offer extreme durability, fire protection, and a flawless architectural finish.',
+    icon: <ShieldCheck className="w-5 h-5" />,
     image: '/publicidad/review-Captura-desde-2026-03-13-16-36-53.png',
-    label: 'Durability & Elegance'
+    accent: 'bg-blue-600'
   },
   'systexx-phantasy': {
     title: 'SYSTEXX Phantasy',
-    subtitle: 'Luxury Jacquard Patterns',
-    description: 'Exclusive designs woven into the fabric for dramatic interior statements.',
-    icon: <Palette className="w-5 h-5 text-purple-600" />,
+    subtitle: 'Designer Collection',
+    tagline: 'Luxury Jacquard Patterns',
+    description: 'Exclusive designs woven into the fabric for dramatic interior statements. A fusion of strength and art.',
+    icon: <Palette className="w-5 h-5" />,
     image: '/publicidad/phantasy-versailles-lifestyle.png',
-    label: 'Exclusive Designer Patterns'
+    accent: 'bg-purple-600'
   },
   'systexx-active': {
     title: 'SYSTEXX Active',
-    subtitle: 'The Functional Revolution',
-    description: 'Magnetic surfaces, acoustic comfort, and whiteboard capabilities.',
-    icon: <Zap className="w-5 h-5 text-yellow-600" />,
+    subtitle: 'Functional Mastery',
+    tagline: 'The Technical Revolution',
+    description: 'Magnetic surfaces, acoustic comfort, and whiteboard capabilities for high-performance spaces.',
+    icon: <Zap className="w-5 h-5" />,
     image: '/publicidad/active-category-overview.png',
-    label: 'Functional Wall Systems'
+    accent: 'bg-yellow-500'
   }
 };
 
 export default function CatalogPage() {
   const router = useRouter();
   const { addItem } = useCart();
+  const { locale, t } = useLocale();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [adIndex, setAdIndex] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   useEffect(() => {
     fetchProducts();
-    const timer = setInterval(() => setAdIndex((prev) => (prev + 1) % ADS.length), 7000);
-    return () => clearInterval(timer);
   }, []);
 
   const fetchProducts = async () => {
@@ -118,203 +116,181 @@ export default function CatalogPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white">
         <Loader2 className="w-10 h-10 animate-spin text-black mb-4" />
-        <p className="text-xs font-black tracking-[0.2em] uppercase text-gray-400">Loading Catalog...</p>
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-gray-400">Loading Master Catalog</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-white text-gray-900 selection:bg-black selection:text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* --- LUXURY BANNER --- */}
-        <div className="relative h-[250px] md:h-[350px] rounded-[2.5rem] overflow-hidden mb-16 shadow-sm border border-gray-100">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={adIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }}
-              className="absolute inset-0"
-            >
-              <Image 
-                src={ADS[adIndex].src} 
-                alt={ADS[adIndex].title} 
-                fill 
-                className="object-cover brightness-[0.95]"
-                priority
-                unoptimized
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent flex flex-col justify-end p-10">
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <span className="text-black text-[9px] font-black uppercase tracking-[0.3em] mb-2 block">Premium Collection</span>
-                  <h2 className="text-4xl md:text-5xl font-black text-black tracking-tighter uppercase italic leading-none mb-2">
-                    {ADS[adIndex].title}
-                  </h2>
-                </motion.div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* --- HEADER & SEARCH --- */}
-        <div className="flex flex-col gap-10 mb-16">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="space-y-2">
-              <h1 className="text-5xl font-black text-black tracking-tighter uppercase italic leading-none">
-                Virtual <span className="text-gray-300">Showroom</span>
+    <div className="min-h-screen bg-white text-gray-900 selection:bg-black selection:text-white">
+      {/* --- HERO SHOWROOM --- */}
+      <section className="relative pt-32 pb-20 overflow-hidden bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row md:items-end justify-between gap-12"
+          >
+            <div className="max-w-2xl">
+              <span className="inline-block px-3 py-1 border border-black/10 rounded-full text-[10px] tracking-[0.2em] uppercase mb-6 bg-white/50 backdrop-blur-sm">
+                Official Vitrulan Distributor
+              </span>
+              <h1 className="text-5xl md:text-7xl font-light tracking-tight mb-6">
+                Master <span className="font-bold">Catalog</span>
               </h1>
-              <p className="text-gray-400 text-sm font-light">Explore our official German SYSTEXX glass textile collections.</p>
+              <p className="text-lg text-gray-500 font-light leading-relaxed">
+                Explore the most advanced wall coverings in the world. From jacquard-woven designer patterns to functional magnetic and acoustic systems.
+              </p>
             </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-black transition-colors" />
                 <Input 
-                  placeholder="Search wallpaper..." 
-                  className="pl-12 h-14 w-full sm:w-[300px] rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white transition-all shadow-sm"
+                  placeholder={locale === 'es' ? "Buscar papel tapiz..." : "Search collection..."}
+                  className="pl-12 h-14 w-full sm:w-[320px] rounded-none border-gray-200 bg-white focus:ring-0 focus:border-black transition-all shadow-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Link href="/design/">
-                <Button className="h-14 px-8 rounded-2xl bg-black text-white hover:bg-gray-800 gap-3 shadow-lg transition-all">
-                  <Wand2 className="w-4 h-4" />
-                  <span className="font-black uppercase text-[10px] tracking-widest">AI Designer</span>
-                </Button>
-              </Link>
+              <Button className="h-14 px-8 rounded-none bg-black text-white hover:bg-gray-800 gap-3 shadow-xl transition-all">
+                <Filter className="w-4 h-4" />
+                <span className="font-bold uppercase text-[10px] tracking-widest">Filter</span>
+              </Button>
             </div>
-          </div>
+          </motion.div>
 
           {/* FILTER TABS */}
-          <div className="flex flex-wrap gap-2 border-b border-gray-50 pb-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-wrap gap-4 mt-16"
+          >
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`px-8 py-3 rounded-none text-[10px] font-bold uppercase tracking-widest transition-all border ${
                 selectedCategory === 'all' 
-                  ? 'bg-black text-white' 
-                  : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                  ? 'bg-black text-white border-black shadow-lg' 
+                  : 'bg-transparent text-gray-400 border-gray-200 hover:border-black hover:text-black'
               }`}
             >
-              All
+              All Series
             </button>
             {Object.keys(CATEGORIES_INFO).map((key) => (
               <button
                 key={key}
                 onClick={() => setSelectedCategory(key)}
-                className={`px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                className={`px-8 py-3 rounded-none text-[10px] font-bold uppercase tracking-widest transition-all border ${
                   selectedCategory === key 
-                    ? 'bg-black text-white shadow-lg' 
-                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                    ? 'bg-black text-white border-black shadow-lg' 
+                    : 'bg-transparent text-gray-400 border-gray-200 hover:border-black hover:text-black'
                 }`}
               >
                 {CATEGORIES_INFO[key].title}
               </button>
             ))}
-          </div>
+          </motion.div>
         </div>
 
-        {/* --- DYNAMIC SECTIONS --- */}
+        {/* Decorative background element */}
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-gray-100 to-transparent pointer-events-none"></div>
+      </section>
+
+      {/* --- PRODUCT DISPLAY --- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="space-y-32">
-          {Object.entries(productsByCategory).map(([catSlug, catProducts]) => {
+          {Object.entries(productsByCategory).map(([catSlug, catProducts], sectionIdx) => {
             const info = CATEGORIES_INFO[catSlug] || { 
               title: catSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-              image: '/publicidad/active-category-overview.png',
-              label: 'SYSTEXX Collection',
-              description: 'Premium German glass textiles for high-performance wall surfaces.'
+              image: '/publicidad/cover-systexx-collection.png',
+              tagline: 'Premium Series',
+              description: 'Excellence in architectural wall coverings.'
             };
             
             return (
               <section key={catSlug} className="scroll-mt-32">
-                {/* --- SECTION HERO HEADER (PUBLICITY) --- */}
-                <div className="relative h-[250px] md:h-[350px] rounded-[3rem] overflow-hidden mb-16 shadow-sm border border-gray-100 group">
-                   <Image 
-                    src={info.image || '/publicidad/active-category-overview.png'} 
-                    alt={info.title} 
-                    fill 
-                    className="object-cover brightness-75 group-hover:scale-105 transition-transform duration-[5s]" 
-                    unoptimized 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent flex flex-col justify-center p-12 md:p-16">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="h-[2px] w-8 bg-white" />
-                      <span className="text-white text-[10px] font-black uppercase tracking-[0.4em]">{info.label}</span>
-                    </div>
-                    <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none mb-6">
-                      {info.title}
+                {/* --- CATEGORY POSTER --- */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-0 mb-16 rounded-[2rem] overflow-hidden border border-gray-100 shadow-2xl bg-white"
+                >
+                  <div className="lg:col-span-7 relative h-[300px] lg:h-[500px]">
+                    <Image 
+                      src={info.image} 
+                      alt={info.title} 
+                      fill 
+                      className="object-cover" 
+                      unoptimized 
+                    />
+                    <div className="absolute inset-0 bg-black/20"></div>
+                  </div>
+                  <div className="lg:col-span-5 p-12 lg:p-16 flex flex-col justify-center">
+                    <span className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block">Collection Profile</span>
+                    <h2 className="text-4xl md:text-5xl font-light tracking-tighter mb-4">
+                      {info.title.split(' ')[0]} <span className="font-bold">{info.title.split(' ')[1]}</span>
                     </h2>
-                    <p className="text-gray-300 text-sm md:text-base font-light leading-relaxed max-w-xl">
+                    <p className="text-blue-600 font-bold text-sm mb-8 tracking-wide uppercase">{info.tagline}</p>
+                    <p className="text-gray-500 text-lg font-light leading-relaxed mb-10">
                       {info.description}
                     </p>
+                    <div className="flex items-center gap-4 text-xs font-bold tracking-widest text-black">
+                      <div className={`w-8 h-[2px] ${info.accent || 'bg-black'}`}></div>
+                      {catProducts.length} DESIGNS AVAILABLE
+                    </div>
                   </div>
-                </div>
+                </motion.div>
 
-                {/* --- HORIZONTAL PRODUCT GRID (IMAGE LEFT) --- */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* --- PRODUCT TILES --- */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {catProducts.map((product, idx) => {
                     let imgUrl = parseProductImage(product);
                     
                     return (
                       <motion.div
                         key={product.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         viewport={{ once: true }}
-                        className="group flex flex-col sm:flex-row bg-white rounded-[2rem] overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-500 shadow-sm hover:shadow-xl h-auto sm:h-[220px]"
+                        className="group flex flex-col h-full"
                       >
-                        {/* IMAGE ON THE LEFT (SHOWING RECTANGLE ON RIGHT) */}
                         <div 
-                          className="relative w-full sm:w-[220px] aspect-square sm:aspect-auto sm:h-full bg-gray-50 border-r border-gray-50 cursor-pointer overflow-hidden"
+                          className="relative aspect-[4/5] bg-gray-50 overflow-hidden cursor-pointer rounded-2xl border border-gray-100 group-hover:shadow-2xl transition-all duration-700"
                           onClick={() => setSelectedProduct(product)}
                         >
                           <Image 
                             src={imgUrl} 
                             alt={product.name} 
                             fill 
-                            className="object-contain sm:object-cover object-center sm:object-right transition-transform duration-700 group-hover:scale-110"
+                            className="object-cover group-hover:scale-110 transition-transform duration-1000"
                             unoptimized
                           />
-                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-[1px]">
-                             <Maximize2 className="w-6 h-6 text-black" />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center backdrop-blur-[2px]">
+                             <Button size="sm" className="rounded-none bg-white text-black hover:bg-gray-100 px-6 font-bold tracking-widest text-[9px]">
+                               QUICK VIEW
+                             </Button>
+                          </div>
+                          
+                          {/* Price Tag Overlay */}
+                          <div className="absolute bottom-4 left-4 right-4">
+                            <div className="bg-white/90 backdrop-blur-md p-4 flex justify-between items-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 rounded-xl">
+                              <span className="text-[9px] font-black tracking-widest text-gray-400">PRICE</span>
+                              <span className="text-lg font-bold text-black">${product.price.toFixed(0)} <span className="text-[8px] font-light">/ ROLL</span></span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* INFO ON THE RIGHT - NO OVERLAP */}
-                        <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-start">
-                               <Badge className="bg-gray-50 text-gray-400 border-none font-black text-[8px] uppercase tracking-widest px-2 py-1">
-                                {product.sku}
-                              </Badge>
-                              <span className="text-xl font-black text-black tracking-tighter">${product.price.toFixed(2)} <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">/ ROLL</span></span>
-                            </div>
-                            <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tighter uppercase italic leading-[1.1] group-hover:text-blue-600 transition-colors">
-                              {product.name}
-                            </h3>
+                        <div className="pt-6 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[9px] font-bold text-gray-400 tracking-widest">{product.sku}</span>
+                            <Badge variant="outline" className="text-[8px] uppercase tracking-tighter rounded-full border-gray-200 text-gray-400">German Quality</Badge>
                           </div>
-
-                          <div className="flex flex-wrap items-center gap-3 mt-6">
-                             <Button 
-                              variant="ghost" 
-                              onClick={() => setSelectedProduct(product)}
-                              className="flex-1 sm:flex-none rounded-xl h-10 px-4 text-[9px] font-black uppercase tracking-widest gap-2 bg-gray-50 hover:bg-gray-100"
-                            >
-                              Details <ArrowRight className="w-3 h-3" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              onClick={() => handleOpenCalculator(product.id)}
-                              className="flex-1 sm:flex-none rounded-xl h-10 px-4 text-[9px] font-black uppercase tracking-widest gap-2 bg-gray-50 hover:bg-gray-100"
-                            >
-                              <Calculator className="w-3 h-3" /> Calculator
-                            </Button>
-                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-snug truncate group-hover:text-blue-600 transition-colors">
+                            {product.name}
+                          </h3>
                         </div>
                       </motion.div>
                     );
@@ -328,102 +304,112 @@ export default function CatalogPage() {
 
       {/* --- PRODUCT DETAIL MODAL --- */}
       <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border-none rounded-[2rem] sm:rounded-[3rem] shadow-2xl max-h-[95vh] sm:max-h-[90vh]">
-          {selectedProduct && (
-            <div className="flex flex-col lg:flex-row max-h-[95vh] sm:max-h-[90vh] overflow-y-auto lg:overflow-hidden">
-              {/* Image Panel */}
-              <div className="relative w-full lg:w-[50%] aspect-[4/3] sm:aspect-square lg:aspect-auto lg:min-h-[500px] bg-gray-50 border-b lg:border-b-0 lg:border-r border-gray-100 shrink-0">
-                <Image 
-                  src={parseProductImage(selectedProduct)}
-                  alt={selectedProduct.name} 
-                  fill 
-                  className="object-contain"
-                  unoptimized
-                />
-              </div>
-
-              {/* Info Panel - scrollable on desktop */}
-              <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col bg-white relative lg:overflow-y-auto lg:max-h-[90vh]">
-                <button 
-                  onClick={() => setSelectedProduct(null)}
-                  className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-400 transition-all z-10"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[10px] text-blue-600 font-black tracking-[0.3em] uppercase mb-2">SYSTEXX GERMANY</p>
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3 pr-10">
-                      {selectedProduct.name}
-                    </h2>
-                    <p className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">${selectedProduct.price.toFixed(2)} <span className="text-gray-300 text-xs tracking-widest uppercase">/ ROLL</span></p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6 py-5 border-y border-gray-100">
-                    <div className="space-y-1">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Dimensions</p>
-                      <p className="text-sm font-bold text-gray-900">{selectedProduct.dimensions || '1m x 25m'}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Fire Class</p>
-                      <p className="text-sm font-bold text-gray-900">B-s1,d0</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-[9px] font-black text-black uppercase tracking-widest flex items-center gap-2">
-                       <Info className="w-3 h-3" /> Key Specifications
-                    </h4>
-                    <p className="text-gray-500 text-xs leading-relaxed font-light">
-                      {selectedProduct.description || 'High-durability glass textile. Impact resistant, repaintable, and fire-rated for commercial and residential use.'}
-                    </p>
+        <DialogContent className="max-w-6xl p-0 overflow-hidden bg-white border-none rounded-[3rem] shadow-3xl max-h-[90vh]">
+          <AnimatePresence>
+            {selectedProduct && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col lg:flex-row h-full overflow-y-auto lg:overflow-hidden"
+              >
+                {/* Image Panel */}
+                <div className="relative w-full lg:w-[55%] aspect-square lg:aspect-auto bg-gray-50 shrink-0">
+                  <Image 
+                    src={parseProductImage(selectedProduct)}
+                    alt={selectedProduct.name} 
+                    fill 
+                    className="object-cover"
+                    unoptimized
+                  />
+                  <div className="absolute top-8 left-8">
+                     <span className="px-4 py-1 bg-black text-white text-[10px] font-bold tracking-[0.2em] rounded-full uppercase">
+                       {selectedProduct.category.name}
+                     </span>
                   </div>
                 </div>
 
-                {/* Action Buttons - always visible */}
-                <div className="mt-6 pt-4 flex flex-col gap-3 border-t border-gray-50">
-                  <Button 
-                    onClick={() => handleOpenSimulador(selectedProduct.id)}
-                    className="w-full h-14 rounded-2xl bg-black text-white hover:bg-gray-800 font-black uppercase text-xs tracking-[0.2em] gap-3 shadow-lg"
+                {/* Info Panel */}
+                <div className="flex-1 p-10 lg:p-16 flex flex-col bg-white relative lg:overflow-y-auto lg:max-h-[90vh]">
+                  <button 
+                    onClick={() => setSelectedProduct(null)}
+                    className="absolute top-8 right-8 p-3 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 transition-all z-10"
                   >
-                    <Wand2 className="w-5 h-5" />
-                    Open Visualizer
-                  </Button>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button 
-                      variant="outline"
-                      onClick={() => handleOpenCalculator(selectedProduct.id)}
-                      className="h-14 rounded-2xl border-gray-200 bg-white hover:bg-gray-50 text-black font-black uppercase text-[9px] tracking-widest gap-2 shadow-sm"
-                    >
-                      <Calculator className="w-4 h-4" />
-                      Calculator
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        addItem({
-                          id: selectedProduct.id,
-                          name: selectedProduct.name,
-                          price: selectedProduct.price,
-                          quantity: 1,
-                          image: parseProductImage(selectedProduct),
-                          sku: selectedProduct.sku,
-                          isRoll: true
-                        });
-                        setSelectedProduct(null);
-                        router.push('/checkout');
-                      }}
-                      className="h-14 rounded-2xl bg-blue-600 text-white hover:bg-blue-500 font-black uppercase text-[9px] tracking-widest gap-2 shadow-md shadow-blue-600/10"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      Buy Direct
-                    </Button>
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="space-y-10">
+                    <div>
+                      <p className="text-[10px] text-blue-600 font-bold tracking-[0.4em] uppercase mb-4">Architectural Series</p>
+                      <h2 className="text-4xl lg:text-6xl font-light tracking-tighter mb-4 leading-tight">
+                        {selectedProduct.name}
+                      </h2>
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-4xl font-bold text-gray-900 tracking-tighter">${selectedProduct.price.toFixed(2)}</span>
+                        <span className="text-gray-400 text-xs tracking-widest uppercase font-light">USD Per Roll</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8 py-10 border-y border-gray-100">
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Dimensions</p>
+                        <p className="text-lg font-light text-gray-900">{selectedProduct.dimensions || '1m x 25m'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Fire Class</p>
+                        <p className="text-lg font-light text-gray-900">A2, s1, d0</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-[10px] font-bold text-black uppercase tracking-widest flex items-center gap-2">
+                         <Info className="w-3 h-3" /> Technical Specification
+                      </h4>
+                      <p className="text-gray-500 text-lg font-light leading-relaxed italic">
+                        {selectedProduct.description || 'Precision-engineered German glass textile. Offering unmatched durability, fire resistance, and a sophisticated aesthetic finish for premium interiors.'}
+                      </p>
+                    </div>
+
+                    <div className="pt-10 flex flex-col gap-4">
+                      <Button 
+                        onClick={() => handleOpenSimulador(selectedProduct.id)}
+                        className="w-full h-16 rounded-none bg-black text-white hover:bg-gray-800 font-bold uppercase text-[10px] tracking-[0.3em] gap-3 shadow-2xl transition-all"
+                      >
+                        LAUNCH VIRTUAL SHOWROOM
+                      </Button>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <Button 
+                          variant="outline"
+                          onClick={() => handleOpenCalculator(selectedProduct.id)}
+                          className="h-16 rounded-none border-gray-200 bg-white hover:border-black text-black font-bold uppercase text-[10px] tracking-widest gap-2"
+                        >
+                          <Calculator className="w-4 h-4" /> CALCULATOR
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            addItem({
+                              id: selectedProduct.id,
+                              name: selectedProduct.name,
+                              price: selectedProduct.price,
+                              quantity: 1,
+                              image: parseProductImage(selectedProduct),
+                              sku: selectedProduct.sku,
+                              isRoll: true
+                            });
+                            setSelectedProduct(null);
+                            router.push('/checkout');
+                          }}
+                          className="h-16 rounded-none bg-blue-600 text-white hover:bg-blue-700 font-bold uppercase text-[10px] tracking-widest gap-2 shadow-xl shadow-blue-600/20"
+                        >
+                          <ShoppingCart className="w-4 h-4" /> PURCHASE
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </DialogContent>
       </Dialog>
     </div>

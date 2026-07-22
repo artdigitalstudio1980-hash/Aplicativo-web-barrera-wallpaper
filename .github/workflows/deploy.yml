@@ -128,3 +128,19 @@ jobs:
               pm2 start "yarn start" --name barrera-wallpaper
               pm2 save
             fi
+
+      - name: 🔍 Post-Deploy Smoke Check
+        uses: appleboy/ssh-action@v1.0.3
+        continue-on-error: true
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USERNAME }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          script: |
+            sleep 5
+            STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://barrerawallpaper.com/)
+            echo "Homepage status: $STATUS"
+            TEST_STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://barrerawallpaper.com/test-non-existent-page/)
+            echo "404 test: $TEST_STATUS"
+            [ "$STATUS" = "200" ] && echo "✅ Deploy verificado" || echo "⚠️ Homepage no responde 200"

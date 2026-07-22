@@ -131,7 +131,7 @@ export async function GET(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Get order error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch order', details: error.message },
+      { error: 'Failed to fetch order' },
       { status: 500 }
     );
   }

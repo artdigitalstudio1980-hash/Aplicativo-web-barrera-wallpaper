@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
+import { logAudit } from './audit';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -24,12 +25,14 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user?.password) {
+          logAudit({ action: 'LOGIN_FAILED', email: credentials?.email, metadata: { reason: 'no_password' } });
           return null;
         }
 
         const isValidPassword = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValidPassword) {
+          logAudit({ action: 'LOGIN_FAILED', email: credentials.email, metadata: { reason: 'wrong_password' } });
           return null;
         }
 
@@ -45,7 +48,8 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    maxAge: 7 * 24 * 60 * 60, // 7 days
   },
   callbacks: {
     async jwt({ token, user }) {

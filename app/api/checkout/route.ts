@@ -6,6 +6,7 @@ import { paypal } from '@/lib/paypal';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { logAudit } from '@/lib/audit';
 
 export async function POST(req: Request) {
   try {
@@ -59,21 +60,15 @@ export async function POST(req: Request) {
         console.warn('⚠️ DB lookup failed for product, using client price:', dbError);
       }
 
-      // Fallback: use the price sent from the client (for local-catalog products)
-      const clientPrice = parseFloat(item.price);
-      if (isNaN(clientPrice) || clientPrice <= 0 || clientPrice > 10000) {
-        throw new Error(`Invalid price for item: ${item.wallpaperId}`);
-      }
-      return {
-        ...item,
-        price: clientPrice,
-        name: item.name || `Wallpaper Product`,
-      };
+      // Reject items that cannot be verified against the database
+      throw new Error(`Product not found: ${item.wallpaperId}. Only verified products can be purchased.`);
     }));
 
     const orderTotal = validatedItems.reduce(
       (acc: number, item: any) => acc + (item.price * item.quantity), 0
     );
+    const userId = session?.user?.id;
+    const userEmail = session?.user?.email;
     const orderNumber = `BW-${Date.now().toString().slice(-6)}`;
 
     // ─── CREATE ORDER IN DATABASE ───
@@ -107,9 +102,17 @@ export async function POST(req: Request) {
           }
         }
       });
+
+      logAudit({
+        action: 'ORDER_CREATED',
+        entity: 'Order',
+        entityId: order.id,
+        userId: userId || undefined,
+        email: userEmail || undefined,
+        metadata: { orderNumber, total: orderTotal, paymentMethod, itemCount: validatedItems.length },
+      });
     } catch (dbError: any) {
       console.error('❌ Failed to create order in DB:', dbError.message);
-      // Fallback: Create a mock order to allow checkout to proceed
       order = {
         id: `mock_${Date.now()}`,
         orderNumber,

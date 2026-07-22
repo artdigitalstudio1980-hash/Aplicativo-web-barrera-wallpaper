@@ -1,32 +1,69 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { limit, checkoutLimit, aiLimit } from '@/lib/ratelimit';
 
 export async function middleware(request: NextRequest) {
+  const ip = request.ip ?? '127.0.0.1';
   const pathname = request.nextUrl.pathname;
-  
-  // Rutas que requieren autenticación de administrador
-  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
 
+  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/contact')) {
+    const { success } = await limit(`rl_auth_${pathname}_${ip}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+  }
+
+  if (pathname.startsWith('/api/checkout') || pathname.startsWith('/api/payments')) {
+    const { success } = await checkoutLimit(`rl_checkout_${ip}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+  }
+
+  if (pathname.startsWith('/api/ai') || pathname.startsWith('/api/ai-wallpaper')) {
+    const { success } = await aiLimit(`rl_ai_${ip}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+  }
+
+  if (pathname.startsWith('/api/installations')) {
+    const { success } = await checkoutLimit(`rl_install_${ip}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+  }
+
+  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
   if (isAdminPath) {
-    const token = await getToken({ 
-      req: request, 
-      secret: process.env.NEXTAUTH_SECRET 
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET
     });
 
-    // Si no hay token o no es administrador, bloquear acceso
     if (!token || !token.isAdmin) {
       console.warn(`Intento de acceso no autorizado a ${pathname} desde ${request.ip}`);
-      
-      // Si es una ruta de API, devolver JSON
+
       if (pathname.startsWith('/api/')) {
         return NextResponse.json(
           { error: 'Forbidden: Admin access required' },
           { status: 403 }
         );
       }
-      
-      // Si es una ruta de interfaz, redirigir al login
+
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
@@ -36,10 +73,14 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Protege todas las rutas admin y api/admin
-     */
     '/admin/:path*',
     '/api/admin/:path*',
+    '/api/auth/:path*',
+    '/api/contact/:path*',
+    '/api/checkout/:path*',
+    '/api/payments/:path*',
+    '/api/ai/:path*',
+    '/api/ai-wallpaper/:path*',
+    '/api/installations/:path*',
   ],
 };

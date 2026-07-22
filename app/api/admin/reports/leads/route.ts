@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Admin report error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate admin report', details: error.message },
+      { error: 'Failed to generate admin report' },
       { status: 500 }
     );
   }

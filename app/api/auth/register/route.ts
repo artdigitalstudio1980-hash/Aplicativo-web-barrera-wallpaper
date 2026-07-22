@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/mailer";
+import { logAudit } from "@/lib/audit";
 
 // Helper function to sanitize string inputs for security
 function sanitizeString(str: string): string {
@@ -17,8 +18,9 @@ function sanitizeString(str: string): string {
 // Basic email format validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-// Password complexity: Requires at least 8 characters
+// Password complexity: Requires at least 8 characters with mixed case, digit, and special character
 const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
 export async function POST(req: Request) {
   try {
@@ -35,9 +37,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }
 
-    // Password validation: length constraint
+    // Password validation: length and complexity
     if (password.length < PASSWORD_MIN_LENGTH) {
       return NextResponse.json({ error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters long` }, { status: 400 });
+    }
+    if (!PASSWORD_REGEX.test(password)) {
+      return NextResponse.json({
+        error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      }, { status: 400 });
     }
     // --- End Input Validation ---
 
@@ -82,15 +89,21 @@ export async function POST(req: Request) {
       // We don't fail the registration if email fails
     }
 
-    // Return minimal user info, avoid sending sensitive data
-    return NextResponse.json({ 
-      success: true, 
-      message: "User created successfully", 
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email 
-      } 
+    logAudit({
+      action: 'USER_REGISTERED',
+      entity: 'User',
+      entityId: user.id,
+      email: email.toLowerCase(),
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "User created successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      }
     }, { status: 201 });
 
   } catch (error) {

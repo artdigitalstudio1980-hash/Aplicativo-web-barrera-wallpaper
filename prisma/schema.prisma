@@ -478,3 +478,20 @@ model DesignSession {
   
   @@index([userId])
 }
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entity     String?
+  entityId   String?
+  userId     String?
+  email      String?
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}

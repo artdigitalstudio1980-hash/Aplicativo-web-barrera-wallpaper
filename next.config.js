@@ -5,6 +5,7 @@ const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   output: process.env.NEXT_OUTPUT_MODE,
   trailingSlash: true,
+  poweredByHeader: false,
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../'),
   },
@@ -50,6 +51,14 @@ const nextConfig = {
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self'; connect-src 'self' https://api.replicate.com https://api.stripe.com https://www.paypal.com; frame-src https://www.paypal.com https://js.stripe.com;",
           },
         ],
       },

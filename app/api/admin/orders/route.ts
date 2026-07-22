@@ -2,6 +2,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/prisma';
 import { Order, AIWallpaperOrder, PaymentTransaction, OrderItem, Product } from '@prisma/client';
 
@@ -13,6 +15,10 @@ type OrderWithRelations = Order & {
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !(session.user as any)?.isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
     // Get all orders with related data
     const orders = await prisma.order.findMany({
       include: {
@@ -94,7 +100,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Get admin orders error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch orders', details: error.message },
+      { error: 'Failed to fetch orders' },
       { status: 500 }
     );
   }

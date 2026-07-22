@@ -4,9 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { deleteFile } from '@/lib/s3';
-
-// GET - Get single product
 import { authOptions } from '@/lib/auth-options';
+import { logAudit } from '@/lib/audit';
 
 export async function GET(
   req: NextRequest,
@@ -42,7 +41,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Get product error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch product', details: error.message },
+      { error: 'Failed to fetch product' },
       { status: 500 }
     );
   }
@@ -170,6 +169,14 @@ export async function PUT(
       }
     });
 
+    logAudit({
+      action: 'PRODUCT_UPDATED',
+      entity: 'Product',
+      entityId: product.id,
+      userId: (session.user as any).id,
+      metadata: { name: product.name, sku: product.sku },
+    });
+
     return NextResponse.json({
       success: true,
       product
@@ -177,7 +184,7 @@ export async function PUT(
   } catch (error: any) {
     console.error('Update product error:', error);
     return NextResponse.json(
-      { error: 'Failed to update product', details: error.message },
+      { error: 'Failed to update product' },
       { status: 500 }
     );
   }
@@ -223,6 +230,14 @@ export async function DELETE(
       where: { id: params.id }
     });
 
+    logAudit({
+      action: 'PRODUCT_DELETED',
+      entity: 'Product',
+      entityId: params.id,
+      userId: (session.user as any).id,
+      metadata: { name: product.name, sku: product.sku },
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Product deleted successfully'
@@ -230,7 +245,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('Delete product error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete product', details: error.message },
+      { error: 'Failed to delete product' },
       { status: 500 }
     );
   }

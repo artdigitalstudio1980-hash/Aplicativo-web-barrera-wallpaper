@@ -2,9 +2,12 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/prisma';
 import { paypal } from '@/lib/paypal';
 import { sendOrderConfirmationEmail } from '@/lib/mailer';
+import { logAudit } from '@/lib/audit';
 
 interface CapturePayPalOrderRequest {
   paypalOrderId: string;
@@ -15,6 +18,11 @@ export async function POST(req: NextRequest) {
   let paypalOrderId: string | undefined;
   
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
+
     const body: CapturePayPalOrderRequest = await req.json();
     const { paypalOrderId: paypalId, orderId } = body;
     paypalOrderId = paypalId;
@@ -56,6 +64,14 @@ export async function POST(req: NextRequest) {
       });
 
       // Send confirmation email (consistent with Stripe flow)
+      logAudit({
+        action: 'PAYMENT_CAPTURED',
+        entity: 'Order',
+        entityId: order.id,
+        userId: (session.user as any).id,
+        metadata: { provider: 'PAYPAL', transactionId: captureData.id, paypalOrderId },
+      });
+
       if (order.shippingEmail) {
         const emailItems = order.orderItems.map((item: any) => ({
           name: item.product?.name || 'Custom AI Wallpaper',
@@ -102,7 +118,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: false, error: 'Failed to capture PayPal payment', details: error.message },
+      { success: false, error: 'Failed to capture PayPal payment' },
       { status: 500 }
     );
   }

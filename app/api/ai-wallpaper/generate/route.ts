@@ -17,9 +17,22 @@ interface GenerateRequest {
 }
 
 const sanitizePrompt = (prompt: string): string => {
+  const forbiddenKeywords = [
+    "ignore", "instructions", "forget", "rules", "system prompt", 
+    "admin", "api_key", "secret", "password", "token", "execute",
+    "terminal", "bash", "cmd", "sudo", "act as"
+  ];
+  
+  const lowerPrompt = prompt.toLowerCase();
+  const hasForbidden = forbiddenKeywords.some(keyword => lowerPrompt.includes(keyword));
+  
+  if (hasForbidden) {
+    throw new Error("Malicious activity detected in prompt");
+  }
+
   return prompt
-    .replace(/[<>]/g, '') // Remove HTML tags
-    .substring(0, 500);   // Limit length
+    .replace(/[^a-zA-Z0-9\s,.?!\x27\x22-]/g, '') // Only allow basic characters
+    .substring(0, 400); // Tighter limit for safety
 };
 
 export async function POST(req: NextRequest) {
@@ -155,7 +168,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Global API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

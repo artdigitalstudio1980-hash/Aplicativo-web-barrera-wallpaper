@@ -4,4 +4,9 @@ dist/
 build/
 .env
 .env.local
+.env.staging
 .DS_Store
+test-results/
+playwright-report/
+
+testsprite_tests/tmp/config.json

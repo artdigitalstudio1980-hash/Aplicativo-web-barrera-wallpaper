@@ -1,0 +1,342 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript 5.9
+  - Next.js 14 (App Router)
+  - React 18
+  - Tailwind CSS 3 + shadcn/ui
+  - NextAuth v4 (JWT credentials)
+  - Prisma 6 + MySQL
+  - Stripe + PayPal
+  - Framer Motion 12
+  - Zustand + Jotai
+  - Google Gemini AI
+  - Replicate (Flux Schnell)
+  - Playwright (testing)
+routes:
+  - path: /
+    file: app/page.tsx
+    auth_required: false
+    description: Homepage with hero, stats, features
+  - path: /about/
+    file: app/about/page.tsx
+    auth_required: false
+    description: About Oscar Barrera and company story
+  - path: /account/
+    file: app/account/page.tsx
+    auth_required: true
+    description: User account dashboard with order history
+  - path: /admin/orders/
+    file: app/admin/orders/page.tsx
+    auth_required: true
+    description: Admin order management dashboard
+  - path: /admin/products/
+    file: app/admin/products/page.tsx
+    auth_required: true
+    description: Admin product CRUD management
+  - path: /calculator/
+    file: app/calculator/page.tsx
+    auth_required: false
+    description: Wallpaper measurement calculator
+  - path: /cart/
+    file: app/cart/page.tsx
+    auth_required: false
+    description: Shopping cart with Zustand persistence
+  - path: /catalog/
+    file: app/catalog/page.tsx
+    auth_required: false
+    description: Product catalog with search and filters
+  - path: /checkout/
+    file: app/checkout/page.tsx
+    auth_required: false
+    description: Checkout with Stripe and PayPal options
+  - path: /checkout/success/
+    file: app/checkout/success/page.tsx
+    auth_required: false
+    description: Order success page after payment
+  - path: /collections/[slug]/
+    file: app/collections/[slug/]/page.tsx
+    auth_required: false
+    description: Collection detail page
+  - path: /contact/
+    file: app/contact/page.tsx
+    auth_required: false
+    description: Contact form with newsletter signup
+  - path: /design/
+    file: app/design/page.tsx
+    auth_required: false
+    description: AI design studio and product info
+  - path: /installation/
+    file: app/installation/page.tsx
+    auth_required: true
+    description: Installation service request form
+  - path: /login/
+    file: app/login/page.tsx
+    auth_required: false
+    description: User login page
+  - path: /privacy/
+    file: app/privacy/page.tsx
+    auth_required: false
+    description: Privacy policy page
+  - path: /register/
+    file: app/register/page.tsx
+    auth_required: false
+    description: User registration page
+  - path: /services/
+    file: app/services/page.tsx
+    auth_required: false
+    description: Residential and commercial services
+  - path: /terms/
+    file: app/terms/page.tsx
+    auth_required: false
+    description: Terms and conditions
+features:
+  - name: User Registration
+    description: Register with email and password (bcrypt, complexity rules, welcome email)
+    files:
+      - app/register/page.tsx
+      - app/api/auth/register/route.ts
+      - lib/auth-options.ts
+      - lib/mailer.ts
+    entry_route: /register/
+    user_interactions:
+      - Navigate to /register/
+      - Fill name, email, and password fields
+      - Click submit button
+      - See validation errors for weak passwords
+      - See success message on registration
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/register
+    auth_required: false
+  - name: User Login
+    description: Login with email and password via NextAuth JWT
+    files:
+      - app/login/page.tsx
+      - lib/auth-options.ts
+      - app/api/auth/[...nextauth]/route.ts
+    entry_route: /login/
+    user_interactions:
+      - Navigate to /login/
+      - Fill email and password fields
+      - Click login button
+      - See error on invalid credentials
+      - Redirect to account on success
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/callback/credentials
+    auth_required: false
+  - name: Browse Product Catalog
+    description: Browse products by category with search and filter
+    files:
+      - app/catalog/page.tsx
+      - app/api/products/route.ts
+    entry_route: /catalog/
+    user_interactions:
+      - Navigate to /catalog/
+      - View product grid with images
+      - Filter by category
+      - Search by keyword
+      - Click product to see details
+    api_calls:
+      - method: GET
+        endpoint: /api/products
+    auth_required: false
+  - name: Shopping Cart
+    description: Add products to cart with measurements, persisted to localStorage
+    files:
+      - app/cart/page.tsx
+      - lib/store/use-cart.ts
+      - app/calculator/page.tsx
+    entry_route: /cart/
+    user_interactions:
+      - Add product to cart from catalog or calculator
+      - View cart items with quantities
+      - Update quantities
+      - Remove items
+      - Click checkout to proceed
+    api_calls: []
+    auth_required: false
+  - name: Checkout
+    description: Unified checkout with Stripe and PayPal payment options
+    files:
+      - app/checkout/page.tsx
+      - app/api/checkout/route.ts
+      - app/api/payments/stripe/webhook/route.ts
+      - app/api/payments/paypal/create-order/route.ts
+      - app/api/payments/paypal/capture/route.ts
+    entry_route: /checkout/
+    user_interactions:
+      - Navigate to /checkout/ with items in cart
+      - Fill contact and shipping details
+      - Select payment method (Stripe or PayPal)
+      - Complete payment via Stripe checkout or PayPal redirect
+      - See success page after payment
+    api_calls:
+      - method: POST
+        endpoint: /api/checkout
+      - method: POST
+        endpoint: /api/payments/stripe/webhook
+      - method: POST
+        endpoint: /api/payments/paypal/create-order
+      - method: POST
+        endpoint: /api/payments/paypal/capture
+    auth_required: false
+  - name: AI Wallpaper Design
+    description: Generate custom wallpaper designs via Replicate Flux Schnell
+    files:
+      - app/design/page.tsx
+      - app/api/ai-wallpaper/generate/route.ts
+    entry_route: /design/
+    user_interactions:
+      - Navigate to /design/
+      - Enter a text prompt describing desired wallpaper
+      - Click generate
+      - View generated image
+      - Save or download result
+    api_calls:
+      - method: POST
+        endpoint: /api/ai-wallpaper/generate
+    auth_required: false
+  - name: AI Design Consultant Chat
+    description: Chat with AI design consultant powered by Gemini
+    files:
+      - app/api/ai/chat/design/route.ts
+      - lib/knowledge/design_trends.md
+    entry_route: /design/
+    user_interactions:
+      - Open AI chat assistant on design page
+      - Type design-related questions
+      - Receive AI responses with design recommendations
+    api_calls:
+      - method: POST
+        endpoint: /api/ai/chat/design
+    auth_required: false
+  - name: Contact Form
+    description: Submit contact inquiries with newsletter opt-in
+    files:
+      - app/contact/page.tsx
+      - app/api/contact/route.ts
+      - lib/mailer.ts
+    entry_route: /contact/
+    user_interactions:
+      - Navigate to /contact/
+      - Fill name, email, message, and optional phone
+      - Check newsletter opt-in
+      - Click submit
+      - See success confirmation
+    api_calls:
+      - method: POST
+        endpoint: /api/contact
+    auth_required: false
+  - name: Admin Order Management
+    description: View and manage all orders with payment and AI order summaries
+    files:
+      - app/admin/orders/page.tsx
+      - app/admin/orders/order-table.tsx
+      - app/api/admin/orders/route.ts
+    entry_route: /admin/orders/
+    user_interactions:
+      - Login as admin user
+      - Navigate to /admin/orders/
+      - View all orders with status, payment info
+      - See order summary statistics
+      - Click individual orders for details
+    api_calls:
+      - method: GET
+        endpoint: /api/admin/orders
+    auth_required: true
+  - name: Admin Product Management
+    description: Create, read, update, delete products with image upload
+    files:
+      - app/admin/products/page.tsx
+      - app/api/admin/products/route.ts
+      - app/api/admin/upload/route.ts
+    entry_route: /admin/products/
+    user_interactions:
+      - Login as admin user
+      - Navigate to /admin/products/
+      - View product list
+      - Add new product with name, price, image, category
+      - Edit existing products
+      - Delete products
+    api_calls:
+      - method: GET
+        endpoint: /api/admin/products
+      - method: POST
+        endpoint: /api/admin/products
+      - method: PUT
+        endpoint: /api/admin/products/[id]
+      - method: DELETE
+        endpoint: /api/admin/products/[id]
+      - method: POST
+        endpoint: /api/admin/upload
+    auth_required: true
+  - name: Wallpaper Calculator
+    description: Calculate wallpaper rolls needed based on wall dimensions
+    files:
+      - app/calculator/page.tsx
+    entry_route: /calculator/
+    user_interactions:
+      - Navigate to /calculator/
+      - Enter wall width, height, and pattern repeat
+      - Enter window/door measurements
+      - See calculated rolls needed
+      - Add result to cart
+    api_calls: []
+    auth_required: false
+  - name: Installation Service Request
+    description: Request professional wallpaper installation
+    files:
+      - app/installation/page.tsx
+      - app/api/installations/route.ts
+    entry_route: /installation/
+    user_interactions:
+      - Login to account
+      - Navigate to /installation/
+      - Fill installation details (address, date, room info)
+      - Submit request
+    api_calls:
+      - method: POST
+        endpoint: /api/installations
+    auth_required: true
+  - name: User Account Dashboard
+    description: View order history and account details
+    files:
+      - app/account/page.tsx
+      - app/api/user/orders/route.ts
+    entry_route: /account/
+    user_interactions:
+      - Login to account
+      - Navigate to /account/
+      - View order history with statuses
+      - Click order for details
+    api_calls:
+      - method: GET
+        endpoint: /api/user/orders
+    auth_required: true
+known_limitations:
+  - issue: Locale forcibly resets to English ignoring saved Spanish preference
+    location: components/locale-context.tsx:32-38
+    impact: Spanish translations exist but frontend always shows English
+  - issue: Two competing i18n systems (lib/i18n.ts stale, lib/translations.ts active)
+    location: lib/i18n.ts, lib/translations.ts
+    impact: Dead code confusion
+  - issue: Rate limiting fails closed when Upstash Redis unconfigured
+    location: lib/ratelimit.ts:29-31
+    impact: Auth, contact, checkout, AI routes all rejected with 429
+  - issue: Order creation mock fallback may lead to payments without persisted orders
+    location: app/api/checkout/route.ts:116-123
+    impact: Payment succeeds but order not saved to DB
+  - issue: No password reset flow exists
+    location: app/api/auth/
+    impact: Users who forget password have no recovery path
+  - issue: Email templates hardcoded in Spanish despite English-default site
+    location: lib/mailer.ts:27
+    impact: Order confirmations sent in Spanish
+  - issue: No seed for admin user
+    location: scripts/seed-master.ts
+    impact: Must manually set isAdmin in DB after registration
+  - issue: cart uses localStorage only, no server-side persistence
+    location: lib/store/use-cart.ts
+    impact: Cart not synced across devices

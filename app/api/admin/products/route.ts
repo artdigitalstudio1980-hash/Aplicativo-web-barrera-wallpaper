@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { getFileUrl } from '@/lib/s3';
-
 import { authOptions } from '@/lib/auth-options';
+import { logAudit } from '@/lib/audit';
 
 // GET - List all products
 export async function GET(req: NextRequest) {
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Get products error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch products', details: error.message },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
@@ -152,6 +152,14 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    logAudit({
+      action: 'PRODUCT_CREATED',
+      entity: 'Product',
+      entityId: product.id,
+      userId: (session.user as any).id,
+      metadata: { name: product.name, sku: product.sku, price: product.price },
+    });
+
     return NextResponse.json({
       success: true,
       product
@@ -159,7 +167,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Create product error:', error);
     return NextResponse.json(
-      { error: 'Failed to create product', details: error.message },
+      { error: 'Failed to create product' },
       { status: 500 }
     );
   }

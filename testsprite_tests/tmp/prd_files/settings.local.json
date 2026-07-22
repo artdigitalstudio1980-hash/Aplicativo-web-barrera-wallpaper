@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -i -b /tmp/cookies.txt http://172.17.0.2:8000/dashboard)",
+      "Bash(curl -s -i -b /tmp/cookies.txt http://172.17.0.2:8000/api/me)",
+      "Bash(curl -s -i -b /tmp/cookies.txt http://172.17.0.2:8000/accounting)",
+      "Bash(curl -s -i -b /tmp/cookies.txt -X POST http://172.17.0.2:8000/quejas -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode queja=hola)",
+      "Bash(curl -s -i -b /tmp/cookies.txt -X POST http://172.17.0.2:8000/verify-mfa -H \"Content-Type: application/x-www-form-urlencoded\" --data-urlencode \"pin=0000\")",
+      "Bash(curl -s -i -b /tmp/cookies.txt -X POST http://172.17.0.2:8000/verify-mfa -H \"Content-Type: application/x-www-form-urlencoded\" --data-urlencode \"pin=1234\")",
+      "Bash(curl -s -b /tmp/cookies.txt -X POST http://172.17.0.2:8000/verify-mfa -H \"Content-Type: application/x-www-form-urlencoded\" --data-urlencode \"pin=0000\")",
+      "Bash(curl -s -b /tmp/cookies.txt -X POST http://172.17.0.2:8000/verify-mfa -H \"Content-Type: application/x-www-form-urlencoded\" --data-urlencode \"pin=1111\")",
+      "Read(//tmp/**)",
+      "Bash(curl -s -i -b /tmp/cookies.txt -c /tmp/cookies.txt -X POST http://172.17.0.2:8000/verify-mfa -H \"Content-Type: application/x-www-form-urlencoded\" --data-urlencode \"pin=0000\")",
+      "Bash(curl -s -b /tmp/cookies.txt -X POST http://172.17.0.2:8000/verify-mfa -H \"Content-Type: application/x-www-form-urlencoded\" --data-urlencode \"pin=1234\")",
+      "Bash(curl -s http://172.17.0.2:8000/verify-mfa)"
+    ]
+  }
+}

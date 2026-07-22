@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Get categories error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch categories', details: error.message },
+      { error: 'Failed to fetch categories' },
       { status: 500 }
     );
   }

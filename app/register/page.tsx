@@ -38,6 +38,11 @@ export default function RegisterPage() {
       return false;
     }
 
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(formData.password)) {
+      setError('Password must contain uppercase, lowercase, number, and special character');
+      return false;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;

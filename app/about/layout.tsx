@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BreadcrumbSchema } from '@/components/schemas/breadcrumb-schema';
 
 export const metadata: Metadata = {
   title: 'About Us',
@@ -13,5 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default function AboutLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: 'About Us', url: '/about' },
+      ]} />
+      {children}
+    </>
+  );
 }

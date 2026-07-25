@@ -117,6 +117,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const categorySlug = searchParams.get('category');
   const featured = searchParams.get('featured');
+  const slug = searchParams.get('slug');
 
   // ─── STRATEGY 1: Try database first ───
   try {
@@ -162,9 +163,14 @@ export async function GET(req: NextRequest) {
         };
       });
 
+      let result = productsWithUrls;
+      if (slug) {
+        result = result.filter((p: any) => p.slug === slug);
+      }
+
       return NextResponse.json({
         success: true,
-        products: productsWithUrls,
+        products: result,
         source: 'database',
       });
     }
@@ -174,7 +180,10 @@ export async function GET(req: NextRequest) {
 
   // ─── STRATEGY 2: Fallback to local JSON catalog ───
   try {
-    const localProducts = getLocalCatalogProducts(categorySlug);
+    let localProducts = getLocalCatalogProducts(categorySlug);
+    if (slug) {
+      localProducts = localProducts.filter((p: any) => p.slug === slug);
+    }
 
     return NextResponse.json({
       success: true,

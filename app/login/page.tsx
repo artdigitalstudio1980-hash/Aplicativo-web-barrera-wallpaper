@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -10,16 +9,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, LogIn, Loader2 } from 'lucide-react';
+import { AlertCircle, LogIn, Loader2, User, Shield, Eye, EyeOff, Gift } from 'lucide-react';
+import PromoBanner from '@/components/promo-banner';
+
+type RoleTab = 'visitor' | 'admin';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [role, setRole] = useState<RoleTab>('visitor');
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +64,33 @@ export default function LoginPage() {
             <CardDescription className="text-center">
               Sign in to your Barrera Wallpaper account
             </CardDescription>
+
+            <div className="flex gap-2 pt-4">
+              <button
+                type="button"
+                onClick={() => { setRole('visitor'); setError(''); }}
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                  role === 'visitor'
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span className="text-sm font-medium">Visitor</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setRole('admin'); setError(''); }}
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                  role === 'admin'
+                    ? 'border-gray-900 bg-gray-900 text-white'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="text-sm font-medium">Admin</span>
+              </button>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -90,20 +121,35 @@ export default function LoginPage() {
                     Forgot password?
                   </Link>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                    disabled={isLoading}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <Button
                 type="submit"
-                className="w-full bg-black hover:bg-gray-800"
+                className={`w-full ${
+                  role === 'admin'
+                    ? 'bg-gray-900 hover:bg-gray-800'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -113,14 +159,21 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Sign In
+                    {role === 'admin' ? (
+                      <Shield className="w-4 h-4 mr-2" />
+                    ) : (
+                      <LogIn className="w-4 h-4 mr-2" />
+                    )}
+                    Sign In as {role === 'admin' ? 'Admin' : 'Visitor'}
                   </>
                 )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
+            <div className="w-full">
+              <PromoBanner variant="card" />
+            </div>
             <div className="text-sm text-center text-gray-600">
               Don't have an account?{' '}
               <Link href="/register" className="text-blue-600 hover:underline font-medium">

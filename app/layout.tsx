@@ -7,6 +7,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import WhatsAppFloat from "@/components/whatsapp-float";
 import { Toaster } from "sonner";
+import { OrganizationSchema, WebSiteSchema } from "@/components/schemas/organization-schema";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,6 +40,10 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: '/',
+    languages: {
+      'en-US': '/',
+      'es-US': '/',
+    },
   },
   openGraph: {
     title: "Barrera Wallpaper - Premium Wall Coverings",
@@ -72,6 +77,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased min-h-screen bg-white">
+        <OrganizationSchema />
+        <WebSiteSchema />
         <Providers>
           <LocaleProvider>
             <div className="flex flex-col min-h-screen">

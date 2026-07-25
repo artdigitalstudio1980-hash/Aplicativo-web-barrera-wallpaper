@@ -6,7 +6,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseProductImage } from '@/lib/utils';
-import { 
+import PromoBanner from '@/components/promo-banner';
+import {
   Search, Loader2, ShoppingCart, 
   Info, X, ShieldCheck, 
   Zap, Calculator, ArrowRight, 
@@ -197,6 +198,11 @@ export default function CatalogPage() {
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-gray-100 to-transparent pointer-events-none"></div>
       </section>
 
+      {/* --- PROMO BANNER --- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <PromoBanner />
+      </div>
+
       {/* --- PRODUCT DISPLAY --- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="space-y-32">
@@ -269,9 +275,16 @@ export default function CatalogPage() {
                             unoptimized
                           />
                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center backdrop-blur-[2px]">
-                             <Button size="sm" className="rounded-none bg-white text-black hover:bg-gray-100 px-6 font-bold tracking-widest text-[9px]">
-                               QUICK VIEW
-                             </Button>
+                            <div className="flex flex-col gap-2">
+                              <Button size="sm" className="rounded-none bg-white text-black hover:bg-gray-100 px-6 font-bold tracking-widest text-[9px]">
+                                QUICK VIEW
+                              </Button>
+                              <Link href={`/products/${product.slug}`}>
+                                <Button size="sm" variant="secondary" className="rounded-none bg-black text-white hover:bg-gray-800 px-6 font-bold tracking-widest text-[9px] w-full">
+                                  VIEW DETAILS
+                                </Button>
+                              </Link>
+                            </div>
                           </div>
                           
                           {/* Price Tag Overlay */}
@@ -288,9 +301,11 @@ export default function CatalogPage() {
                             <span className="text-[9px] font-bold text-gray-400 tracking-widest">{product.sku}</span>
                             <Badge variant="outline" className="text-[8px] uppercase tracking-tighter rounded-full border-gray-200 text-gray-400">German Quality</Badge>
                           </div>
-                          <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-snug truncate group-hover:text-blue-600 transition-colors">
-                            {product.name}
-                          </h3>
+                          <Link href={`/products/${product.slug}`}>
+                            <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-snug truncate group-hover:text-blue-600 transition-colors hover:underline">
+                              {product.name}
+                            </h3>
+                          </Link>
                         </div>
                       </motion.div>
                     );

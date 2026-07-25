@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import PromoBanner from './promo-banner';
 
 export default function Footer() {
   const { t } = useLocale();
@@ -126,7 +127,8 @@ export default function Footer() {
               </div>
             </div>
             
-            <div className="pt-4">
+            <div className="pt-4 space-y-4">
+              <PromoBanner variant="card" />
               <form onSubmit={handleNewsletterSubmit} className="space-y-3">
                 <Input
                   type="email"

@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import PromoBanner from '@/components/promo-banner';
 
 // Purchase Configuration
 const MIN_AREA_CALCULATOR = 5; 
@@ -103,6 +104,9 @@ export default function UnifiedCheckoutPage() {
         <Button onClick={() => router.push('/catalog')} className="h-14 px-10 rounded-2xl bg-black text-white hover:bg-gray-800 uppercase text-[10px] font-black tracking-widest shadow-xl">
           Back to Collections
         </Button>
+        <div className="mt-12 w-full max-w-md">
+          <PromoBanner variant="card" />
+        </div>
       </div>
     );
   }
@@ -290,6 +294,8 @@ export default function UnifiedCheckoutPage() {
                       <div className="text-gray-300 text-xs mb-3 font-black">USD</div>
                     </div>
                   </div>
+
+                  <PromoBanner variant="card" />
 
                   {/* Provider Selector */}
                   <div className="space-y-4 mb-10">

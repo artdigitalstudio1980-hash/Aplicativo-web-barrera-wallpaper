@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BreadcrumbSchema } from '@/components/schemas/breadcrumb-schema';
 
 export const metadata: Metadata = {
   title: 'Wallpaper Catalog',
@@ -13,5 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default function CatalogLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: 'Catalog', url: '/catalog' },
+      ]} />
+      {children}
+    </>
+  );
 }

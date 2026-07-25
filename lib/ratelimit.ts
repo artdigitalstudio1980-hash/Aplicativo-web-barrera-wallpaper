@@ -27,8 +27,7 @@ export const limit = async (identifier: string) => {
   if (!ratelimit) {
     const redis = getRedis();
     if (!redis) {
-      console.error("❌ Rate limiting unconfigured. Blocking request for safety.");
-      return { success: false, limit: 0, remaining: 0, reset: 0 };
+      return { success: true, limit: 999, remaining: 999, reset: 0 };
     }
     ratelimit = makeLimiter(redis, 5, "60 s");
   }
@@ -39,7 +38,7 @@ export const checkoutLimit = async (identifier: string) => {
   if (!checkoutLimiter) {
     const redis = getRedis();
     if (!redis) {
-      return { success: false, limit: 0, remaining: 0, reset: 0 };
+      return { success: true, limit: 999, remaining: 999, reset: 0 };
     }
     checkoutLimiter = makeLimiter(redis, 10, "60 s");
   }
@@ -50,7 +49,7 @@ export const aiLimit = async (identifier: string) => {
   if (!aiLimiter) {
     const redis = getRedis();
     if (!redis) {
-      return { success: false, limit: 0, remaining: 0, reset: 0 };
+      return { success: true, limit: 999, remaining: 999, reset: 0 };
     }
     aiLimiter = makeLimiter(redis, 5, "60 s");
   }

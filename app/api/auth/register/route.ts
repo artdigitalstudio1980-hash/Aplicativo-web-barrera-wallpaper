@@ -25,7 +25,7 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { firstName, lastName, email, password, phone } = body;
+    const { firstName, lastName, email, password, phone, address, city, state, country, zipCode, dateOfBirth, howDidYouHear, preferredPayment, newsletterOptIn } = body;
 
     // --- Input Validation ---
     if (!firstName || !email || !password) {
@@ -74,6 +74,15 @@ export async function POST(req: Request) {
         email: email.toLowerCase(),
         password: hashedPassword,
         phone: phone || null,
+        address: address || null,
+        city: city || null,
+        state: state || null,
+        country: country || null,
+        zipCode: zipCode || null,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        howDidYouHear: howDidYouHear || null,
+        preferredPayment: preferredPayment || null,
+        newsletterOptIn: newsletterOptIn || false,
         role: "USER",
         isAdmin: false
       },

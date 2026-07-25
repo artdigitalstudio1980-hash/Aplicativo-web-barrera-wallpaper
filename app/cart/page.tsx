@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/lib/store/use-cart';
 import { useLocale } from '@/components/locale-context';
+import PromoBanner from '@/components/promo-banner';
 import { 
   Minus,
   Plus,
@@ -54,6 +55,9 @@ export default function CartPage() {
         <Button onClick={() => router.push('/catalog')} className="h-14 px-10 rounded-2xl bg-black text-white hover:bg-gray-800 uppercase text-[10px] font-black tracking-widest shadow-xl">
           Start Exploring
         </Button>
+        <div className="mt-12 w-full max-w-md">
+          <PromoBanner variant="card" />
+        </div>
       </div>
     );
   }
@@ -220,6 +224,8 @@ export default function CartPage() {
                   </p>
                 </div>
               </div>
+
+              <PromoBanner variant="card" />
             </div>
           </div>
         </div>

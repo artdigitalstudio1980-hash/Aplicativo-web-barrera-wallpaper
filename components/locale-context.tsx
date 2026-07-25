@@ -23,19 +23,16 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     setLocale(newLocale);
     if (typeof window !== 'undefined') {
       localStorage.setItem('preferred-locale', newLocale);
+      document.documentElement.lang = newLocale;
     }
   };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedLocale = localStorage.getItem('preferred-locale') as Locale;
-      // Force reset to English if Spanish was previously saved
-      if (savedLocale === 'es') {
-        setLocale('en');
-        localStorage.setItem('preferred-locale', 'en');
-      } else {
-        setLocale('en');
-      }
+      const validLocale = savedLocale === 'es' || savedLocale === 'en' ? savedLocale : 'en';
+      setLocale(validLocale);
+      document.documentElement.lang = validLocale;
     }
   }, []);
 

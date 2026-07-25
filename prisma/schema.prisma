@@ -49,11 +49,20 @@ model User {
   password      String?
   firstName     String?
   lastName      String?
-  phone         String?
-  role          Role      @default(USER)
-  isAdmin       Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  phone             String?
+  address           String?
+  city              String?
+  state             String?
+  country           String?
+  zipCode           String?
+  dateOfBirth       DateTime?
+  howDidYouHear     String?
+  preferredPayment  String?
+  newsletterOptIn   Boolean   @default(false)
+  role              Role      @default(USER)
+  isAdmin           Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   accounts               Account[]
   sessions               Session[]

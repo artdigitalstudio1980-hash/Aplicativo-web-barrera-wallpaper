@@ -17,7 +17,7 @@ CI runs `yarn build` as the primary verification.
 
 ## Framework & Key Libraries
 
-- **Next.js 14** (App Router), React 18, TypeScript 5.2
+- **Next.js 14.2.35** (App Router), React 18, TypeScript 5.2
 - **NextAuth v4** — JWT strategy, credentials provider only (no OAuth)
 - **Prisma 6** — MySQL, binary engine (`engineType = "binary"`), target `debian-openssl-1.1.x` for Hostinger compat
 - **shadcn/ui** — `style: "default"`, `baseColor: "neutral"`, CSS variables
@@ -28,7 +28,7 @@ CI runs `yarn build` as the primary verification.
 
 ## Architecture Gotchas
 
-- **Lazy services**: Stripe (`lib/stripe.ts`), Upstash rate limit (`lib/ratelimit.ts`) — they throw/warn at runtime if env vars are missing, not at import time. Rate limit **fails closed** (blocks requests) when unconfigured.
+- **Lazy services**: Stripe (`lib/stripe.ts`), Upstash rate limit (`lib/ratelimit.ts`) — they throw/warn at runtime if env vars are missing, not at import time. Rate limit **fails open** (allows requests through) when unconfigured.
 - **Prisma singleton**: `lib/prisma.ts` — only one client instance, cached on `globalThis`.
 - **Admin auth**: Middleware (`middleware.ts`) protects `/admin/*` and `/api/admin/*` by checking JWT `token.isAdmin`. Uses `next-auth/jwt` `getToken`, not the session API.
 - **Rate limiting**: Middleware rate-limits `/api/auth/*` and `/api/contact/*` via Upstash (5 requests / 60s sliding window).
@@ -37,11 +37,24 @@ CI runs `yarn build` as the primary verification.
 - **`trailingSlash: true`** — all routes end with `/`.
 - **Redirects** in next.config.js: `/auth/login` → `/login`, `/shop` → `/catalog`, `/ai-studio` → `/design`.
 
-## i18n (WARNING)
+## SEO Infrastructure
 
-Custom client-side i18n via `lib/translations.ts` + `LocaleProvider`. Full EN/ES translations exist, but the `LocaleProvider` in `locale-context.tsx` **actively forces English and ignores saved Spanish preference**. Do not treat ES as functional without changing locale-context.tsx.
+- **JSON-LD schemas** in `components/schemas/` — Organization, LocalBusiness, WebSite, BreadcrumbList, Product, ItemList, FAQPage, Service. Rendered via `components/json-ld-script.tsx`. Layouts inject schemas per page; product pages use `generateMetadata` + ProductSchema.
+- **Product detail pages** at `/products/[slug]` — server component with `generateMetadata()` for dynamic titles, descriptions, OG per product. Includes BreadcrumbSchema + ProductSchema.
+- **Collections metadata** via `app/collections/layout.tsx`. Dynamic metadata for individual collections is not generated server-side (page is `'use client'`).
+- **Sitemap** (`app/sitemap.ts`) — dynamically generated, includes static pages + all 3 collections + all product slugs (fetched from `/api/products`).
+- **`public/llms.txt`** — AI context file for ChatGPT/Perplexity/Claude.
+- **`app/robots.ts`** — allows all AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended). Disallows admin/api/account/cart/checkout/auth.
 
-There are **two** translation files: `lib/i18n.ts` (small, stale) and `lib/translations.ts` (complete, active). Always use `translations.ts`.
+## API Key
+
+- **`GET /api/products?slug=X`** — the slug filter was added to support product detail pages. The API falls back from DB to local `catalog_master.json` if DB is unreachable. Slugs for fallback products are generated from `nameEs`.
+
+## i18n
+
+Custom client-side i18n via `lib/translations.ts` + `LocaleProvider` (`components/locale-context.tsx`). Full EN/ES translations exist (100+ keys each). Spanish **is functional** — `locale-context.tsx` respects saved browser preference. Use `lib/translations.ts` (complete, active), NOT `lib/i18n.ts` (stale, ~40 keys).
+
+Hreflang tags in root layout: `en-US` and `es-US`.
 
 ## Package Manager
 

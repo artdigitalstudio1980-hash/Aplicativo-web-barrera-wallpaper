@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
@@ -7,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   User, 
@@ -16,7 +16,9 @@ import {
   Loader2,
   Mail,
   Phone,
-  Calendar
+  Calendar,
+  Shield,
+  LayoutDashboard,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -75,7 +77,6 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -86,7 +87,6 @@ export default function AccountPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -102,8 +102,27 @@ export default function AccountPage() {
                   {user.firstName} {user.lastName}
                 </CardTitle>
                 <CardDescription>{user.email}</CardDescription>
+                <div className="mt-2">
+                  {user.isAdmin ? (
+                    <Badge className="bg-gray-900 text-white flex items-center justify-center gap-1 w-fit mx-auto">
+                      <Shield className="w-3 h-3" /> Admin
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="flex items-center justify-center gap-1 w-fit mx-auto">
+                      <User className="w-3 h-3" /> Visitor
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
+                {user.isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="outline" className="w-full justify-start mb-2">
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
                 <Button
                   variant="outline"
                   className="w-full justify-start"
@@ -116,7 +135,6 @@ export default function AccountPage() {
             </Card>
           </motion.div>
 
-          {/* Main Content */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -139,7 +157,6 @@ export default function AccountPage() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Profile Tab */}
               <TabsContent value="profile">
                 <Card>
                   <CardHeader>
@@ -166,18 +183,25 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    <div className="pt-4">
+                    <div className="pt-4 flex gap-3">
                       <Link href="/catalog">
                         <Button className="bg-black hover:bg-gray-800">
                           Explore Catalog
                         </Button>
                       </Link>
+                      {user.isAdmin && (
+                        <Link href="/admin">
+                          <Button variant="outline">
+                            <Shield className="w-4 h-4 mr-2" />
+                            Admin Panel
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              {/* Orders Tab */}
               <TabsContent value="orders">
                 <Card>
                   <CardHeader>
@@ -226,7 +250,6 @@ export default function AccountPage() {
                 </Card>
               </TabsContent>
 
-              {/* Settings Tab */}
               <TabsContent value="settings">
                 <Card>
                   <CardHeader>

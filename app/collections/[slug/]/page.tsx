@@ -150,9 +150,11 @@ export default function CollectionPage() {
                     </div>
                     
                     <div className="p-6">
-                      <h3 className="font-bold text-xl mb-1 text-gray-900">
-                        {locale === 'es' ? product.nameEs : product.name}
-                      </h3>
+                      <Link href={`/products/${product.slug}`}>
+                        <h3 className="font-bold text-xl mb-1 text-gray-900 hover:text-blue-600 hover:underline transition-colors">
+                          {locale === 'es' ? product.nameEs : product.name}
+                        </h3>
+                      </Link>
                       <p className="text-sm text-gray-500 mb-4">
                         {locale === 'es' ? product.category.nameEs : product.category.name}
                       </p>
@@ -170,9 +172,9 @@ export default function CollectionPage() {
                         </div>
                         
                         <div className="flex gap-2">
-                          <Link href="/cart">
-                            <Button size="sm" className="rounded-full px-6">
-                              {locale === 'es' ? 'Comprar' : 'Buy'}
+                          <Link href={`/products/${product.slug}`}>
+                            <Button size="sm" variant="outline" className="rounded-full px-4">
+                              {locale === 'es' ? 'Detalles' : 'Details'}
                             </Button>
                           </Link>
                         </div>

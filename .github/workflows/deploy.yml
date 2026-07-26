@@ -35,8 +35,50 @@ jobs:
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
 
       - name: Prepare Deployment Package
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+          PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
+          PAYPAL_ENVIRONMENT: ${{ secrets.PAYPAL_ENVIRONMENT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
+          GOOGLE_AI_STUDIO_API_KEY: ${{ secrets.GOOGLE_AI_STUDIO_API_KEY }}
         run: |
-          # Creamos el paquete en el directorio actual para evitar errores de ruta en SCP
+          cat << EOF > .env.production
+          DATABASE_URL="$DATABASE_URL"
+          NEXTAUTH_SECRET="$NEXTAUTH_SECRET"
+          NEXTAUTH_URL="$NEXTAUTH_URL"
+          STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY"
+          STRIPE_PUBLISHABLE_KEY="$STRIPE_PUBLISHABLE_KEY"
+          STRIPE_WEBHOOK_SECRET="$STRIPE_WEBHOOK_SECRET"
+          PAYPAL_CLIENT_ID="$PAYPAL_CLIENT_ID"
+          PAYPAL_CLIENT_SECRET="$PAYPAL_CLIENT_SECRET"
+          PAYPAL_ENVIRONMENT="$PAYPAL_ENVIRONMENT"
+          AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
+          AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
+          AWS_REGION="$AWS_REGION"
+          AWS_BUCKET_NAME="$AWS_BUCKET_NAME"
+          SMTP_HOST="$SMTP_HOST"
+          SMTP_PORT="$SMTP_PORT"
+          SMTP_USER="$SMTP_USER"
+          SMTP_PASS="$SMTP_PASS"
+          ADMIN_EMAIL="$ADMIN_EMAIL"
+          REPLICATE_API_TOKEN="$REPLICATE_API_TOKEN"
+          GOOGLE_AI_STUDIO_API_KEY="$GOOGLE_AI_STUDIO_API_KEY"
+          EOF
           tar -czf deploy.tar.gz \
             .next \
             public \
@@ -44,7 +86,7 @@ jobs:
             yarn.lock \
             next.config.js \
             prisma \
-            .env.example
+            .env.production
 
       - name: Setup SSH Key
         run: |
@@ -66,81 +108,36 @@ jobs:
           done
 
       - name: Extract & Restart App
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USERNAME }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: ${{ secrets.HOSTINGER_PORT }}
-          script: |
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-
-            cd /home/u425976741/domains/barrerawallpaper.com/nodejs
-
-            # Limpieza profunda para evitar conflictos
-            echo "Realizando limpieza profunda..."
-            rm -rf .next
-            rm -f package.json yarn.lock next.config.js
-            
-            # Descomprimir el paquete nuevo
-            echo "Extrayendo paquete fresco..."
-            tar -xzf deploy.tar.gz
-            rm deploy.tar.gz
-            
-            # REGENERACIÓN CRÍTICA DEL .ENV
-            echo "Generando archivo .env desde secretos..."
-            cat << EOF > .env
-            DATABASE_URL="${{ secrets.DATABASE_URL }}"
-            NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"
-            NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}"
-            STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}"
-            STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_PUBLISHABLE_KEY }}"
-            STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-            PAYPAL_CLIENT_ID="${{ secrets.PAYPAL_CLIENT_ID }}"
-            PAYPAL_CLIENT_SECRET="${{ secrets.PAYPAL_CLIENT_SECRET }}"
-            PAYPAL_ENVIRONMENT="${{ secrets.PAYPAL_ENVIRONMENT }}"
-            AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-            AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-            AWS_REGION="${{ secrets.AWS_REGION }}"
-            AWS_BUCKET_NAME="${{ secrets.AWS_BUCKET_NAME }}"
-            SMTP_HOST="${{ secrets.SMTP_HOST }}"
-            SMTP_PORT="${{ secrets.SMTP_PORT }}"
-            SMTP_USER="${{ secrets.SMTP_USER }}"
-            SMTP_PASS="${{ secrets.SMTP_PASS }}"
-            ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"
-            REPLICATE_API_TOKEN="${{ secrets.REPLICATE_API_TOKEN }}"
-            GOOGLE_AI_STUDIO_API_KEY="${{ secrets.GOOGLE_AI_STUDIO_API_KEY }}"
-            EOF
-
-            # Instalar solo dependencias de producción
-            echo "Instalando dependencias..."
-            yarn install --production --frozen-lockfile
-            
-            # Sincronizar catálogo
-            echo "Sincronizando catálogo..."
-            npx tsx scripts/seed-master.ts
-            
-            echo "Reiniciando la aplicación con PM2..."
-            if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
-              pm2 restart barrera-wallpaper --update-env
-            else
-              pm2 start "yarn start" --name barrera-wallpaper
-              pm2 save
-            fi
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+        run: |
+          ssh -p $HOSTINGER_PORT -o ConnectTimeout=30 -o StrictHostKeyChecking=no \
+            -i ~/.ssh/id_rsa \
+            $HOSTINGER_USERNAME@$HOSTINGER_HOST \
+            "export NVM_DIR=\"\$HOME/.nvm\"; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; \
+             cd /home/u425976741/domains/barrerawallpaper.com/nodejs; \
+             rm -rf .next; rm -f package.json yarn.lock next.config.js; \
+             echo 'Extrayendo paquete...'; \
+             tar -xzf deploy.tar.gz; rm deploy.tar.gz; \
+             mv .env.production .env; \
+             echo 'Instalando dependencias...'; \
+             yarn install --production --frozen-lockfile; \
+             echo 'Sincronizando catalogo...'; \
+             npx tsx scripts/seed-master.ts; \
+             echo 'Reiniciando PM2...'; \
+             if pm2 describe barrera-wallpaper > /dev/null 2>&1; \
+             then pm2 restart barrera-wallpaper --update-env; \
+             else pm2 start \"yarn start\" --name barrera-wallpaper && pm2 save; fi"
 
       - name: 🔍 Post-Deploy Smoke Check
-        uses: appleboy/ssh-action@v1.0.3
-        continue-on-error: true
-        with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USERNAME }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: ${{ secrets.HOSTINGER_PORT }}
-          script: |
-            sleep 5
-            STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://barrerawallpaper.com/)
-            echo "Homepage status: $STATUS"
-            TEST_STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://barrerawallpaper.com/test-non-existent-page/)
-            echo "404 test: $TEST_STATUS"
-            [ "$STATUS" = "200" ] && echo "✅ Deploy verificado" || echo "⚠️ Homepage no responde 200"
+        env:
+          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+        run: |
+          sleep 5
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://barrerawallpaper.com/)
+          echo "Homepage status: $STATUS"
+          [ "$STATUS" = "200" ] && echo "✅ Deploy verificado" || echo "⚠️ Homepage no responde 200"

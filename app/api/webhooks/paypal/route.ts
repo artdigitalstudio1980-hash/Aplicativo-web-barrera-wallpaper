@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { checkoutLimit } from '@/lib/ratelimit';
 
 async function verifyPayPalWebhookEvent(req: Request, webhookEvent: unknown): Promise<boolean> {
   const webhookId = process.env.PAYPAL_WEBHOOK_ID;
@@ -66,8 +67,14 @@ type PayPalWebhookBody = {
   };
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const ip = req.ip ?? '127.0.0.1';
+    const { success } = await checkoutLimit(`rl_webhook_paypal_${ip}`);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const rawBody = await req.text();
 
     let event: PayPalWebhookBody;

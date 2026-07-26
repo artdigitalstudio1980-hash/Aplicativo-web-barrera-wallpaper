@@ -5,12 +5,19 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { sendOrderConfirmationEmail } from '@/lib/mailer';
+import { checkoutLimit } from '@/lib/ratelimit';
 import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.ip ?? '127.0.0.1';
+    const { success } = await checkoutLimit(`rl_webhook_stripe_${ip}`);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await req.text();
     const signature = headers().get('stripe-signature');
 

@@ -1,23 +1,20 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
-    const googleKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
-    if (!googleKey) {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) {
       return NextResponse.json(
-        { error: 'AI service is not configured (GOOGLE_AI_STUDIO_API_KEY)' },
+        { error: 'AI service is not configured (GROQ_API_KEY)' },
         { status: 503 }
       );
     }
 
-    const genAI = new GoogleGenerativeAI(googleKey);
     const { messages, lead } = await req.json();
 
-    // 1. Load Knowledge Base
     let dynamicKnowledge = '';
     try {
       const knowledgePath = path.join(process.cwd(), 'knowledge', 'concierge_faq.md');
@@ -28,7 +25,6 @@ export async function POST(req: Request) {
       console.warn('Could not load knowledge base:', e);
     }
 
-    // 2. Load live catalog from DB (fallback to local JSON)
     let catalogSummary = '';
     try {
       const products = await prisma.product.findMany({
@@ -62,7 +58,6 @@ export async function POST(req: Request) {
       } catch (e2) {}
     }
 
-    // 3. Lead capture — if user provided contact info, save to DB
     if (lead?.name || lead?.phone) {
       try {
         await prisma.contactSubmission.create({
@@ -71,15 +66,12 @@ export async function POST(req: Request) {
             email: lead.email || null,
             phone: lead.phone || null,
             message: lead.message || 'Captured via AI Sales Chat',
-            source: 'ai-sales-chat',
           }
         });
       } catch (e) {
         console.warn('Could not save lead:', e);
       }
     }
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const systemPrompt = `
       ROLE: Senior Sales Concierge for Barrera Wallpaper (Miami, FL).
@@ -114,14 +106,36 @@ export async function POST(req: Request) {
 
     const finalPrompt = `${systemPrompt}\n\nCHAT HISTORY:\n${previousContext}\n\nUSER: ${lastMessage}\nASSISTANT:`;
 
-    const result = await model.generateContent(finalPrompt);
-    const response = result.response;
-    const text = response.text();
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('Groq API error:', response.status, errorBody);
+      throw new Error(`Groq API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.choices[0].message.content;
 
     return NextResponse.json({ role: 'assistant', content: text });
 
   } catch (error: any) {
-    console.error('Concierge Gemini Error:', error);
+    console.error('Concierge Groq Error:', error);
     return NextResponse.json({
       role: 'assistant',
       content: "I apologize, I'm currently updating my database. Please click the WhatsApp button below to speak with Oscar directly."

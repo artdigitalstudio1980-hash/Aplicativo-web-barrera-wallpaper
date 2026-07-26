@@ -68,6 +68,7 @@ export const paypal = {
         intent: 'CAPTURE',
         purchase_units: [{
           reference_id: order.id,
+          custom_id: order.id,
           amount: {
             currency_code: order.currency,
             value: order.total.toFixed(2),

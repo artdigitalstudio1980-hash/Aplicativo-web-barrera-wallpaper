@@ -26,6 +26,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (fileName.includes('..') || fileName.includes('/')) {
+      return NextResponse.json(
+        { error: 'Invalid fileName' },
+        { status: 400 }
+      );
+    }
+
     // Generate presigned URL for upload
     const { uploadUrl, cloudStoragePath } = await generatePresignedUploadUrl(
       fileName,

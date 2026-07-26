@@ -193,7 +193,7 @@ export async function GET(req: NextRequest) {
   } catch (fallbackError: any) {
     console.error('❌ Both database and local catalog failed:', fallbackError);
     return NextResponse.json(
-      { error: 'Failed to fetch products', details: fallbackError.message },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }

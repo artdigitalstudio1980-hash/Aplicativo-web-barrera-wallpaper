@@ -1,30 +1,17 @@
-
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/prisma';
 import { paypal } from '@/lib/paypal';
-import { sendOrderConfirmationEmail } from '@/lib/mailer';
+import { sendOrderConfirmationEmailV2, sendAdminNotificationEmail } from '@/lib/mailer';
 import { logAudit } from '@/lib/audit';
-
-interface CapturePayPalOrderRequest {
-  paypalOrderId: string;
-  orderId: string;
-}
 
 export async function POST(req: NextRequest) {
   let paypalOrderId: string | undefined;
-  
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
-    }
 
-    const body: CapturePayPalOrderRequest = await req.json();
-    const { paypalOrderId: paypalId, orderId } = body;
+  try {
+    const body = await req.json();
+    const { paypalOrderId: paypalId, orderId, locale } = body;
     paypalOrderId = paypalId;
 
     if (!paypalOrderId || !orderId) {
@@ -34,65 +21,82 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Use the centralized PayPal service instead of duplicated logic
     const captureData = await paypal.captureOrder(paypalOrderId);
 
     if (captureData.status === 'COMPLETED') {
-      // Update payment transaction
       await prisma.paymentTransaction.updateMany({
-        where: {
-          orderId,
-          paypalOrderId
-        },
-        data: {
-          status: 'COMPLETED',
-          transactionId: captureData.id
-        }
+        where: { orderId, paypalOrderId },
+        data: { status: 'COMPLETED', transactionId: captureData.id }
       });
 
-      // Update order status
       const order = await prisma.order.update({
         where: { id: orderId },
         data: { status: 'CONFIRMED' },
         include: { orderItems: { include: { product: true } } }
       });
 
-      // Update AI wallpaper order status if applicable
       await prisma.aIWallpaperOrder.updateMany({
         where: { orderId },
         data: { status: 'PAID' }
       });
 
-      // Send confirmation email (consistent with Stripe flow)
       logAudit({
         action: 'PAYMENT_CAPTURED',
         entity: 'Order',
         entityId: order.id,
-        userId: (session.user as any).id,
         metadata: { provider: 'PAYPAL', transactionId: captureData.id, paypalOrderId },
       });
 
-      if (order.shippingEmail) {
-        const emailItems = order.orderItems.map((item: any) => ({
-          name: item.product?.name || 'Custom AI Wallpaper',
-          price: item.price,
-          measurements: item.customization,
-        }));
+      const emailItems = order.orderItems.map((item: any) => ({
+        name: item.product?.name || 'Custom AI Wallpaper',
+        price: item.price,
+        quantity: item.quantity,
+        measurements: item.customization,
+      }));
 
-        await sendOrderConfirmationEmail(
-          order.orderNumber,
-          order.shippingEmail,
-          order.shippingName || 'Customer',
-          order.total,
-          emailItems
-        ).catch((err: any) => console.error('Email send error (non-blocking):', err));
-      }
+      const isGuest = !order.userId;
+      const lang = locale || 'en';
+
+      await sendOrderConfirmationEmailV2(
+        order.orderNumber,
+        order.shippingEmail,
+        order.shippingName || 'Customer',
+        lang,
+        {
+          total: order.total,
+          currency: order.currency,
+          items: emailItems,
+          shippingName: order.shippingName,
+          shippingAddress: order.shippingAddress1,
+          shippingCity: order.shippingCity,
+          shippingState: order.shippingState,
+          shippingZip: order.shippingZip,
+          shippingCountry: order.shippingCountry,
+          needsInstallation: !!order.notes?.includes('INSTALLATION REQUESTED'),
+        }
+      ).catch((err: any) => console.error('Email send error (non-blocking):', err));
+
+      const shipAddr = `${order.shippingAddress1}, ${order.shippingCity}, ${order.shippingState} ${order.shippingZip}, ${order.shippingCountry}`;
+
+      await sendAdminNotificationEmail({
+        orderNumber: order.orderNumber,
+        customerName: order.shippingName,
+        customerEmail: order.shippingEmail,
+        total: order.total,
+        currency: order.currency,
+        items: emailItems,
+        shippingAddress: shipAddr,
+        needsInstallation: !!order.notes?.includes('INSTALLATION REQUESTED'),
+        isGuest,
+        createdAt: new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }),
+      }).catch((err: any) => console.error('Admin notification error (non-blocking):', err));
 
       return NextResponse.json({
         success: true,
         data: {
           transactionId: captureData.id,
-          status: 'COMPLETED'
+          status: 'COMPLETED',
+          orderNumber: order.orderNumber,
         }
       });
     } else {
@@ -101,16 +105,12 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('PayPal capture error:', error);
-    
-    // Update transaction with error if we have the paypalOrderId
+
     if (paypalOrderId) {
       try {
         await prisma.paymentTransaction.updateMany({
           where: { paypalOrderId },
-          data: {
-            status: 'FAILED',
-            errorMessage: error.message
-          }
+          data: { status: 'FAILED', errorMessage: error.message }
         });
       } catch (dbError) {
         console.error('Database error while updating failed payment:', dbError);

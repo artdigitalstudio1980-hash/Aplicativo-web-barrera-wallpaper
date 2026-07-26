@@ -4,7 +4,7 @@ test.describe('Smoke Tests — Static Pages', () => {
   test('Homepage carga y muestra título', async ({ page }) => {
     const response = await page.goto('/');
     expect(response?.status()).toBe(200);
-    await expect(page.locator('h1, h2, header')).toBeVisible();
+    await expect(page.locator('h1')).toBeVisible();
   });
 
   test('Catálogo carga productos', async ({ page }) => {

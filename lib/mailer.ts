@@ -155,6 +155,83 @@ export const sendContactNotificationEmail = async (formData: {
   }
 };
 
+export const sendOrderConfirmationEmailV2 = async (
+  orderNumber: string,
+  customerEmail: string,
+  customerName: string,
+  locale: string,
+  data: {
+    total: number;
+    currency: string;
+    items: Array<{ name: string; price: number; quantity: number; measurements?: any }>;
+    shippingName: string;
+    shippingAddress: string;
+    shippingCity: string;
+    shippingState: string;
+    shippingZip: string;
+    shippingCountry: string;
+    needsInstallation: boolean;
+    installationAddress?: string;
+  }
+) => {
+  try {
+    const isEN = locale === 'en';
+    const { renderOrderConfirmationEN } = await import('./email-templates/order-confirmation-en');
+    const { renderOrderConfirmationES } = await import('./email-templates/order-confirmation-es');
+    const html = isEN
+      ? renderOrderConfirmationEN({ ...data, orderNumber, customerName })
+      : renderOrderConfirmationES({ ...data, orderNumber, customerName });
+
+    const mailOptions = {
+      from: `"Barrera Wallpaper" <${process.env.SMTP_USER || 'ventas@barrerawallpaper.com'}>`,
+      to: customerEmail,
+      subject: isEN
+        ? `Order Confirmed #${orderNumber} — Barrera Wallpaper`
+        : `Orden Confirmada #${orderNumber} — Barrera Wallpaper`,
+      html,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Order confirmation email sent: %s', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending order confirmation email:', error);
+    return false;
+  }
+};
+
+export const sendAdminNotificationEmail = async (data: {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  total: number;
+  currency: string;
+  items: Array<{ name: string; quantity: number; price: number }>;
+  shippingAddress: string;
+  needsInstallation: boolean;
+  isGuest: boolean;
+  createdAt: string;
+}) => {
+  try {
+    const { renderAdminNotification } = await import('./email-templates/admin-notification');
+    const html = renderAdminNotification(data);
+
+    const mailOptions = {
+      from: `"Barrera Wallpaper System" <${process.env.SMTP_USER || 'ventas@barrerawallpaper.com'}>`,
+      to: process.env.ADMIN_EMAIL || 'infobarrerawallpaper@gmail.com',
+      subject: `New Order #${data.orderNumber} — ${data.customerName}`,
+      html,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Admin notification sent: %s', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending admin notification email:', error);
+    return false;
+  }
+};
+
 export const sendContactConfirmationEmail = async (customerEmail: string, customerName: string) => {
   try {
     const mailOptions = {

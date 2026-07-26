@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import bcrypt from "bcryptjs";
+import { createUserSchema } from "@/lib/validations";
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
@@ -55,11 +56,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { firstName, lastName, email, password, phone, role, isAdmin } = await req.json();
-
-    if (!firstName || !email || !password) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const parsed = createUserSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid fields", details: parsed.error.flatten().fieldErrors }, { status: 400 });
     }
+    const { firstName, lastName, email, password, phone } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -77,8 +78,6 @@ export async function POST(req: Request) {
         email: email.toLowerCase(),
         password: hashedPassword,
         phone: phone || null,
-        role: role || "USER",
-        isAdmin: isAdmin || false,
       },
     });
 

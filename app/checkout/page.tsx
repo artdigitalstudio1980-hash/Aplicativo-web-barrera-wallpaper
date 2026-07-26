@@ -5,93 +5,136 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/lib/store/use-cart';
-import { 
-  ArrowLeft, CreditCard, ShieldCheck, Truck, 
-  Info, Loader2, CheckCircle2, AlertCircle,
-  Package, Ruler, Trash2, Plus, Minus, Clock,
-  ArrowRight
+import { useLocale } from '@/components/locale-context';
+import {
+  ArrowLeft, ArrowRight, Truck, ShieldCheck,
+  Loader2, Package, CheckCircle2, CreditCard,
+  Info, ChevronRight, MapPin, Home, User, Mail, Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import PromoBanner from '@/components/promo-banner';
+import Script from 'next/script';
 
-// Purchase Configuration
-const MIN_AREA_CALCULATOR = 5; 
+const US_STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+];
 
-export default function UnifiedCheckoutPage() {
+export default function CheckoutPage() {
   const router = useRouter();
-  const { items, removeItem, updateQuantity, getTotal, clearCart, needsInstallation, setNeedsInstallation } = useCart();
+  const { locale, t } = useLocale();
+  const { items, needsInstallation, setNeedsInstallation, getTotal, clearCart } = useCart();
+  const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
-  
-  const subtotal = getTotal();
-  const shipping = subtotal > 500 ? 0 : 50; 
-  const total = subtotal + shipping;
+  const [paypalReady, setPaypalReady] = useState(false);
 
-  const hasIncompleteItems = items.some(item => {
-    if (item.measurements && item.measurements.area < MIN_AREA_CALCULATOR) return true;
-    return false;
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: 'US',
+    installationAddress: '',
   });
 
-  const handleCheckout = async () => {
-    if (items.length === 0) {
-      toast.error('Your cart is empty');
-      return;
-    }
+  const updateForm = (field: string, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
 
-    if (hasIncompleteItems) {
-      toast.error(`Minimum order is ${MIN_AREA_CALCULATOR}m² for custom cuts.`);
-      return;
-    }
+  const formErrors = (() => {
+    const errors: Record<string, string> = {};
+    if (!form.name.trim()) errors.name = 'Required';
+    if (!form.email.trim()) errors.email = 'Required';
+    if (!form.address1.trim()) errors.address1 = 'Required';
+    if (!form.city.trim()) errors.city = 'Required';
+    if (!form.state.trim()) errors.state = 'Required';
+    if (!form.zip.trim()) errors.zip = 'Required';
+    return errors;
+  })();
 
+  const canProceed = Object.keys(formErrors).length === 0;
+
+  const subtotal = getTotal();
+  const total = subtotal;
+
+  const handlePayPalCreateOrder = async () => {
     setIsProcessing(true);
     try {
       const res = await fetch('/api/checkout/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          paymentMethod,
-          needsInstallation,
           items: items.map(item => ({
             wallpaperId: item.id,
             name: item.name,
             quantity: item.quantity,
             price: item.price,
-            measurements: item.measurements
+            measurements: item.measurements,
           })),
+          shippingDetails: {
+            name: form.name,
+            email: form.email,
+            phone: form.phone || '',
+            address1: form.address1,
+            address2: form.address2 || '',
+            city: form.city,
+            state: form.state,
+            country: form.country,
+            zip: form.zip,
+          },
+          needsInstallation,
+          installationAddress: form.installationAddress,
+          locale,
         }),
       });
 
       const data = await res.json();
-      
+
       if (!res.ok || !data.success) {
-        const errorMsg = data.error || `Checkout failed (${res.status})`;
-        toast.error(errorMsg, {
-          description: paymentMethod === 'stripe' 
-            ? 'Please try PayPal or contact support.' 
-            : 'Please try Stripe or contact support.',
-          duration: 6000,
-        });
-        setIsProcessing(false);
-        return;
+        throw new Error(data.error || 'Checkout failed');
       }
 
-      // Determine redirect URL based on payment method
-      const redirectUrl = paymentMethod === 'stripe' ? data.data?.url : data.data?.approvalUrl;
-      
-      if (redirectUrl) {
-        toast.success('Redirecting to secure payment...', { duration: 3000 });
-        setTimeout(() => { window.location.href = redirectUrl; }, 500);
-        return;
-      } else {
-        toast.error('Payment gateway did not return a redirect URL. Please try another method.', { duration: 6000 });
-        setIsProcessing(false);
+      const { paypalOrderId, approvalUrl } = data.data;
+
+      if (approvalUrl) {
+        window.location.href = approvalUrl;
+      } else if (window.paypal) {
+        window.paypal.Buttons({
+          createOrder: () => paypalOrderId,
+          onApprove: async (data: any, actions: any) => {
+            const captureRes = await fetch('/api/payments/paypal/capture/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paypalOrderId, orderId: data.data?.orderId, locale }),
+            });
+            const captureData = await captureRes.json();
+            if (captureData.success) {
+              clearCart();
+              router.push(`/checkout/success?order=${captureData.data.orderNumber}`);
+            } else {
+              toast.error('Payment capture failed. Please contact support.');
+            }
+          },
+          onError: (err: any) => {
+            console.error('PayPal error:', err);
+            toast.error('PayPal payment failed. Please try again.');
+          },
+        }).render('#paypal-button-container');
+        setPaypalReady(true);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Network error. Please check your connection and try again.', { duration: 6000 });
+      toast.error(error.message || 'Network error. Please try again.');
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -100,262 +143,316 @@ export default function UnifiedCheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white text-gray-900 p-4">
         <Package className="w-20 h-20 text-gray-100 mb-8" />
-        <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-6">Your Cart is Empty</h1>
+        <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-6">
+          {locale === 'es' ? 'Tu carrito está vacío' : 'Your Cart is Empty'}
+        </h1>
         <Button onClick={() => router.push('/catalog')} className="h-14 px-10 rounded-2xl bg-black text-white hover:bg-gray-800 uppercase text-[10px] font-black tracking-widest shadow-xl">
-          Back to Collections
+          {locale === 'es' ? 'Volver al catálogo' : 'Back to Collections'}
         </Button>
-        <div className="mt-12 w-full max-w-md">
-          <PromoBanner variant="card" />
-        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen pt-28 pb-20 bg-white text-gray-900 selection:bg-black selection:text-white">
+      <Script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD" strategy="lazyOnload" />
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
+        {/* Steps indicator */}
+        <div className="flex items-center gap-4 mb-12">
+          <div className={`flex items-center gap-2 ${step >= 1 ? 'text-black' : 'text-gray-300'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>1</div>
+            <span className="text-xs font-black uppercase tracking-widest">{locale === 'es' ? 'Envío' : 'Shipping'}</span>
+          </div>
+          <div className="h-px flex-1 bg-gray-200" />
+          <div className={`flex items-center gap-2 ${step >= 2 ? 'text-black' : 'text-gray-300'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>2</div>
+            <span className="text-xs font-black uppercase tracking-widest">{locale === 'es' ? 'Pago' : 'Payment'}</span>
+          </div>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-16">
-          
-          {/* Left Side: Cart Review */}
-          <div className="lg:flex-1 space-y-12">
-            <div>
-              <Button 
-                variant="ghost" 
-                className="pl-0 text-gray-400 hover:text-black hover:bg-transparent mb-6 group"
-                onClick={() => router.back()}
-              >
-                <ArrowLeft className="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" />
-                Return to Shop
-              </Button>
-              <h1 className="text-7xl font-black tracking-tighter italic uppercase leading-none">
-                Checkout <span className="text-gray-200">.</span>
-              </h1>
-            </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 mb-4">
-                 <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400">Items in your cart</h2>
-                 <div className="h-[1px] flex-1 bg-gray-50" />
-              </div>
-              
-              <AnimatePresence mode="popLayout">
-                {items.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="relative bg-gray-50/50 border border-gray-100 p-6 md:p-8 rounded-[2.5rem] group hover:bg-white hover:shadow-xl hover:border-gray-200 transition-all duration-500"
-                  >
-                    <div className="flex flex-col sm:flex-row gap-8">
-                      <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm shrink-0">
-                        <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
-                      </div>
-                      
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <Badge className="bg-white text-gray-400 border border-gray-100 font-black text-[8px] uppercase tracking-widest px-3 py-1 mb-2">
-                                {item.sku}
-                              </Badge>
-                              <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter leading-none group-hover:text-blue-600 transition-colors">
-                                {item.name}
-                              </h3>
-                            </div>
-                            <button 
-                              onClick={() => removeItem(item.id)}
-                              className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </div>
+          {/* Left: Form */}
+          <div className="lg:flex-1">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter italic uppercase leading-none mb-12">
+              {step === 1
+                ? (locale === 'es' ? 'Dirección' : 'Shipping')
+                : (locale === 'es' ? 'Revisar y pagar' : 'Review & Pay')
+              }
+              <span className="text-gray-200">.</span>
+            </h1>
 
-                          {item.measurements && (
-                            <div className="flex flex-wrap gap-3 mt-4">
-                              <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 text-[9px] uppercase font-black text-gray-500 flex items-center gap-2 shadow-sm">
-                                <Ruler className="w-3 h-3" />
-                                {item.measurements.area.toFixed(2)} m²
-                              </div>
-                              {item.measurements.area < MIN_AREA_CALCULATOR && (
-                                <div className="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-[9px] font-black uppercase flex items-center gap-2">
-                                  <AlertCircle className="w-3 h-3" />
-                                  Minimum {MIN_AREA_CALCULATOR}m² required
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Nombre completo' : 'Full Name'}</Label>
+                      <Input
+                        value={form.name}
+                        onChange={e => updateForm('name', e.target.value)}
+                        placeholder="John Doe"
+                        className="h-14 rounded-2xl border-gray-200 text-base"
+                      />
+                      {formErrors.name && <p className="text-red-500 text-xs">{formErrors.name}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email</Label>
+                      <Input
+                        value={form.email}
+                        onChange={e => updateForm('email', e.target.value)}
+                        placeholder="john@example.com"
+                        type="email"
+                        className="h-14 rounded-2xl border-gray-200 text-base"
+                      />
+                      {formErrors.email && <p className="text-red-500 text-xs">{formErrors.email}</p>}
+                    </div>
+                  </div>
 
-                        <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100">
-                          <div className="flex items-center gap-4 bg-white p-1 rounded-2xl border border-gray-100 shadow-sm">
-                            <button 
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-50 text-gray-400 hover:text-black transition-colors"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="text-sm font-black w-6 text-center">{item.quantity}</span>
-                            <button 
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-50 text-gray-400 hover:text-black transition-colors"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <div className="text-right">
-                             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Item Total</span>
-                             <span className="text-3xl font-black italic tracking-tighter">${(item.price * item.quantity).toFixed(2)}</span>
-                          </div>
-                        </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Teléfono' : 'Phone'}</Label>
+                    <Input
+                      value={form.phone}
+                      onChange={e => updateForm('phone', e.target.value)}
+                      placeholder="+1 305 555 0123"
+                      className="h-14 rounded-2xl border-gray-200 text-base"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Dirección' : 'Address'}</Label>
+                    <Input
+                      value={form.address1}
+                      onChange={e => updateForm('address1', e.target.value)}
+                      placeholder="123 Main St"
+                      className="h-14 rounded-2xl border-gray-200 text-base"
+                    />
+                    {formErrors.address1 && <p className="text-red-500 text-xs">{formErrors.address1}</p>}
+                    <Input
+                      value={form.address2}
+                      onChange={e => updateForm('address2', e.target.value)}
+                      placeholder={locale === 'es' ? 'Apto, suite, etc. (opcional)' : 'Apt, suite, etc. (optional)'}
+                      className="h-14 rounded-2xl border-gray-200 text-base mt-3"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Ciudad' : 'City'}</Label>
+                      <Input value={form.city} onChange={e => updateForm('city', e.target.value)} placeholder="Miami" className="h-14 rounded-2xl border-gray-200" />
+                      {formErrors.city && <p className="text-red-500 text-xs">{formErrors.city}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Estado' : 'State'}</Label>
+                      <select
+                        value={form.state}
+                        onChange={e => updateForm('state', e.target.value)}
+                        className="w-full h-14 rounded-2xl border border-gray-200 bg-white px-4 text-base"
+                      >
+                        <option value="">--</option>
+                        {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      {formErrors.state && <p className="text-red-500 text-xs">{formErrors.state}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">ZIP</Label>
+                      <Input value={form.zip} onChange={e => updateForm('zip', e.target.value)} placeholder="33101" className="h-14 rounded-2xl border-gray-200" />
+                      {formErrors.zip && <p className="text-red-500 text-xs">{formErrors.zip}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'País' : 'Country'}</Label>
+                      <select value={form.country} onChange={e => updateForm('country', e.target.value)} className="w-full h-14 rounded-2xl border border-gray-200 bg-white px-4 text-base">
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="MX">Mexico</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Installation */}
+                  <div className="bg-blue-50/30 border border-blue-100 p-8 rounded-[2.5rem] space-y-4">
+                    <div className="flex items-start gap-4">
+                      <Checkbox
+                        id="installation"
+                        checked={needsInstallation}
+                        onCheckedChange={(checked) => setNeedsInstallation(!!checked)}
+                        className="w-6 h-6 rounded-lg border-blue-200 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
+                      />
+                      <div>
+                        <label htmlFor="installation" className="text-lg font-black uppercase tracking-tighter cursor-pointer">
+                          {locale === 'es' ? 'Instalación profesional' : 'Professional Installation'}
+                        </label>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {locale === 'es'
+                            ? '¿Necesitas instalación en Miami? Te contactaremos para una cotización separada.'
+                            : 'Need expert installation in Miami? We\'ll contact you for a separate quote.'}
+                        </p>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+                    {needsInstallation && (
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          {locale === 'es' ? 'Dirección de instalación (si es diferente)' : 'Installation address (if different)'}
+                        </Label>
+                        <Input
+                          value={form.installationAddress}
+                          onChange={e => updateForm('installationAddress', e.target.value)}
+                          placeholder={form.address1}
+                          className="h-14 rounded-2xl border-gray-200"
+                        />
+                      </div>
+                    )}
+                  </div>
 
-            {/* --- INSTALLATION OPTION (WHITE THEME) --- */}
-            <div className="bg-blue-50/30 border border-blue-100 p-8 rounded-[3rem] group hover:bg-blue-50 transition-all duration-500">
-              <div className="flex items-start gap-6">
-                <div className="pt-1">
-                  <Checkbox 
-                    id="installation" 
-                    checked={needsInstallation}
-                    onCheckedChange={(checked) => setNeedsInstallation(!!checked)}
-                    className="w-8 h-8 rounded-xl border-blue-200 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 shadow-lg"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label htmlFor="installation" className="text-2xl font-black uppercase tracking-tighter cursor-pointer text-gray-900">
-                    Professional Installation <span className="text-blue-600 italic">BY BARRERA</span>
-                  </label>
-                  <p className="text-gray-500 text-sm mt-2 leading-relaxed font-light max-w-xl">
-                    Need expert labor in Miami? Select this option and we will schedule a site visit to provide a separate installation quote.
-                  </p>
-                  {needsInstallation && (
-                    <div className="mt-6 p-5 bg-white rounded-2xl border border-blue-100 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-4 shadow-sm animate-in fade-in slide-in-from-top-4">
-                      <Clock className="w-5 h-5" />
-                      Labor quoted separately via official appointment
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => setStep(2)}
+                      disabled={!canProceed}
+                      className="h-16 px-10 rounded-2xl bg-black text-white hover:bg-gray-800 text-sm font-black uppercase tracking-widest shadow-xl disabled:opacity-30"
+                    >
+                      {locale === 'es' ? 'Continuar al pago' : 'Continue to Payment'}
+                      <ChevronRight className="w-5 h-5 ml-3" />
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-8">
+                  {/* Summary card */}
+                  <div className="bg-gray-50/50 border border-gray-100 p-8 rounded-[2.5rem] space-y-4">
+                    <div className="flex items-center gap-3 text-gray-400">
+                      <MapPin className="w-5 h-5" />
+                      <span className="text-xs font-black uppercase tracking-widest">{locale === 'es' ? 'Envío a' : 'Shipping to'}</span>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
+                    <p className="text-lg font-bold">
+                      {form.name}<br />
+                      {form.address1}{form.address2 ? `, ${form.address2}` : ''}<br />
+                      {form.city}, {form.state} {form.zip}
+                    </p>
+                    <p className="text-sm text-gray-500">{form.email} · {form.phone}</p>
+                    {needsInstallation && (
+                      <div className="pt-4 border-t border-gray-200 mt-4 flex items-center gap-3 text-blue-600">
+                        <Home className="w-5 h-5" />
+                        <span className="text-sm font-bold">{locale === 'es' ? 'Instalación solicitada' : 'Installation requested'}</span>
+                      </div>
+                    )}
+                    <button onClick={() => setStep(1)} className="text-xs text-gray-400 underline mt-4 block">
+                      {locale === 'es' ? 'Editar dirección' : 'Edit address'}
+                    </button>
+                  </div>
 
-            {/* Quality Seals */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-10">
-              <div className="bg-gray-50 border border-gray-100 p-8 rounded-[2.5rem] flex items-center gap-6">
-                <div className="bg-white p-4 rounded-2xl shadow-sm"><ShieldCheck className="w-8 h-8 text-blue-600" /></div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">German Engineering</p>
-                  <p className="text-sm font-bold text-gray-800 italic">SYSTEXX Certified.</p>
-                </div>
-              </div>
-              <div className="bg-gray-50 border border-gray-100 p-8 rounded-[2.5rem] flex items-center gap-6">
-                <div className="bg-white p-4 rounded-2xl shadow-sm"><Truck className="w-8 h-8 text-black" /></div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Secure Delivery</p>
-                  <p className="text-sm font-bold text-gray-800 italic">Insured shipping.</p>
-                </div>
-              </div>
-            </div>
+                  {/* Items summary */}
+                  <div className="space-y-4">
+                    {items.map(item => (
+                      <div key={item.id} className="flex items-center gap-4 bg-white border border-gray-100 p-4 rounded-2xl">
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                          <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold truncate">{item.name}</p>
+                          <p className="text-xs text-gray-400">x{item.quantity}</p>
+                        </div>
+                        <p className="text-lg font-black">${(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Free shipping + No tax notice */}
+                  <div className="bg-green-50 border border-green-100 p-4 rounded-2xl flex items-center gap-3">
+                    <Truck className="w-5 h-5 text-green-600 shrink-0" />
+                    <p className="text-sm text-green-800 font-medium">
+                      {locale === 'es'
+                        ? 'Envío gratis · Sin impuestos'
+                        : 'Free shipping · No tax applied'}
+                    </p>
+                  </div>
+
+                  {/* Total */}
+                  <div className="flex justify-between items-end pt-4 border-t border-gray-200">
+                    <span className="text-xs font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Total a pagar' : 'Total to Pay'}</span>
+                    <span className="text-5xl font-black italic tracking-tighter">${total.toFixed(2)}</span>
+                  </div>
+
+                  {/* PayPal button area */}
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 border border-gray-100 p-8 rounded-[2.5rem] flex flex-col items-center gap-6">
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="w-6 h-6 text-blue-600" />
+                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">
+                          {locale === 'es' ? 'Pago seguro con' : 'Secure payment via'}
+                        </span>
+                        <Image src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" width={80} height={25} className="h-6 w-auto" />
+                      </div>
+                      <div id="paypal-button-container" className="w-full max-w-sm" />
+                      <Button
+                        onClick={handlePayPalCreateOrder}
+                        disabled={isProcessing}
+                        className="w-full h-16 rounded-2xl bg-black text-white hover:bg-gray-800 text-sm font-black uppercase tracking-widest shadow-xl disabled:opacity-30"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        ) : (
+                          <span className="flex items-center gap-3">
+                            {locale === 'es' ? 'Pagar con PayPal' : 'Pay with PayPal'}
+                            <ArrowRight className="w-5 h-5" />
+                          </span>
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-4 text-gray-300 text-xs">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span className="font-black uppercase tracking-widest">
+                        {locale === 'es' ? 'Transacción segura y encriptada' : 'Encrypted & Secure Transaction'}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Right Side: Payment Panel */}
-          <div className="lg:w-[450px]">
-            <div className="sticky top-28">
-              <Card className="bg-white border-gray-100 rounded-[3.5rem] overflow-hidden shadow-2xl border">
-                <CardContent className="p-12">
-                  <div className="flex items-center justify-between mb-10">
-                    <h3 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-3">
-                      Order Summary
-                    </h3>
-                    <CreditCard className="w-8 h-8 text-blue-600" />
+          {/* Right sidebar: order summary */}
+          <div className="lg:w-[350px] shrink-0">
+            <div className="sticky top-28 bg-gray-50 border border-gray-100 p-8 rounded-[2.5rem] space-y-6">
+              <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Resumen' : 'Summary'}</h3>
+
+              <div className="space-y-3">
+                {items.map(item => (
+                  <div key={item.id} className="flex justify-between items-center text-sm">
+                    <span className="truncate text-gray-600">{item.name} x{item.quantity}</span>
+                    <span className="font-bold">${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
+                ))}
+              </div>
 
-                  <div className="space-y-6 mb-10">
-                    <div className="flex justify-between items-center text-gray-400">
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Material Subtotal</span>
-                      <span className="text-xl font-bold text-gray-900">${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-gray-400">
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Estimated Shipping</span>
-                      <span className="text-xl font-bold text-gray-900">
-                        {shipping === 0 ? <span className="text-blue-600 italic">FREE</span> : `$${shipping.toFixed(2)}`}
-                      </span>
-                    </div>
-                    <div className="pt-10 border-t border-gray-100 flex justify-between items-end">
-                      <div>
-                        <div className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 mb-2">Total to Pay Now</div>
-                        <div className="text-6xl font-black italic tracking-tighter text-gray-900">${total.toFixed(2)}</div>
-                      </div>
-                      <div className="text-gray-300 text-xs mb-3 font-black">USD</div>
-                    </div>
-                  </div>
+              <div className="pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-500">
+                <div className="flex justify-between">
+                  <span>{locale === 'es' ? 'Subtotal' : 'Subtotal'}</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-green-600 font-medium">
+                  <span>{locale === 'es' ? 'Envío' : 'Shipping'}</span>
+                  <span>{locale === 'es' ? 'GRATIS' : 'FREE'}</span>
+                </div>
+                <div className="flex justify-between text-green-600 font-medium">
+                  <span>{locale === 'es' ? 'Impuestos' : 'Tax'}</span>
+                  <span>$0.00</span>
+                </div>
+              </div>
 
-                  <PromoBanner variant="card" />
+              <div className="pt-4 border-t border-gray-200 flex justify-between items-end">
+                <span className="text-xs font-black uppercase tracking-widest text-gray-400">{locale === 'es' ? 'Total' : 'Total'}</span>
+                <span className="text-3xl font-black italic tracking-tighter">${total.toFixed(2)}</span>
+              </div>
 
-                  {/* Provider Selector */}
-                  <div className="space-y-4 mb-10">
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Secure Payment Method</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button
-                        onClick={() => setPaymentMethod('stripe')}
-                        className={`group p-6 rounded-3xl border transition-all duration-500 flex flex-col items-center gap-2 ${
-                          paymentMethod === 'stripe' ? 'bg-black border-black shadow-xl' : 'bg-white border-gray-100 hover:border-gray-200'
-                        }`}
-                      >
-                        <Image 
-                          src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" 
-                          alt="Stripe" width={70} height={25} 
-                          className={`h-6 w-auto transition-all ${paymentMethod === 'stripe' ? 'invert' : 'opacity-40 group-hover:opacity-100'}`} 
-                        />
-                      </button>
-
-                      <button
-                        onClick={() => setPaymentMethod('paypal')}
-                        className={`group p-6 rounded-3xl border transition-all duration-500 flex flex-col items-center gap-2 ${
-                          paymentMethod === 'paypal' ? 'bg-[#ffc439] border-[#ffc439] shadow-xl' : 'bg-white border-gray-100 hover:border-gray-200'
-                        }`}
-                      >
-                        <Image 
-                          src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" 
-                          alt="PayPal" width={70} height={25} 
-                          className={`h-6 w-auto transition-all ${paymentMethod === 'paypal' ? '' : 'grayscale opacity-40 group-hover:opacity-100 group-hover:grayscale-0'}`} 
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={handleCheckout} 
-                    disabled={isProcessing}
-                    className={`w-full h-24 rounded-[2.5rem] text-2xl font-black italic uppercase tracking-tighter shadow-2xl transition-all hover:scale-[1.02] active:scale-95 ${
-                      paymentMethod === 'paypal' 
-                        ? 'bg-[#ffc439] hover:bg-[#ffb700] text-blue-900 shadow-[#ffc439]/20' 
-                        : 'bg-black hover:bg-gray-800 text-white shadow-black/20'
-                    }`}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="w-8 h-8 animate-spin" />
-                    ) : (
-                      <span className="flex items-center gap-4">
-                        Pay ${total.toFixed(2)} <ArrowRight className="w-8 h-8" />
-                      </span>
-                    )}
-                  </Button>
-                  
-                  <div className="mt-10 flex flex-col items-center gap-6">
-                    <div className="flex gap-6 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
-                       <Image src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" width={40} height={20} />
-                       <Image src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" width={30} height={20} />
-                    </div>
-                    <p className="text-[9px] text-gray-400 uppercase tracking-[0.3em] font-black">Encrypted & Secure Transaction</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center gap-3 pt-4 text-gray-400 text-xs">
+                <ShieldCheck className="w-4 h-4" />
+                <span className="font-black uppercase tracking-widest">SYSTEXX Certified</span>
+              </div>
             </div>
           </div>
 

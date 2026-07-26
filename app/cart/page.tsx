@@ -43,8 +43,8 @@ export default function CartPage() {
   }
 
   const subtotal = getTotal();
-  const shipping = subtotal > 500 || items.length === 0 ? 0 : 50;
-  const tax = subtotal * 0.07; // Florida Sales Tax average
+  const shipping = 0; // Free shipping always
+  const tax = 0; // No tax
   const total = subtotal + shipping + tax;
 
   if (items.length === 0) {
@@ -176,11 +176,11 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-black uppercase tracking-widest">Shipping</span>
-                    <span className="text-xl text-white font-medium">{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+                    <span className="text-xl text-white font-medium text-green-400">FREE</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest">Estimated Tax</span>
-                    <span className="text-xl text-white font-medium">${tax.toFixed(2)}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Tax</span>
+                    <span className="text-xl text-white font-medium text-green-400">$0.00</span>
                   </div>
                 </div>
 

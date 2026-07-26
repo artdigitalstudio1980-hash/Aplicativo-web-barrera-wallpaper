@@ -52,12 +52,9 @@ export async function GET(req: NextRequest, { params }: Context) {
     const sessionIdParam = req.nextUrl.searchParams.get('session_id');
     const stripeSessionMatches =
       !!order.stripeSessionId && sessionIdParam === order.stripeSessionId;
-    const mockDevSessionMatches =
-      process.env.NODE_ENV !== 'production' &&
-      sessionIdParam === `mock_session_${order.id}`;
     const ownerMatches = !!(userId && order.userId && order.userId === userId);
 
-    if (!isAdmin && !ownerMatches && !stripeSessionMatches && !mockDevSessionMatches) {
+    if (!isAdmin && !ownerMatches && !stripeSessionMatches) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

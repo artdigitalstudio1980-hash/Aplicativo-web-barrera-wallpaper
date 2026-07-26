@@ -1,10 +1,38 @@
-
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import { logAudit } from './audit';
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+
+const loginAttempts = new Map<string, { count: number; lockoutUntil: number | null }>();
+
+function checkLockout(email: string): boolean {
+  const record = loginAttempts.get(email.toLowerCase());
+  if (!record || !record.lockoutUntil) return false;
+  if (Date.now() >= record.lockoutUntil) {
+    loginAttempts.delete(email.toLowerCase());
+    return false;
+  }
+  return true;
+}
+
+function recordFailedAttempt(email: string) {
+  const key = email.toLowerCase();
+  const record = loginAttempts.get(key) || { count: 0, lockoutUntil: null };
+  record.count += 1;
+  if (record.count >= MAX_LOGIN_ATTEMPTS) {
+    record.lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+  }
+  loginAttempts.set(key, record);
+}
+
+function resetAttempts(email: string) {
+  loginAttempts.delete(email.toLowerCase());
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -20,11 +48,17 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        if (checkLockout(credentials.email)) {
+          logAudit({ action: 'LOGIN_FAILED', email: credentials.email, metadata: { reason: 'account_locked' } });
+          throw new Error('Account temporarily locked. Try again in 15 minutes.');
+        }
+
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });
 
         if (!user?.password) {
+          recordFailedAttempt(credentials.email);
           logAudit({ action: 'LOGIN_FAILED', email: credentials?.email, metadata: { reason: 'no_password' } });
           return null;
         }
@@ -32,9 +66,12 @@ export const authOptions: NextAuthOptions = {
         const isValidPassword = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValidPassword) {
+          recordFailedAttempt(credentials.email);
           logAudit({ action: 'LOGIN_FAILED', email: credentials.email, metadata: { reason: 'wrong_password' } });
           return null;
         }
+
+        resetAttempts(credentials.email);
 
         return {
           id: user.id,
@@ -49,7 +86,8 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    maxAge: 24 * 60 * 60,
+    updateAge: 60 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {

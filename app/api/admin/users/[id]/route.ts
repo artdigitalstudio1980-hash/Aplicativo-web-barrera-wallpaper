@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import bcrypt from "bcryptjs";
+import { updateUserSchema } from "@/lib/validations";
 
 async function checkAdmin(session: any) {
   if (!session?.user || !(session.user as any).isAdmin) {
@@ -19,8 +20,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 
   try {
-    const body = await req.json();
-    const { firstName, lastName, email, phone, role, isAdmin, password } = body;
+    const parsed = updateUserSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid fields", details: parsed.error.flatten().fieldErrors }, { status: 400 });
+    }
+    const { firstName, lastName, email, phone, password } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { id: params.id } });
     if (!existing) {
@@ -39,8 +43,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     if (lastName !== undefined) data.lastName = lastName;
     if (email !== undefined) data.email = email.toLowerCase();
     if (phone !== undefined) data.phone = phone;
-    if (role !== undefined) data.role = role;
-    if (isAdmin !== undefined) data.isAdmin = isAdmin;
     if (firstName !== undefined || lastName !== undefined) {
       data.name = `${firstName || existing.firstName} ${lastName !== undefined ? lastName : existing.lastName}`.trim();
     }

@@ -1,22 +1,18 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
 
 export async function POST(req: Request) {
   try {
-    const googleKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
-    if (!googleKey) {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) {
       return NextResponse.json(
-        { error: 'AI service is not configured (GOOGLE_AI_STUDIO_API_KEY)' },
+        { error: 'AI service is not configured (GROQ_API_KEY)' },
         { status: 503 }
       );
     }
 
-    const genAI = new GoogleGenerativeAI(googleKey);
     const { messages, measurements, product } = await req.json();
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const systemPrompt = `
       ROLE: Technical Estimator & Installation Expert for Barrera Wallpaper.
@@ -41,19 +37,36 @@ export async function POST(req: Request) {
       Precise, authoritative, helpful, and professional.
     `;
 
-    const lastMessage = messages[messages.length - 1].content;
-    const previousContext = messages.slice(0, -1).map((m: any) => `${m.role}: ${m.content}`).join('\n');
-    
-    const finalPrompt = `${systemPrompt}\n\nCHAT HISTORY:\n${previousContext}\n\nUSER: ${lastMessage}\nASSISTANT:`;
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        temperature: 0.5,
+        max_tokens: 1024
+      })
+    });
 
-    const result = await model.generateContent(finalPrompt);
-    const response = result.response;
-    const text = response.text();
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('Groq API error:', response.status, errorBody);
+      throw new Error(`Groq API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.choices[0].message.content;
 
     return NextResponse.json({ role: 'assistant', content: text });
 
   } catch (error: any) {
-    console.error('Technical Agent Error:', error);
+    console.error('Technical Groq Error:', error);
     return NextResponse.json({ role: 'assistant', content: "Our technical database is being updated. Feel free to proceed with the calculation or contact Oscar via WhatsApp for urgent installation queries." });
   }
 }

@@ -17,7 +17,7 @@ export default function PromoBanner({ variant = 'section' }: PromoBannerProps) {
             <div className="flex items-center justify-center h-10 sm:h-11 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] gap-2 sm:gap-3">
               <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
               <span className="hidden sm:inline">New customers —</span>
-              <span>Register & get up to 15% OFF your first order</span>
+              <span>Register & get up to 10% OFF your first order</span>
               <ArrowRight className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
             </div>
           </div>
@@ -39,7 +39,7 @@ export default function PromoBanner({ variant = 'section' }: PromoBannerProps) {
               <Percent className="w-6 h-6 text-yellow-400" />
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-black uppercase tracking-wider">Get 15% OFF</h4>
+              <h4 className="text-sm font-black uppercase tracking-wider">Get 10% OFF</h4>
               <p className="text-[11px] text-gray-500 font-light">on your first wallpaper order — join now</p>
             </div>
             <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-black transition-colors" />
@@ -53,7 +53,7 @@ export default function PromoBanner({ variant = 'section' }: PromoBannerProps) {
     return (
       <Link href="/register" className="group inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
         <Gift className="w-4 h-4" />
-        <span>Register & get 15% OFF</span>
+        <span>Register & get 10% OFF</span>
         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
       </Link>
     );
@@ -79,7 +79,7 @@ export default function PromoBanner({ variant = 'section' }: PromoBannerProps) {
                 New Customer Offer
               </h3>
               <p className="text-sm text-gray-400 font-light mt-1">
-                Register now and get <span className="text-yellow-400 font-bold">up to 15% off</span> your first wallpaper order
+                Register now and get <span className="text-yellow-400 font-bold">up to 10% off</span> your first wallpaper order
               </p>
             </div>
           </div>

@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
 
       console.error('AI Generation error:', aiError);
       return NextResponse.json(
-        { error: 'Failed to generate wallpaper', details: aiError.message },
+        { error: 'Failed to generate wallpaper' },
         { status: 500 }
       );
     }

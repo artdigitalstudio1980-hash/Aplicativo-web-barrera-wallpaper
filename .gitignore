@@ -10,3 +10,15 @@ test-results/
 playwright-report/
 
 testsprite_tests/tmp/config.json
+
+# Docker (local dev only)
+Dockerfile
+docker-compose.yml
+docker-entrypoint.sh
+.dockerignore
+docker/
+
+# Session artifacts
+mcp_*.png
+mcp_*.txt
+sessions/

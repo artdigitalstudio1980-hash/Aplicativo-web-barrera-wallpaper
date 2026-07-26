@@ -1,4 +1,4 @@
-name: Deploy to Hostinger (Optimized)
+name: Build & Prepare Artifact
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Build & Deploy
+  build:
+    name: Build & Upload Artifact
     runs-on: ubuntu-latest
 
     steps:
@@ -34,7 +34,7 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
 
-      - name: Prepare Deployment Package
+      - name: Prepare Archive
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
@@ -88,56 +88,9 @@ jobs:
             prisma \
             .env.production
 
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.HOSTINGER_PORT }} ${{ secrets.HOSTINGER_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Upload Package via SCP (with Retries)
-        env:
-          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
-          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
-          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
-        run: |
-          # Intentar subir el archivo hasta 5 veces si hay timeout
-          for i in {1..5}; do
-            echo "Intento de subida $i..."
-            scp -P $HOSTINGER_PORT -o ConnectTimeout=30 deploy.tar.gz $HOSTINGER_USERNAME@$HOSTINGER_HOST:/home/u425976741/domains/barrerawallpaper.com/nodejs/ && break || sleep 15
-          done
-
-      - name: Extract & Restart App
-        env:
-          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
-          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
-          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
-        run: |
-          ssh -p $HOSTINGER_PORT -o ConnectTimeout=30 -o StrictHostKeyChecking=no \
-            -i ~/.ssh/id_rsa \
-            $HOSTINGER_USERNAME@$HOSTINGER_HOST \
-            "export NVM_DIR=\"\$HOME/.nvm\"; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; \
-             cd /home/u425976741/domains/barrerawallpaper.com/nodejs; \
-             rm -rf .next; rm -f package.json yarn.lock next.config.js; \
-             echo 'Extrayendo paquete...'; \
-             tar -xzf deploy.tar.gz; rm deploy.tar.gz; \
-             mv .env.production .env; \
-             echo 'Instalando dependencias...'; \
-             yarn install --production --frozen-lockfile; \
-             echo 'Sincronizando catalogo...'; \
-             npx tsx scripts/seed-master.ts; \
-             echo 'Reiniciando PM2...'; \
-             if pm2 describe barrera-wallpaper > /dev/null 2>&1; \
-             then pm2 restart barrera-wallpaper --update-env; \
-             else pm2 start \"yarn start\" --name barrera-wallpaper && pm2 save; fi"
-
-      - name: 🔍 Post-Deploy Smoke Check
-        env:
-          HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
-          HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
-          HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
-        run: |
-          sleep 5
-          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://barrerawallpaper.com/)
-          echo "Homepage status: $STATUS"
-          [ "$STATUS" = "200" ] && echo "✅ Deploy verificado" || echo "⚠️ Homepage no responde 200"
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy.tar.gz
+          retention-days: 2

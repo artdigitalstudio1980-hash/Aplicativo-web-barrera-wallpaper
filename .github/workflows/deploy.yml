@@ -110,7 +110,7 @@ jobs:
             SMTP_PASS="${{ secrets.SMTP_PASS }}"
             ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"
             REPLICATE_API_TOKEN="${{ secrets.REPLICATE_API_TOKEN }}"
-            GOOGLE_GENERATIVE_AI_KEY="${{ secrets.GOOGLE_GENERATIVE_AI_KEY }}"
+            GOOGLE_AI_STUDIO_API_KEY="${{ secrets.GOOGLE_AI_STUDIO_API_KEY }}"
             EOF
 
             # Instalar solo dependencias de producción

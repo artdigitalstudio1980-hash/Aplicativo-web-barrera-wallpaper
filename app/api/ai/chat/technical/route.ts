@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const genAI = new GoogleGenerativeAI(googleKey);
     const { messages, measurements, product } = await req.json();
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const systemPrompt = `
       ROLE: Technical Estimator & Installation Expert for Barrera Wallpaper.

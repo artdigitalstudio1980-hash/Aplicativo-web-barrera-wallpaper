@@ -6,11 +6,13 @@
 |---------|-------------|
 | `yarn dev` | Start dev server |
 | `yarn build` | Build (ESLint + TS errors are **ignored** per next.config.js) |
+| `yarn start` | Start production server |
 | `yarn lint` | ESLint via `next lint` |
 | `yarn seed` | Seed catalog via `tsx scripts/seed-master.ts` |
 | `yarn prisma generate` | Auto-runs on `postinstall`; required after schema changes |
 | `yarn dev:staging` | Dev server con BD de staging (`.env.staging`) |
 | `yarn test:smoke` | Playwright smoke tests contra localhost |
+| `yarn test:smoke:ui` | Playwright UI mode |
 | `yarn seed:staging` | Seed en BD de staging |
 
 CI runs `yarn build` as the primary verification.
@@ -31,11 +33,11 @@ CI runs `yarn build` as the primary verification.
 - **Lazy services**: Stripe (`lib/stripe.ts`), Upstash rate limit (`lib/ratelimit.ts`) — they throw/warn at runtime if env vars are missing, not at import time. Rate limit **fails open** (allows requests through) when unconfigured.
 - **Prisma singleton**: `lib/prisma.ts` — only one client instance, cached on `globalThis`.
 - **Admin auth**: Middleware (`middleware.ts`) protects `/admin/*` and `/api/admin/*` by checking JWT `token.isAdmin`. Uses `next-auth/jwt` `getToken`, not the session API.
-- **Rate limiting**: Middleware rate-limits `/api/auth/*` and `/api/contact/*` via Upstash (5 requests / 60s sliding window).
+- **Rate limiting**: Middleware rate-limits `/api/auth/*`, `/api/contact/*`, `/api/checkout/*`, `/api/payments/*`, `/api/ai/*`, `/api/ai-wallpaper/*`, and `/api/installations/*` via Upstash. Auth/contact/ai use 5 req/60s; checkout/payments/installations use 10 req/60s.
 - **Security headers**: CSP in `next.config.js` whitelists Stripe, PayPal, Replicate. Adding new external API calls from the client may require CSP updates.
 - **Images**: `unoptimized: true` in next.config.js — no Next.js image optimization. Remote images whitelisted via `remotePatterns` (AWS S3, Replicate, Cloudinary, Unsplash).
 - **`trailingSlash: true`** — all routes end with `/`.
-- **Redirects** in next.config.js: `/auth/login` → `/login`, `/shop` → `/catalog`, `/ai-studio` → `/design`.
+- **Redirects** in next.config.js: `/auth/login` → `/login`, `/auth/register` → `/register`, `/shop` → `/catalog`, `/ai-studio` → `/design`.
 
 ## SEO Infrastructure
 
@@ -64,9 +66,9 @@ Hreflang tags in root layout: `en-US` and `es-US`.
 
 ## CI/CD
 
-- **Deploy**: GitHub Actions → SCP → Hostinger, managed by PM2 as `barrera-wallpaper`. Pushes to `main` trigger it.
-- **`.env` is generated from GitHub secrets during deployment** (`deploy.yml`), not stored in repo.
-- **Pull requests** trigger a build check (`test.yml`). Post-deploy, a smoke check verifies the site responds 200.
+- **Deploy** (GitHub Actions → SCP → Hostinger): Node 20.x, `yarn install --frozen-lockfile`, `yarn build`, packages only `.next/` `public/` `package.json` `yarn.lock` `next.config.js` `prisma/` `.env.example` into a tarball. Server extracts, regenerates `.env` from secrets, runs `yarn install --production --frozen-lockfile` (triggers postinstall → prisma generate), then `npx tsx scripts/seed-master.ts`, and restarts via PM2 as `barrera-wallpaper`.
+- **PR checks** (`test.yml`): Node 22.x, `yarn install --frozen-lockfile`, `yarn prisma generate`, then `yarn build`. Sets `SKIP_ENV_VALIDATION=true` and `NEXTAUTH_URL=http://localhost:3000`.
+- **Pushes to `main`** trigger deploy. Post-deploy, a smoke check verifies the site responds 200.
 - **Branch strategy**: `feature/*` → PR a `main` → build + tests → merge. No commits directo a main.
 
 ## Database
@@ -75,8 +77,9 @@ Hreflang tags in root layout: `en-US` and `es-US`.
 - Prisma `relationMode = "prisma"` (no foreign keys in DB)
 - Seeding: `scripts/seed-master.ts` reads `prisma/catalog_master.json` + images from `public/catalogo/`
 - VSCode setting: `prisma.pinToPrisma6: true`
+- Other scripts in `scripts/`: `check-db.ts`, `check-products.ts`, `seed-users.ts`, `update-prices.ts`
 
-## Seed Script Quirk
+### Seed Script Quirk
 
 The seed script creates its own `PrismaClient` instance (not the singleton from `lib/prisma.ts`). It reads product images from `public/catalogo/` directory — if the directory is missing, it logs a warning but continues.
 
@@ -100,3 +103,4 @@ The seed script creates its own `PrismaClient` instance (not the singleton from 
 - Cubren: páginas estáticas (200), API validation (400/401/403), 404
 - No requieren BD — testean rutas y validación de entrada
 - Ejecutar: `yarn test:smoke` (servidor local debe estar corriendo)
+- UI mode: `yarn test:smoke:ui`

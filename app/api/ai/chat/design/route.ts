@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       }
     } catch (e) { console.warn(e); }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const systemPrompt = `
       ROLE: Expert Design Consultant for Barrera Wallpaper.

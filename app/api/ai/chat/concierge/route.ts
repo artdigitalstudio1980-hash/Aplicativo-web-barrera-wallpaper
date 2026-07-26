@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
@@ -14,9 +15,9 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(googleKey);
-    const { messages } = await req.json();
+    const { messages, lead } = await req.json();
 
-    // 1. Cargar Conocimiento Dinámico (Auto-Aprendizaje)
+    // 1. Load Knowledge Base
     let dynamicKnowledge = '';
     try {
       const knowledgePath = path.join(process.cwd(), 'knowledge', 'concierge_faq.md');
@@ -24,38 +25,90 @@ export async function POST(req: Request) {
         dynamicKnowledge = fs.readFileSync(knowledgePath, 'utf-8');
       }
     } catch (e) {
-      console.warn('No se pudo cargar el conocimiento dinámico:', e);
+      console.warn('Could not load knowledge base:', e);
     }
 
-    // 2. Configurar el Modelo
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // 2. Load live catalog from DB (fallback to local JSON)
+    let catalogSummary = '';
+    try {
+      const products = await prisma.product.findMany({
+        take: 50,
+        select: { name: true, nameEs: true, category: true, price: true, slug: true }
+      });
+      if (products.length > 0) {
+        const byCat: Record<string, { names: string[], minPrice: number, count: number }> = {};
+        for (const p of products) {
+          const cat = p.category || 'other';
+          if (!byCat[cat]) byCat[cat] = { names: [], minPrice: Infinity, count: 0 };
+          byCat[cat].count++;
+          byCat[cat].minPrice = Math.min(byCat[cat].minPrice, p.price || Infinity);
+          if (byCat[cat].names.length < 5) byCat[cat].names.push(p.name || p.nameEs || '');
+        }
+        catalogSummary = Object.entries(byCat)
+          .map(([cat, info]) => {
+            const price = info.minPrice === Infinity ? 'N/A' : `$${info.minPrice}/roll`;
+            return `${cat}: ${info.count} designs, from ${price} — ${info.names.join(', ')}`;
+          })
+          .join('\n');
+      }
+    } catch (e) {
+      console.warn('Could not load catalog from DB:', e);
+      try {
+        const jsonPath = path.join(process.cwd(), 'prisma', 'catalog_master.json');
+        if (fs.existsSync(jsonPath)) {
+          const raw = fs.readFileSync(jsonPath, 'utf-8');
+          catalogSummary = `Product catalog loaded with ${raw.split('"slug"').length - 1} items. Refer user to /catalog for full details.`;
+        }
+      } catch (e2) {}
+    }
 
-    // 3. Crear el Prompt del Sistema
+    // 3. Lead capture — if user provided contact info, save to DB
+    if (lead?.name || lead?.phone) {
+      try {
+        await prisma.contactSubmission.create({
+          data: {
+            name: lead.name || 'Chat Lead',
+            email: lead.email || null,
+            phone: lead.phone || null,
+            message: lead.message || 'Captured via AI Sales Chat',
+            source: 'ai-sales-chat',
+          }
+        });
+      } catch (e) {
+        console.warn('Could not save lead:', e);
+      }
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
     const systemPrompt = `
-      ROLE: Luxury Concierge for Barrera Wallpaper (Miami).
+      ROLE: Senior Sales Concierge for Barrera Wallpaper (Miami, FL).
       NAME: Oscar's Assistant.
-      TONE: Sophisticated, helpful, professional, minimalist.
-      LANGUAGE: ENGLISH (Default). Adapt to user if they speak Spanish.
+      TONE: Warm, confident, persuasive, luxury but not pushy.
+      LANGUAGE: ENGLISH preferred. Switch to Spanish if user writes in Spanish.
 
-      DYNAMIC KNOWLEDGE (UPDATED REAL-TIME):
+      COMPANY INFO:
       ${dynamicKnowledge}
 
-      OBJECTIVES:
-      1. Welcome warmly.
-      2. Answer questions using the Knowledge Base.
-      3. Qualify the client (Residential vs Commercial).
-      4. GOAL: Get them to click "Talk to Oscar on WhatsApp" or visit "/design".
+      LIVE CATALOG (current products & pricing):
+      ${catalogSummary || 'Products available at /catalog — prices start at $350/roll.'}
+
+      YOUR SALES PROCESS:
+      1. GREET warmly and ask about their project.
+      2. QUALIFY: Residential or Commercial? Room type? Dimensions?
+      3. RECOMMEND: Match their need to the right collection.
+      4. HANDLE OBJECTIONS with the talking points from your knowledge base.
+      5. CLOSE with a clear next step: register for 15% off, schedule a consultation, visit catalog, or WhatsApp.
 
       RULES:
-      - Short answers (max 3 sentences).
-      - Prices start at ~$95/m².
-      - Never say "I am an AI" unless asked directly.
+      - Be concise (2-3 sentences max per response).
+      - Always steer toward a specific product or next action.
+      - If they mention a room type, recommend a specific collection and design.
+      - If they hesitate, offer the 15% off registration incentive.
+      - Never say "I am an AI" unless they ask directly.
+      - For complex installations or pricing, offer to connect them with Oscar on WhatsApp.
     `;
 
-    // 4. Preparar el historial para Gemini
-    // Gemini gestiona el historial de forma diferente, aquí simplificamos enviando el contexto + último mensaje
-    // o construyendo un chat simple. Para este endpoint stateless, enviamos el prompt + historial reciente.
-    
     const lastMessage = messages[messages.length - 1].content;
     const previousContext = messages.slice(0, -1).map((m: any) => `${m.role}: ${m.content}`).join('\n');
 
@@ -69,10 +122,9 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('Concierge Gemini Error:', error);
-    // Fallback elegante si falla la API
-    return NextResponse.json({ 
-      role: 'assistant', 
-      content: "I apologize, I'm currently updating my database. Please click the WhatsApp button below to speak with Oscar directly." 
+    return NextResponse.json({
+      role: 'assistant',
+      content: "I apologize, I'm currently updating my database. Please click the WhatsApp button below to speak with Oscar directly."
     });
   }
 }

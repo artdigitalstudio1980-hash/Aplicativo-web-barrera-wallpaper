@@ -123,12 +123,9 @@ EOF
             npx tsx scripts/seed-master.ts
             
             echo "Reiniciando la aplicación con PM2..."
-            if pm2 describe barrera-wallpaper > /dev/null 2>&1; then
-              pm2 restart barrera-wallpaper --update-env
-            else
-              pm2 start "yarn start" --name barrera-wallpaper
-              pm2 save
-            fi
+            pm2 delete barrera-wallpaper || true
+            pm2 start yarn --name barrera-wallpaper -- start
+            pm2 save
 
       - name: 🔍 Post-Deploy Smoke Check
         uses: appleboy/ssh-action@v1.0.3

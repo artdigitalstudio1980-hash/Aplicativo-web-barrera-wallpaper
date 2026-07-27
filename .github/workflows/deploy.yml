@@ -90,28 +90,27 @@ jobs:
             
             # REGENERACIÓN CRÍTICA DEL .ENV
             echo "Generando archivo .env desde secretos..."
-            cat << EOF > .env
-DATABASE_URL="${{ secrets.DATABASE_URL }}"
-NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"
-NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}"
-STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}"
-STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_PUBLISHABLE_KEY }}"
-STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-PAYPAL_CLIENT_ID="${{ secrets.PAYPAL_CLIENT_ID }}"
-PAYPAL_CLIENT_SECRET="${{ secrets.PAYPAL_CLIENT_SECRET }}"
-PAYPAL_ENVIRONMENT="${{ secrets.PAYPAL_ENVIRONMENT }}"
-AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-AWS_REGION="${{ secrets.AWS_REGION }}"
-AWS_BUCKET_NAME="${{ secrets.AWS_BUCKET_NAME }}"
-SMTP_HOST="${{ secrets.SMTP_HOST }}"
-SMTP_PORT="${{ secrets.SMTP_PORT }}"
-SMTP_USER="${{ secrets.SMTP_USER }}"
-SMTP_PASS="${{ secrets.SMTP_PASS }}"
-ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"
-REPLICATE_API_TOKEN="${{ secrets.REPLICATE_API_TOKEN }}"
-GOOGLE_AI_STUDIO_API_KEY="${{ secrets.GOOGLE_AI_STUDIO_API_KEY }}"
-EOF
+            echo 'DATABASE_URL="${{ secrets.DATABASE_URL }}"' > .env
+            echo 'NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"' >> .env
+            echo 'NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}"' >> .env
+            echo 'STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}"' >> .env
+            echo 'STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_PUBLISHABLE_KEY }}"' >> .env
+            echo 'STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}"' >> .env
+            echo 'PAYPAL_CLIENT_ID="${{ secrets.PAYPAL_CLIENT_ID }}"' >> .env
+            echo 'PAYPAL_CLIENT_SECRET="${{ secrets.PAYPAL_CLIENT_SECRET }}"' >> .env
+            echo 'PAYPAL_ENVIRONMENT="${{ secrets.PAYPAL_ENVIRONMENT }}"' >> .env
+            echo 'AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"' >> .env
+            echo 'AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"' >> .env
+            echo 'AWS_REGION="${{ secrets.AWS_REGION }}"' >> .env
+            echo 'AWS_BUCKET_NAME="${{ secrets.AWS_BUCKET_NAME }}"' >> .env
+            echo 'SMTP_HOST="${{ secrets.SMTP_HOST }}"' >> .env
+            echo 'SMTP_PORT="${{ secrets.SMTP_PORT }}"' >> .env
+            echo 'SMTP_USER="${{ secrets.SMTP_USER }}"' >> .env
+            echo 'SMTP_PASS="${{ secrets.SMTP_PASS }}"' >> .env
+            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> .env
+            echo 'REPLICATE_API_TOKEN="${{ secrets.REPLICATE_API_TOKEN }}"' >> .env
+            echo 'GOOGLE_AI_STUDIO_API_KEY="${{ secrets.GOOGLE_AI_STUDIO_API_KEY }}"' >> .env
+            echo 'GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"' >> .env
 
 
             # Instalar solo dependencias de producción

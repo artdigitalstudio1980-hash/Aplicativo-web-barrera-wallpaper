@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname.startsWith('/api/installations')) {
+  if (pathname.startsWith('/api/installations') || pathname.startsWith('/api/estimator')) {
     const { success } = await checkoutLimit(`rl_install_${ip}`);
     if (!success) {
       return NextResponse.json(
@@ -82,5 +82,6 @@ export const config = {
     '/api/ai/:path*',
     '/api/ai-wallpaper/:path*',
     '/api/installations/:path*',
+    '/api/estimator/:path*',
   ],
 };

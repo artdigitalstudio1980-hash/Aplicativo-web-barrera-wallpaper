@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { paypal } from '@/lib/paypal';
 import { prisma } from '@/lib/prisma';
+import { stripe, isStripeConfigured, getStripeInstance } from '@/lib/stripe';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { logAudit } from '@/lib/audit';
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    const { items, shippingDetails, needsInstallation, installationAddress, locale } = parsed.data;
+    const { items, shippingDetails, needsInstallation, installationAddress, locale, paymentMethod } = parsed.data;
 
     const host = req.headers.get('host');
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
@@ -138,8 +139,76 @@ export async function POST(req: Request) {
       entityId: order.id,
       userId: userId || undefined,
       email: userEmail || undefined,
-      metadata: { orderNumber, total: orderTotal, paymentMethod: 'paypal', itemCount: validatedItems.length },
+      metadata: { orderNumber, total: orderTotal, paymentMethod, itemCount: validatedItems.length },
     });
+
+    if (paymentMethod === 'stripe') {
+      if (!isStripeConfigured()) {
+        return NextResponse.json(
+          { success: false, error: 'Stripe is not configured' },
+          { status: 500 }
+        );
+      }
+
+      try {
+        const stripeInstance = getStripeInstance();
+
+        const lineItems = validatedItems.map((item: any) => ({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.name,
+              images: item.imageUrl ? [item.imageUrl] : [],
+            },
+            unit_amount: Math.round(item.price * 100),
+          },
+          quantity: item.quantity,
+        }));
+
+        const checkoutSession = await stripeInstance.checkout.sessions.create({
+          mode: 'payment',
+          payment_method_types: ['card'],
+          line_items: lineItems,
+          metadata: { orderId: order.id },
+          customer_email: userEmail || undefined,
+          success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order=${orderNumber}`,
+          cancel_url: `${baseUrl}/checkout`,
+        });
+
+        try {
+          await prisma.paymentTransaction.create({
+            data: {
+              orderId: order.id,
+              provider: 'STRIPE',
+              sessionId: checkoutSession.id,
+              amount: order.total,
+              currency: order.currency,
+              status: 'PENDING'
+            }
+          });
+        } catch (dbError) {
+          console.warn('Failed to save Stripe transaction to DB. Proceeding anyway.');
+        }
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            stripeSessionId: checkoutSession.id,
+            approvalUrl: checkoutSession.url,
+            total: orderTotal
+          }
+        });
+
+      } catch (stripeError: any) {
+        console.error('Stripe error:', stripeError);
+        return NextResponse.json(
+          { success: false, error: 'Stripe payment processing failed. Please try again.' },
+          { status: 500 }
+        );
+      }
+    }
 
     try {
       const paypalOrder = await paypal.createOrder(order);

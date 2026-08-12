@@ -22,3 +22,10 @@ docker/
 mcp_*.png
 mcp_*.txt
 sessions/
+
+# Local test/dev artifacts
+test.env
+test-yarn-prod/
+screenshots/
+.playwright-cli/
+tsconfig.tsbuildinfo

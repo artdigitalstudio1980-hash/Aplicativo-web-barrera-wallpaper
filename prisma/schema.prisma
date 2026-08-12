@@ -74,6 +74,8 @@ model User {
   aiWallpaperOrders      AIWallpaperOrder[]
   aiGenerationRequests   AIGenerationRequest[]
   designSessions         DesignSession[]
+  quotes                 Quote[]
+  invoices               Invoice[]
 }
 
 model Category {
@@ -185,6 +187,7 @@ model Order {
   installations       Installation[]
   aiWallpaperOrders   AIWallpaperOrder[]
   paymentTransactions PaymentTransaction[]
+  invoices            Invoice[]
 
   @@index([userId])
 }
@@ -236,8 +239,133 @@ model Installation {
   user  User   @relation(fields: [userId], references: [id])
   order Order? @relation(fields: [orderId], references: [id])
 
+  quotes Quote[]
+
   @@index([userId])
   @@index([orderId])
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+model Quote {
+  id              String      @id @default(cuid())
+  quoteNumber     String      @unique
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  address1        String?
+  address2        String?
+  city            String?
+  state           String?
+  zip             String?
+  country         String      @default("US")
+  items           Json
+  subtotal        Float       @default(0)
+  taxRate         Float       @default(7)
+  tax             Float       @default(0)
+  total           Float       @default(0)
+  currency        String      @default("USD")
+  status          QuoteStatus @default(DRAFT)
+  validUntil      DateTime?
+  notes           String?
+  terms           Json?
+  language        String      @default("es")
+  installationId  String?
+  userId          String?
+  sentAt          DateTime?
+  respondedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user         User?        @relation(fields: [userId], references: [id])
+  installation Installation? @relation(fields: [installationId], references: [id])
+  invoice      Invoice?
+
+  @@index([status])
+  @@index([userId])
+  @@index([installationId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum PaymentMethod {
+  CASH
+  ZELLE
+  CARD
+  STRIPE
+  PAYPAL
+  CHECK
+  BANK_TRANSFER
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  invoiceNumber  String        @unique
+  quoteId        String?       @unique
+  orderId        String?
+  userId         String?
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  address1       String?
+  address2       String?
+  city           String?
+  state          String?
+  zip            String?
+  country        String        @default("US")
+  items          Json
+  subtotal       Float         @default(0)
+  taxRate        Float         @default(7)
+  tax            Float         @default(0)
+  total          Float         @default(0)
+  depositRequired Boolean       @default(true)
+  depositAmount  Float         @default(0)
+  amountPaid     Float         @default(0)
+  payments       Json
+  currency       String        @default("USD")
+  status         InvoiceStatus @default(DRAFT)
+  dueDate        DateTime?
+  notes          String?
+  terms          Json?
+  language       String        @default("es")
+  sentAt         DateTime?
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user  User?  @relation(fields: [userId], references: [id])
+  quote Quote? @relation(fields: [quoteId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([status])
+  @@index([userId])
+  @@index([quoteId])
+  @@index([orderId])
+}
+
+model DocumentCounter {
+  id         String   @id @default(cuid())
+  type       String
+  year       Int
+  lastNumber Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([type, year])
 }
 
 model ContactSubmission {

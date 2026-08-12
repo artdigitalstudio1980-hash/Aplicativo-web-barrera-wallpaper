@@ -232,6 +232,74 @@ export const sendAdminNotificationEmail = async (data: {
   }
 };
 
+export const sendQuoteEmail = async (data: {
+  quoteNumber: string;
+  customerEmail: string;
+  customerName: string;
+  total: number;
+  currency: string;
+  subtotal: number;
+  tax: number;
+  items: Array<{ description: string; quantity: number; unit: string; unitPrice: number }>;
+  printUrl: string;
+  locale: string;
+}) => {
+  try {
+    const { renderQuoteEmail } = await import('./email-templates/document-emails');
+    const isES = data.locale === 'es';
+    const html = renderQuoteEmail({ ...data, documentNumber: data.quoteNumber }, isES ? 'es' : 'en');
+    const mailOptions = {
+      from: `"Barrera Wallpaper" <${process.env.SMTP_USER || 'ventas@barrerawallpaper.com'}>`,
+      to: data.customerEmail,
+      subject: isES
+        ? `Cotización ${data.quoteNumber} — Barrera Wallpaper`
+        : `Quotation ${data.quoteNumber} — Barrera Wallpaper`,
+      html,
+    };
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Quote email sent: %s', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending quote email:', error);
+    return false;
+  }
+};
+
+export const sendInvoiceEmail = async (data: {
+  invoiceNumber: string;
+  customerEmail: string;
+  customerName: string;
+  total: number;
+  currency: string;
+  subtotal: number;
+  tax: number;
+  depositAmount?: number;
+  amountPaid?: number;
+  items: Array<{ description: string; quantity: number; unit: string; unitPrice: number }>;
+  printUrl: string;
+  locale: string;
+}) => {
+  try {
+    const { renderInvoiceEmail } = await import('./email-templates/document-emails');
+    const isES = data.locale === 'es';
+    const html = renderInvoiceEmail({ ...data, documentNumber: data.invoiceNumber }, isES ? 'es' : 'en');
+    const mailOptions = {
+      from: `"Barrera Wallpaper" <${process.env.SMTP_USER || 'ventas@barrerawallpaper.com'}>`,
+      to: data.customerEmail,
+      subject: isES
+        ? `Factura ${data.invoiceNumber} — Barrera Wallpaper`
+        : `Invoice ${data.invoiceNumber} — Barrera Wallpaper`,
+      html,
+    };
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Invoice email sent: %s', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending invoice email:', error);
+    return false;
+  }
+};
+
 export const sendContactConfirmationEmail = async (customerEmail: string, customerName: string) => {
   try {
     const mailOptions = {

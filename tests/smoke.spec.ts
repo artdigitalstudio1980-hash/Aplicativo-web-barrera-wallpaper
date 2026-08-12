@@ -73,8 +73,6 @@ test.describe('Smoke Tests — API Validation', () => {
     const res = await request.post('/api/checkout/', {
       data: {},
     });
-    const body = await res.text();
-    console.log('DIAGNOSTIC checkout status:', res.status(), 'body:', body.slice(0, 800));
     expect(res.status()).toBe(400);
   });
 });

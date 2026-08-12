@@ -259,7 +259,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Checkout error:', error);
     return NextResponse.json(
-      { success: false, error: 'Error creating checkout session', debug: String(error?.message || error), stack: String(error?.stack || '').slice(0, 1500) },
+      { success: false, error: 'Error creating checkout session' },
       { status: 500 }
     );
   }

@@ -111,12 +111,20 @@ jobs:
             echo 'REPLICATE_API_TOKEN="${{ secrets.REPLICATE_API_TOKEN }}"' >> .env
             echo 'GOOGLE_AI_STUDIO_API_KEY="${{ secrets.GOOGLE_AI_STUDIO_API_KEY }}"' >> .env
             echo 'GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"' >> .env
+            echo 'PAYPAL_WEBHOOK_ID="${{ secrets.PAYPAL_WEBHOOK_ID }}"' >> .env
+            echo 'PAYPAL_API_BASE="${{ secrets.PAYPAL_API_BASE }}"' >> .env
+            echo 'SMTP_SECURE="${{ secrets.SMTP_SECURE }}"' >> .env
+            echo 'AWS_FOLDER_PREFIX="${{ secrets.AWS_FOLDER_PREFIX }}"' >> .env
 
 
             # Instalar solo dependencias de producción
             echo "Instalando dependencias..."
             yarn install --production --frozen-lockfile
-            
+
+            # Aplicar migraciones de base de datos (Quote, Invoice, DocumentCounter, etc.)
+            echo "Aplicando migraciones de base de datos..."
+            npx prisma migrate deploy
+
             # Sincronizar catálogo
             echo "Sincronizando catálogo..."
             npx tsx scripts/seed-master.ts

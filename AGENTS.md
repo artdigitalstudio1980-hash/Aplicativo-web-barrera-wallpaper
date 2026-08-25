@@ -98,6 +98,27 @@ The seed script creates its own `PrismaClient` instance (not the singleton from 
 - Seed rápido: `yarn seed:staging`
 - Dev local con staging: `yarn dev:staging`
 
+## Stripe
+
+### Stripe MCP Server
+Server remoto en `https://mcp.stripe.com` — configurado en `.cursor/mcp.json` para que agentes de IA puedan gestionar Stripe (crear productos, consultar pagos, etc.).
+
+### Stripe CLI
+Instalación: `brew install stripe/stripe-cli/stripe` (macOS) o descargar de [GitHub Releases](https://github.com/stripe/stripe-cli/releases).
+
+| Comando | Uso |
+|---------|-----|
+| `stripe login` | Autenticarse |
+| `stripe listen --forward-to localhost:3000/api/payments/stripe/webhook` | Forward webhooks local |
+| `stripe trigger checkout.session.completed` | Disparar evento de prueba |
+| `stripe logs tail` | Ver logs de API en tiempo real |
+| `stripe products list` | Listar productos |
+
+### Stripe Checkout Flow
+El endpoint `/api/checkout` acepta `paymentMethod: 'stripe' | 'paypal'` (default: `'stripe'`).
+- **Stripe**: Crea Checkout Session, guarda `PaymentTransaction` con `sessionId`, redirige a Stripe Checkout. El webhook en `/api/payments/stripe/webhook` confirma la orden.
+- **PayPal**: Crea orden PayPal, guarda `PaymentTransaction` con `paypalOrderId`, redirige a PayPal.
+
 ### Playwright Smoke Tests
 - Archivo: `tests/smoke.spec.ts`
 - Cubren: páginas estáticas (200), API validation (400/401/403), 404

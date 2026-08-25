@@ -19,6 +19,15 @@ import { toast } from 'sonner';
 import { useLocale } from '@/components/locale-context';
 import { useCart } from '@/lib/store/use-cart';
 import { parseProductImage } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Wall {
   id: string;
@@ -39,6 +48,18 @@ function CalculatorContent() {
   const [walls, setWalls] = useState<Wall[]>([{ id: '1', width: '', height: '' }]);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const [quoteSending, setQuoteSending] = useState(false);
+  const [quoteForm, setQuoteForm] = useState({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    address1: '',
+    city: '',
+    state: '',
+    zip: '',
+    notes: '',
+  });
 
   useEffect(() => {
     if (wallpaperId) {
@@ -118,6 +139,43 @@ function CalculatorContent() {
     });
 
     router.push('/checkout');
+  };
+
+  const handleQuoteRequest = async () => {
+    if (!quoteForm.customerName || !quoteForm.customerEmail) {
+      toast.error(locale === 'es' ? 'Ingresa tu nombre y email' : 'Enter your name and email');
+      return;
+    }
+    setQuoteSending(true);
+    try {
+      const res = await fetch('/api/estimator/quote-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...quoteForm,
+          walls,
+          unit,
+          wallpaperName: wallpaper ? wallpaper.name : '',
+          wallpaperPrice: pricePerRoll,
+          language: locale,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setQuoteOpen(false);
+        toast.success(
+          locale === 'es'
+            ? `¡Solicitud enviada! Cotización ${data.data.quoteNumber} creada.`
+            : `Request sent! Quotation ${data.data.quoteNumber} created.`,
+        );
+      } else {
+        toast.error(data.error || (locale === 'es' ? 'Error al enviar' : 'Failed to send'));
+      }
+    } catch (error) {
+      toast.error(locale === 'es' ? 'Error al enviar' : 'Failed to send');
+    } finally {
+      setQuoteSending(false);
+    }
   };
 
   if (loading) {
@@ -305,6 +363,136 @@ function CalculatorContent() {
                       </div>
                     )}
                   </Button>
+
+                  <Dialog open={quoteOpen} onOpenChange={setQuoteOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        disabled={estimatedTotal <= 0}
+                        className="w-full h-16 rounded-[2.5rem] border-gray-200 bg-white hover:bg-gray-50 text-black text-sm font-black uppercase tracking-widest mt-4 transition-all"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        {locale === 'es' ? 'Solicitar cotización de instalación' : 'Request Installation Quote'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-lg rounded-3xl p-8">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">
+                          {locale === 'es' ? 'Cotización de instalación' : 'Installation Quote'}
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-500">
+                          {locale === 'es'
+                            ? 'Cuéntanos tus datos y uno de nuestros especialistas te enviará una cotización con instalación incluida.'
+                            : 'Share your details and one of our specialists will send you a quote with installation included.'}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 mt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                              {locale === 'es' ? 'Nombre completo *' : 'Full name *'}
+                            </Label>
+                            <Input
+                              className="mt-1"
+                              value={quoteForm.customerName}
+                              onChange={(e) => setQuoteForm({ ...quoteForm, customerName: e.target.value })}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                              Email *
+                            </Label>
+                            <Input
+                              type="email"
+                              className="mt-1"
+                              value={quoteForm.customerEmail}
+                              onChange={(e) => setQuoteForm({ ...quoteForm, customerEmail: e.target.value })}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                              {locale === 'es' ? 'Teléfono' : 'Phone'}
+                            </Label>
+                            <Input
+                              className="mt-1"
+                              value={quoteForm.customerPhone}
+                              onChange={(e) => setQuoteForm({ ...quoteForm, customerPhone: e.target.value })}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                              {locale === 'es' ? 'Dirección' : 'Address'}
+                            </Label>
+                            <Input
+                              className="mt-1"
+                              value={quoteForm.address1}
+                              onChange={(e) => setQuoteForm({ ...quoteForm, address1: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                              {locale === 'es' ? 'Ciudad' : 'City'}
+                            </Label>
+                            <Input
+                              className="mt-1"
+                              value={quoteForm.city}
+                              onChange={(e) => setQuoteForm({ ...quoteForm, city: e.target.value })}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                                {locale === 'es' ? 'Estado' : 'State'}
+                              </Label>
+                              <Input
+                                className="mt-1"
+                                value={quoteForm.state}
+                                onChange={(e) => setQuoteForm({ ...quoteForm, state: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">ZIP</Label>
+                              <Input
+                                className="mt-1"
+                                value={quoteForm.zip}
+                                onChange={(e) => setQuoteForm({ ...quoteForm, zip: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                              {locale === 'es' ? 'Notas (opcional)' : 'Notes (optional)'}
+                            </Label>
+                            <Textarea
+                              className="mt-1"
+                              rows={2}
+                              value={quoteForm.notes}
+                              onChange={(e) => setQuoteForm({ ...quoteForm, notes: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 rounded-2xl p-4 text-sm">
+                          <p className="text-gray-500">
+                            {locale === 'es'
+                              ? `~${rollsNeeded} rollos estimados — Material $${estimatedTotal.toFixed(2)} + instalación profesional`
+                              : `~${rollsNeeded} estimated rolls — Material $${estimatedTotal.toFixed(2)} + professional installation`}
+                          </p>
+                        </div>
+                        <Button
+                          className="w-full h-14 rounded-2xl bg-black hover:bg-gray-800 text-white font-black uppercase tracking-widest"
+                          onClick={handleQuoteRequest}
+                          disabled={quoteSending}
+                        >
+                          {quoteSending ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              {locale === 'es' ? 'Enviar solicitud' : 'Send request'}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   
                   <div className="mt-10 flex flex-col items-center gap-6">
                     <div className="flex gap-6 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">

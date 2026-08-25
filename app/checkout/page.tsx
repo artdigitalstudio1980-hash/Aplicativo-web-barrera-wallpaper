@@ -9,7 +9,7 @@ import { useLocale } from '@/components/locale-context';
 import {
   ArrowLeft, ArrowRight, Truck, ShieldCheck,
   Loader2, Package, CheckCircle2, CreditCard,
-  Info, ChevronRight, MapPin, Home, User, Mail, Phone
+  Info, ChevronRight, MapPin, Home, User, Mail, Phone, Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paypalReady, setPaypalReady] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
 
   const [form, setForm] = useState({
     name: '',
@@ -67,7 +68,7 @@ export default function CheckoutPage() {
   const subtotal = getTotal();
   const total = subtotal;
 
-  const handlePayPalCreateOrder = async () => {
+  const handleCreateOrder = async (method: 'stripe' | 'paypal') => {
     setIsProcessing(true);
     try {
       const res = await fetch('/api/checkout/', {
@@ -95,6 +96,7 @@ export default function CheckoutPage() {
           needsInstallation,
           installationAddress: form.installationAddress,
           locale,
+          paymentMethod: method,
         }),
       });
 
@@ -102,6 +104,16 @@ export default function CheckoutPage() {
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Checkout failed');
+      }
+
+      if (method === 'stripe') {
+        const { approvalUrl } = data.data;
+        if (approvalUrl) {
+          window.location.href = approvalUrl;
+        } else {
+          throw new Error('No checkout URL returned');
+        }
+        return;
       }
 
       const { paypalOrderId, approvalUrl } = data.data;
@@ -376,31 +388,97 @@ export default function CheckoutPage() {
                     <span className="text-5xl font-black italic tracking-tighter">${total.toFixed(2)}</span>
                   </div>
 
-                  {/* PayPal button area */}
+                  {/* Payment method selector */}
                   <div className="space-y-4">
-                    <div className="bg-gray-50 border border-gray-100 p-8 rounded-[2.5rem] flex flex-col items-center gap-6">
-                      <div className="flex items-center gap-3">
-                        <CreditCard className="w-6 h-6 text-blue-600" />
-                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">
-                          {locale === 'es' ? 'Pago seguro con' : 'Secure payment via'}
-                        </span>
-                        <Image src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" width={80} height={25} className="h-6 w-auto" />
-                      </div>
-                      <div id="paypal-button-container" className="w-full max-w-sm" />
-                      <Button
-                        onClick={handlePayPalCreateOrder}
-                        disabled={isProcessing}
-                        className="w-full h-16 rounded-2xl bg-black text-white hover:bg-gray-800 text-sm font-black uppercase tracking-widest shadow-xl disabled:opacity-30"
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('stripe')}
+                        className={`p-6 rounded-[2rem] border-2 text-center transition-all ${
+                          paymentMethod === 'stripe'
+                            ? 'border-indigo-600 bg-indigo-50/50 shadow-md'
+                            : 'border-gray-100 bg-white hover:border-gray-200'
+                        }`}
                       >
-                        {isProcessing ? (
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                        ) : (
-                          <span className="flex items-center gap-3">
-                            {locale === 'es' ? 'Pagar con PayPal' : 'Pay with PayPal'}
-                            <ArrowRight className="w-5 h-5" />
-                          </span>
-                        )}
-                      </Button>
+                        <CreditCard className={`w-8 h-8 mx-auto mb-2 ${paymentMethod === 'stripe' ? 'text-indigo-600' : 'text-gray-300'}`} />
+                        <p className={`text-xs font-black uppercase tracking-widest ${paymentMethod === 'stripe' ? 'text-indigo-600' : 'text-gray-400'}`}>
+                          {locale === 'es' ? 'Tarjeta' : 'Card'}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-1">Visa · MC · Amex</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('paypal')}
+                        className={`p-6 rounded-[2rem] border-2 text-center transition-all ${
+                          paymentMethod === 'paypal'
+                            ? 'border-blue-600 bg-blue-50/50 shadow-md'
+                            : 'border-gray-100 bg-white hover:border-gray-200'
+                        }`}
+                      >
+                        <Image
+                          src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
+                          alt="PayPal" width={80} height={25}
+                          className="h-7 w-auto mx-auto mb-2"
+                        />
+                        <p className={`text-xs font-black uppercase tracking-widest ${paymentMethod === 'paypal' ? 'text-blue-600' : 'text-gray-400'}`}>
+                          PayPal
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-1">
+                          {locale === 'es' ? 'Cuenta o tarjeta' : 'Account or card'}
+                        </p>
+                      </button>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-100 p-8 rounded-[2.5rem] flex flex-col items-center gap-6">
+                      {paymentMethod === 'paypal' && (
+                        <>
+                          <div id="paypal-button-container" className="w-full max-w-sm" />
+                          <Button
+                            onClick={() => handleCreateOrder('paypal')}
+                            disabled={isProcessing}
+                            className="w-full h-16 rounded-2xl bg-[#003087] hover:bg-[#002870] text-white text-sm font-black uppercase tracking-widest shadow-xl disabled:opacity-30"
+                          >
+                            {isProcessing ? (
+                              <Loader2 className="w-6 h-6 animate-spin" />
+                            ) : (
+                              <span className="flex items-center gap-3">
+                                {locale === 'es' ? 'Pagar con PayPal' : 'Pay with PayPal'}
+                                <ArrowRight className="w-5 h-5" />
+                              </span>
+                            )}
+                          </Button>
+                        </>
+                      )}
+                      {paymentMethod === 'stripe' && (
+                        <>
+                          <div className="flex items-center gap-3 mb-2">
+                            <ShieldCheck className="w-6 h-6 text-indigo-600" />
+                            <span className="text-xs font-black uppercase tracking-widest text-gray-400">
+                              {locale === 'es' ? 'Pago seguro con tarjeta' : 'Secure card payment'}
+                            </span>
+                          </div>
+                          <Button
+                            onClick={() => handleCreateOrder('stripe')}
+                            disabled={isProcessing}
+                            className="w-full h-16 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black uppercase tracking-widest shadow-xl disabled:opacity-30"
+                          >
+                            {isProcessing ? (
+                              <Loader2 className="w-6 h-6 animate-spin" />
+                            ) : (
+                              <span className="flex items-center gap-3">
+                                <CreditCard className="w-5 h-5" />
+                                {locale === 'es' ? 'Pagar con tarjeta' : 'Pay with Card'}
+                                <ArrowRight className="w-5 h-5" />
+                              </span>
+                            )}
+                          </Button>
+                          <p className="text-[10px] text-gray-400">
+                            {locale === 'es'
+                              ? 'Serás redirigido a Stripe para pagar de forma segura'
+                              : 'You\'ll be redirected to Stripe Checkout for secure payment'}
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-center gap-4 text-gray-300 text-xs">

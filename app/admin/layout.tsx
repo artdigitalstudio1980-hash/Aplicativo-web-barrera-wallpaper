@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Package, ShoppingBag, Users, Shield, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Shield, LogOut, FileText, Receipt, Wrench } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 
@@ -15,6 +15,9 @@ const sidebarLinks = [
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+  { href: '/admin/installations', label: 'Installations', icon: Wrench },
+  { href: '/admin/quotes', label: 'Quotes', icon: FileText },
+  { href: '/admin/invoices', label: 'Invoices', icon: Receipt },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -121,7 +121,8 @@ export default function ContactPage() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Office Location</p>
-                        <p className="text-lg font-bold tracking-tight">Miami, Florida</p>
+                        <p className="text-lg font-bold tracking-tight">3660 NE 166th St Apt 203</p>
+                        <p className="text-sm text-gray-600 font-light">North Miami Beach, FL 33160</p>
                         <p className="text-xs text-gray-500 font-light mt-1">Metropolitan Coverage Area</p>
                       </div>
                    </div>
@@ -289,8 +290,8 @@ export default function ContactPage() {
              viewport={{ once: true }}
              className="relative h-[500px] rounded-[3rem] overflow-hidden border border-gray-200 shadow-2xl bg-white"
            >
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3591.6882672528!2d-80.1251!3d25.9338!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88d9accf00000001%3A0x0!2zQmFycmVyYSBXYWxscGFwZXI!5e0!3m2!1sen!2sus!4v1715000000000!5m2!1sen!2sus" 
+               <iframe
+                src="https://www.google.com/maps?q=3660+NE+166th+St+Apt+203,+North+Miami+Beach,+FL+33160&output=embed"
                 width="100%" 
                 height="100%" 
                 style={{ border: 0 }} 
@@ -306,9 +307,9 @@ export default function ContactPage() {
                   <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
                   <span className="text-[10px] font-bold tracking-[0.3em] text-blue-600 uppercase">Live From The Studio</span>
                 </div>
-                <h3 className="text-3xl font-black tracking-tighter italic mb-2">MIAMI, FLORIDA</h3>
+                <h3 className="text-3xl font-black tracking-tighter italic mb-2">NORTH MIAMI BEACH, FL</h3>
                 <p className="text-gray-500 text-sm font-light leading-relaxed mb-6">
-                  Our main operational center serving Sunny Isles, Palm Beach, and the Greater Miami Area.
+                  3660 NE 166th St Apt 203, North Miami Beach, FL 33160 — serving Sunny Isles, Palm Beach, and the Greater Miami Area.
                 </p>
                 <div className="flex items-center gap-4 text-[10px] font-bold tracking-widest uppercase">
                   <MapPin className="w-4 h-4" /> 

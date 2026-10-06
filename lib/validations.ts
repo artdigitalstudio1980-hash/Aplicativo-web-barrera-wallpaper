@@ -54,6 +54,7 @@ export const checkoutSchema = z.object({
   needsInstallation: z.boolean().optional().default(false),
   installationAddress: z.string().max(500).optional().default(''),
   locale: z.enum(['en', 'es']).optional().default('en'),
+  paymentMethod: z.enum(['stripe', 'paypal']).optional().default('paypal'),
 });
 
 export const registerSchema = z.object({

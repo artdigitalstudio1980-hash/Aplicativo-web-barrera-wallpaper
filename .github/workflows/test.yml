@@ -42,3 +42,65 @@ jobs:
       - name: ❌ Build Failed
         if: failure()
         run: echo "❌ Build failed! Check logs for details."
+
+  smoke:
+    name: Smoke Tests (Playwright)
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'yarn'
+
+      - name: 📦 Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔨 Generate Prisma Client
+        run: yarn prisma generate
+
+      - name: 🏗️ Test Build
+        run: yarn build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: "http://localhost:3000"
+          SKIP_ENV_VALIDATION: "true"
+
+      - name: 🌐 Install Playwright Browser
+        run: npx playwright install --with-deps chromium
+
+      - name: 🚀 Start Production Server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: "http://localhost:3000"
+          SKIP_ENV_VALIDATION: "true"
+        run: |
+          nohup yarn start > /tmp/next-server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/ | grep -q 200; then
+              echo "✅ Server ready after ${i}s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "❌ Server no respondió en tiempo"
+          tail -50 /tmp/next-server.log
+          exit 1
+
+      - name: 🧪 Run Smoke Tests
+        run: yarn test:smoke
+
+      - name: 📤 Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

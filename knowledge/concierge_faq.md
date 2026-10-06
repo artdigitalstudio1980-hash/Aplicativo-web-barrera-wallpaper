@@ -1,7 +1,7 @@
 # BARRERA WALLPAPER — SALES KNOWLEDGE BASE
 
 ## COMPANY INFO
-- Location: Miami, Florida | Showroom by appointment
+- Location: 3660 NE 166th St Apt 203, North Miami Beach, FL 33160 | Showroom by appointment
 - Contact: +1 (954) 544-1740 | infobarrerawallpaper.com
 - Website: barrerawallpaper.com
 - Designer: Oscar Barrera

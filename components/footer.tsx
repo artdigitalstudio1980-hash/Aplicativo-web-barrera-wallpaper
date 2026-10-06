@@ -111,7 +111,7 @@ export default function Footer() {
             <div className="space-y-3 text-sm text-gray-600">
               <div className="flex items-center space-x-3">
                 <MapPin className="w-4 h-4" />
-                <span className="font-light">Miami, Florida</span>
+                <span className="font-light">3660 NE 166th St Apt 203, North Miami Beach, FL 33160</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4" />

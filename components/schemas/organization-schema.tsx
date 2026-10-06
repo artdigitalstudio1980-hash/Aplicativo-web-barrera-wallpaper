@@ -34,8 +34,8 @@ export function OrganizationSchema() {
       latitude: 25.934,
       longitude: -80.144,
     },
-    telephone: '+1-305-555-0000',
-    email: 'info@barrerawallpaper.com',
+    telephone: '+1-954-544-1740',
+    email: 'infobarrerawallpaper@gmail.com',
     priceRange: '$$-$$$',
     areaServed: [
       { '@type': 'City', name: 'Miami' },
